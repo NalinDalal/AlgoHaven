@@ -4,6 +4,8 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "build": "bunx tsc --noEmit -p tsconfig.json",
+    "check-types": "bunx tsc --noEmit -p tsconfig.json",
     "dev": "bun --watch index.ts",
     "start": "bun index.ts"
   },

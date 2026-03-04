@@ -9,15 +9,32 @@ function getErrorMessage(error: unknown) {
   return "Unknown error";
 }
 
+function getPositiveNumberEnv(name: string, fallback: number) {
+  const rawValue = process.env[name];
+
+  if (!rawValue) {
+    return fallback;
+  }
+
+  const parsed = Number(rawValue);
+
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return fallback;
+  }
+
+  return parsed;
+}
+
 const BE_PORT = Number(process.env.BE_PORT ?? 3001);
-const APP_URL = process.env.APP_URL ?? `http://localhost:${BE_PORT}`;
-const SESSION_COOKIE_NAME = "algohaven_session";
-const MAGIC_LINK_TTL_MS = 15 * 60 * 1000;
-const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const BE_URL = process.env.BE_URL ?? `http://localhost:${BE_PORT}`;
+const SESSION_COOKIE_NAME = process.env.SESSION_COOKIE_NAME ?? "algohaven_session";
+const MAGIC_LINK_TTL_MS = getPositiveNumberEnv("MAGIC_LINK_TTL_MS", 15 * 60 * 1000);
+const SESSION_TTL_MS = getPositiveNumberEnv("SESSION_TTL_MS", 7 * 24 * 60 * 60 * 1000);
 const AUTH_EMAIL_FROM = process.env.AUTH_EMAIL_FROM ?? "AlgoHaven <onboarding@resend.dev>";
 
 async function sendMagicLinkEmail(email: string, verifyUrl: string) {
   const resendApiKey = process.env.RESEND_API_KEY;
+  const magicLinkTtlMinutes = Math.round(MAGIC_LINK_TTL_MS / 60000);
 
   if (!resendApiKey) {
     console.log(`[magic-link] ${email}: ${verifyUrl}`);
@@ -34,7 +51,7 @@ async function sendMagicLinkEmail(email: string, verifyUrl: string) {
       from: AUTH_EMAIL_FROM,
       to: [email],
       subject: "Your AlgoHaven sign-in link",
-      html: `<p>Click to sign in:</p><p><a href=\"${verifyUrl}\">${verifyUrl}</a></p><p>This link expires in 15 minutes.</p>`,
+      html: `<p>Click to sign in:</p><p><a href=\"${verifyUrl}\">${verifyUrl}</a></p><p>This link expires in ${magicLinkTtlMinutes} minutes.</p>`,
     }),
   });
 
@@ -166,7 +183,7 @@ const server = Bun.serve({
             },
           });
 
-          const verifyUrl = `${APP_URL}/api/auth/verify?token=${rawMagicToken}`;
+          const verifyUrl = `${BE_URL}/api/auth/verify?token=${rawMagicToken}`;
           const sentByEmail = await sendMagicLinkEmail(normalizedEmail, verifyUrl);
 
           if (!sentByEmail && process.env.NODE_ENV !== "production") {
