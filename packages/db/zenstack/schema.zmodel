@@ -1,0 +1,160 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum SubmissionStatus {
+  QUEUED
+  RUNNING
+  ACCEPTED
+  WRONG_ANSWER
+  TLE
+  RUNTIME_ERROR
+  MEMORY_LIMIT
+}
+
+enum PlagiarismStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+}
+
+model User {
+  id          String      @id @default(uuid())
+  email       String      @unique
+  role        Role        @default(USER)
+
+  submissions Submission[]
+  leaderboard Leaderboard[]
+  sessions    Session[]
+  magicLinks  MagicLinkToken[]
+
+  createdAt   DateTime    @default(now())
+}
+
+model Challenge {
+  id          String         @id @default(uuid())
+  title       String
+  notionDocId String
+  maxPoints   Int
+
+  submissions Submission[]
+  contests    ContestProblem[]
+
+  createdAt   DateTime       @default(now())
+}
+
+model Contest {
+  id          String          @id @default(uuid())
+  title       String
+  startTime   DateTime
+  endTime     DateTime
+  isRated     Boolean         @default(false)
+
+  problems    ContestProblem[]
+  submissions Submission[]
+  leaderboard Leaderboard[]
+
+  createdAt   DateTime        @default(now())
+}
+
+model ContestProblem {
+  id          String    @id @default(uuid())
+  challengeId String
+  contestId   String
+  index       Int
+
+  contest     Contest   @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  @@unique([contestId, challengeId])
+}
+
+model Submission {
+  id                String            @id @default(uuid())
+
+  userId            String
+  challengeId       String
+  contestId         String?
+
+  code              String
+  language          String
+  status            SubmissionStatus
+  points            Int
+  executionTime     Float
+  memoryUsed        Float?
+
+  createdAt         DateTime          @default(now())
+
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challenge         Challenge         @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  contest           Contest?          @relation(fields: [contestId], references: [id], onDelete: Cascade)
+
+  plagiarismReports PlagiarismReport[]
+
+  @@index([userId])
+  @@index([challengeId])
+  @@index([contestId])
+}
+
+model Leaderboard {
+  id        String  @id @default(uuid())
+  contestId String
+  userId    String
+
+  solved    Int     @default(0)
+  penalty   Int     @default(0)
+
+  contest   Contest @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([contestId, userId])
+}
+
+model PlagiarismReport {
+  id              String           @id @default(uuid())
+  submissionId    String
+  matchedWithId   String?
+  similarityScore Float
+  status          PlagiarismStatus @default(PENDING)
+
+  createdAt       DateTime         @default(now())
+
+  submission      Submission       @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@index([submissionId])
+}
+
+model MagicLinkToken {
+  id         String    @id @default(uuid())
+  email      String
+  tokenHash  String    @unique
+  userId     String?
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  user       User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([email])
+  @@index([expiresAt])
+}
+
+model Session {
+  id         String    @id @default(uuid())
+  tokenHash  String    @unique
+  userId     String
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
