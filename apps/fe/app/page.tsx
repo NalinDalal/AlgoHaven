@@ -1,6 +1,36 @@
+'use client';
+import { useState } from "react";
 import Link from "next/link";
+import { MagicLinkForm } from "./components/MagicLinkForm";
 
 export default function Home() {
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "sent" | "error">("idle");
+  const [error, setError] = useState("");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setStatus("loading");
+    setError("");
+    try {
+      const res = await fetch("/api/auth/request-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (res.ok) {
+        setStatus("sent");
+      } else {
+        const data = await res.json();
+        setError(data.error || "Something went wrong");
+        setStatus("error");
+      }
+    } catch (err) {
+      setError("Network error");
+      setStatus("error");
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6 md:px-10">
@@ -81,29 +111,16 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-          <div className="bg-white shadow-lg rounded-lg p-8 max-w-md w-full">
-            <h1 className="text-3xl font-bold mb-4 text-center">Welcome to AlgoHaven</h1>
-            <p className="mb-6 text-center text-gray-600">
-              Sign up or log in to get started. You’ll receive a magic link in your email to sign in instantly.
+        <section className="flex flex-col items-center justify-center min-h-screen bg-background">
+          <div className="shadow-lg rounded-lg p-8 max-w-md w-full border border-foreground/10 bg-background">
+            <h1 className="text-3xl font-bold mb-4 text-center">Sign in to AlgoHaven</h1>
+            <p className="mb-6 text-center text-foreground/70">
+              Enter your email to receive a magic sign-in link.
             </p>
-            <form className="flex flex-col gap-4">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="border rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-              <button
-                type="submit"
-                className="bg-blue-600 text-white font-semibold py-2 rounded hover:bg-blue-700 transition"
-              >
-                Get Magic Link
-              </button>
-            </form>
-            <div className="mt-6 text-center text-sm text-gray-500">
+            <MagicLinkForm />
+            <div className="mt-6 text-center text-sm text-foreground/60">
               Already have a magic link?{" "}
-              <Link href="/verify" className="text-blue-600 hover:underline">
+              <Link href="/verify" className="text-blue-600 dark:text-blue-400 hover:underline">
                 Sign in here
               </Link>
             </div>

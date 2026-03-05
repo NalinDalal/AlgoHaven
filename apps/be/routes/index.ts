@@ -54,6 +54,16 @@ export const routes: Routes = {
     "/favicon.ico": Bun.file("./favicon.ico"),
 
     "/api/auth/request-link": {
+        OPTIONS: () =>
+            new Response(null, {
+                status: 204,
+                headers: {
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Methods": "POST,OPTIONS",
+                    "Access-Control-Allow-Headers": "Content-Type,Authorization",
+                    "Access-Control-Allow-Credentials": "true",
+                },
+            }),
         POST: async (req: Request): Promise<Response> => {
             try {
                 const { email } = (await req.json()) as { email?: string };
@@ -66,6 +76,9 @@ export const routes: Routes = {
                 });
                 const rawMagicToken = createToken();
                 const tokenHash = hashToken(rawMagicToken);
+                console.log(`[magic-link] Creating token for: ${normalizedEmail}`);
+                console.log(`[magic-link] Raw token: ${rawMagicToken}`);
+                console.log(`[magic-link] Token hash: ${tokenHash}`);
                 await db.magicLinkToken.create({
                     data: {
                         email: normalizedEmail,
@@ -97,6 +110,8 @@ export const routes: Routes = {
                     return Response.json({ error: "Token is required" }, { status: 400 });
                 }
                 const tokenHash = hashToken(token);
+                console.log(`[magic-link] Verifying token: ${token}`);
+                console.log(`[magic-link] Token hash: ${tokenHash}`);
                 const now = new Date();
                 const magicLink = await db.magicLinkToken.findFirst({
                     where: {
@@ -105,6 +120,11 @@ export const routes: Routes = {
                         expiresAt: { gt: now },
                     },
                 });
+                if (!magicLink) {
+                  console.log(`[magic-link] No valid magic link found for hash: ${tokenHash}`);
+                } else {
+                  console.log(`[magic-link] Magic link found for email: ${magicLink.email}`);
+                }
                 if (!magicLink) {
                     return Response.json({ error: "Invalid or expired magic link" }, { status: 401 });
                 }
