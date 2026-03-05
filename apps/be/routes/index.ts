@@ -74,7 +74,9 @@ export const routes: Routes = {
                         expiresAt: new Date(Date.now() + MAGIC_LINK_TTL_MS),
                     },
                 });
-                const verifyUrl = `${BE_URL}/api/auth/verify?token=${rawMagicToken}`;
+                // Point magic link to frontend /verify page
+                const FE_URL = process.env.FE_URL ?? "http://localhost:3000";
+                const verifyUrl = `${FE_URL}/verify?token=${rawMagicToken}`;
                 const sentByEmail = await sendMagicLinkEmail(normalizedEmail, verifyUrl);
                 if (!sentByEmail && process.env.NODE_ENV !== "production") {
                     return Response.json({ message: "Magic link generated", verifyUrl });

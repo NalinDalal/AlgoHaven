@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -76,6 +78,35 @@ export default function Home() {
               <h3 className="text-lg font-semibold">Progress Analytics</h3>
               <p className="mt-2 text-sm text-foreground/70">Track strengths, weak areas, and improvement trends over time.</p>
             </article>
+          </div>
+        </section>
+
+        <section className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
+          <div className="bg-white shadow-lg rounded-lg p-8 max-w-md w-full">
+            <h1 className="text-3xl font-bold mb-4 text-center">Welcome to AlgoHaven</h1>
+            <p className="mb-6 text-center text-gray-600">
+              Sign up or log in to get started. You’ll receive a magic link in your email to sign in instantly.
+            </p>
+            <form className="flex flex-col gap-4">
+              <input
+                type="email"
+                placeholder="Enter your email"
+                className="border rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+              <button
+                type="submit"
+                className="bg-blue-600 text-white font-semibold py-2 rounded hover:bg-blue-700 transition"
+              >
+                Get Magic Link
+              </button>
+            </form>
+            <div className="mt-6 text-center text-sm text-gray-500">
+              Already have a magic link?{" "}
+              <Link href="/verify" className="text-blue-600 hover:underline">
+                Sign in here
+              </Link>
+            </div>
           </div>
         </section>
       </main>

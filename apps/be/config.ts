@@ -19,6 +19,9 @@ export const MAGIC_LINK_TTL_MS = getPositiveNumberEnv("MAGIC_LINK_TTL_MS", 15 * 
 export const SESSION_TTL_MS = getPositiveNumberEnv("SESSION_TTL_MS", 7 * 24 * 60 * 60 * 1000);
 export const AUTH_EMAIL_FROM = process.env.AUTH_EMAIL_FROM ?? "AlgoHaven <onboarding@resend.dev>";
 
+// Frontend base URL for magic link emails
+export const FE_URL = process.env.FE_URL ?? "http://localhost:3000";
+
 export function getErrorMessage(error: unknown) {
 	if (error instanceof Error) {
 		return error.message;
