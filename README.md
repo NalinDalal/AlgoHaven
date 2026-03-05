@@ -96,3 +96,14 @@ bun run zen:generate
 ```sh
 bun run zen:db:push
 ```
+
+------
+
+to do:
+Wire landing page CTA to auth: connect “Get Started” to magic-link request and add a simple email form.
+Add FE auth flow: store login state from /api/auth/me, add logout, and redirect after verify success.
+Protect backend routes: add a small auth guard utility and apply it to private endpoints.
+Harden auth security: rate-limit request-link endpoint, add IP/email throttling, and clean up expired tokens/sessions via a cron/task.
+Improve DX: update Turbo config so dev includes fe explicitly and avoid warnings for BE build outputs.
+Ship observability: add request logging + basic error tracking so auth failures are visible quickly.
+Then build product features: contest list page, problem list page, submission flow, and user dashboard analytics.
