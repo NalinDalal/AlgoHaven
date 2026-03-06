@@ -7,8 +7,9 @@ type BunFile = ReturnType<typeof Bun.file>;
 import { getErrorMessage, BE_URL, MAGIC_LINK_TTL_MS, SESSION_TTL_MS, SESSION_COOKIE_NAME } from "../config";
 import { hashToken, createToken } from "../utils/crypto";
 import { getCookie, makeSessionCookie } from "../utils/cookies";
-import { getCurrentUser } from "../utils/session";
+import { getSessionUser } from "../utils/session";
 import { sendMagicLinkEmail } from "../utils/email";
+import { getCurrentUser } from "../auth/session";
 
 interface RouteHandler {
     (req: Request & { params?: Record<string, string> }): Response | Promise<Response>;
@@ -205,3 +206,15 @@ export const routes: Routes = {
         },
     },
 };
+
+// Middleware to protect routes
+export async function requireAuth(req: Request, next: Function) {
+  const user = await getCurrentUser(req);
+  if (!user) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+  return next(user);
+}
