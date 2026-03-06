@@ -40,10 +40,14 @@ export const verifyRoute = {
 
       const setCookie = makeSessionCookie(rawSessionToken, Math.floor(SESSION_TTL_MS / 1000));
 
-      return new Response(JSON.stringify({ message: "Authenticated", user }), {
-        status: 200,
-        headers: { "content-type": "application/json", "set-cookie": setCookie },
-      });
+      // Log the response before redirecting
+      console.log("User authenticated successfully. Redirecting to dashboard...");
+
+      // Redirect user to dashboard after successful authentication
+      const redirectUrl = new URL("/dashboard", url.origin);
+      return Response.redirect(redirectUrl.toString(), 302);
+
+    
     } catch (error) {
       return Response.json({ error: getErrorMessage(error) }, { status: 400 });
     }
