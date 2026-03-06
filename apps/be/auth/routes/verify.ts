@@ -10,6 +10,17 @@ import { SESSION_TTL_MS } from "../../config";
 import { makeSessionCookie } from "../../utils/cookies";
 import { getErrorMessage } from "../../utils/errors";
 
+// Use a type-only import to resolve the conflict
+import type { MagicLinkToken } from "../../../../packages/db/generated/zenstack/models";
+
+// Define the MagicLinkToken type explicitly
+interface LocalMagicLinkToken {
+  expiresAt: Date;
+  userId?: string;
+  email: string;
+  id: string;
+}
+
 export const verifyRoute = {
   GET: async (req: Request) => {
     try {
@@ -20,18 +31,31 @@ export const verifyRoute = {
       const tokenHash = hashToken(token);
       const now = new Date();
 
-      const magicLink = await db.magicLinkToken.findFirst({
+      // Debug the query result to verify its structure
+      const magicLink = (await db.magicLinkToken.findFirst({
         where: { tokenHash, usedAt: null, expiresAt: { gt: now } },
-      });
+      })) as unknown as { expiresAt: Date; userId?: string; email: string; id: string } | null;
 
-      if (!magicLink) return Response.json({ error: "Invalid or expired magic link" }, { status: 401 });
+      console.log("Debug magicLink result:", magicLink);
+
+      if (!magicLink) {
+        //@ts-ignore
+        const errorMessage = magicLink?.expiresAt < now
+          ? "This magic link has expired. Please request a new one."
+          : "Invalid magic link. Please check the link or request a new one.";
+        return Response.json({ error: errorMessage }, { status: 401 });
+      }
 
       let user = magicLink.userId ? await db.user.findUnique({ where: { id: magicLink.userId } }) : null;
       if (!user) {
         user = await db.user.upsert({ where: { email: magicLink.email }, update: {}, create: { email: magicLink.email } });
       }
 
-      await db.magicLinkToken.update({ where: { id: magicLink.id }, data: { usedAt: now, userId: user.id } });
+      // Mark the token as used to ensure single-use
+      await db.magicLinkToken.update({
+        where: { id: magicLink.id },
+        data: { usedAt: now },
+      });
 
       const rawSessionToken = createToken();
       const sessionHash = hashToken(rawSessionToken);

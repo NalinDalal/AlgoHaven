@@ -29,7 +29,29 @@ export async function sendMagicLinkEmail(email: string, verifyUrl: string) {
       from: AUTH_EMAIL_FROM,
       to: [email],
       subject: "Your AlgoHaven sign-in link",
-      html: `<p>Click to sign in:</p><p><a href=\"${verifyUrl}\">${verifyUrl}</a></p><p>This link expires in ${magicLinkTtlMinutes} minutes.</p>`,
+      html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.5;">
+          <h2 style="color: #4CAF50;">Welcome to AlgoHaven!</h2>
+          <p>Click the button below to sign in:</p>
+          <p>
+            <a href="${verifyUrl}" style="
+              display: inline-block;
+              padding: 10px 20px;
+              color: white;
+              background-color: #4CAF50;
+              text-decoration: none;
+              border-radius: 5px;
+            ">Sign In</a>
+          </p>
+          <p style="color: #555; font-size: 0.9em;">
+            This link expires in ${magicLinkTtlMinutes} minutes.
+          </p>
+          <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+          <p style="color: #999; font-size: 0.8em;">
+            If you did not request this email, you can safely ignore it.
+          </p>
+        </div>
+      `,
     }),
   });
 

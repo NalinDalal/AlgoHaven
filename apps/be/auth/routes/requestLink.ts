@@ -20,6 +20,18 @@ export const requestLinkRoute = {
       // Attempt to find an existing user; we still create a token regardless.
       const existingUser = await db.user.findUnique({ where: { email: normalizedEmail } });
 
+      // Rate limiting: Prevent abuse of the endpoint
+      const recentRequest = await db.magicLinkToken.findFirst({
+        where: {
+          email: normalizedEmail,
+          createdAt: { gt: new Date(Date.now() - MAGIC_LINK_TTL_MS) },
+        },
+      });
+
+      if (recentRequest) {
+        return Response.json({ error: "A magic link was recently sent. Please wait before requesting another." }, { status: 429 });
+      }
+
       const rawMagicToken = createToken();
       const tokenHash = hashToken(rawMagicToken);
 
