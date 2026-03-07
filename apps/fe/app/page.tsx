@@ -56,18 +56,9 @@ export default function Home() {
               AlgoHaven helps developers train with structured challenges, real-time contests, and actionable performance insights.
             </p>
             <div id="get-started" className="flex flex-wrap gap-3">
-              <a
-                href="#"
-                className="rounded-full bg-foreground px-5 py-3 text-sm font-medium text-background transition hover:opacity-90"
-              >
-                Start Solving
-              </a>
-              <a
-                href="#"
-                className="rounded-full border border-foreground/20 px-5 py-3 text-sm font-medium transition hover:bg-foreground/5"
-              >
-                View Contests
-              </a>
+              <div className="w-full max-w-xs">
+                <MagicLinkForm />
+              </div>
             </div>
           </div>
 
@@ -110,24 +101,7 @@ export default function Home() {
             </article>
           </div>
         </section>
-
-        <section className="flex flex-col items-center justify-center min-h-screen bg-background">
-          <div className="shadow-lg rounded-lg p-8 max-w-md w-full border border-foreground/10 bg-background">
-            <h1 className="text-3xl font-bold mb-4 text-center">Sign in to AlgoHaven</h1>
-            <p className="mb-6 text-center text-foreground/70">
-              Enter your email to receive a magic sign-in link.
-            </p>
-            <MagicLinkForm />
-            <div className="mt-6 text-center text-sm text-foreground/60">
-              Already have a magic link?{" "}
-              <Link href="/verify" className="text-blue-600 dark:text-blue-400 hover:underline">
-                Sign in here
-              </Link>
-            </div>
-          </div>
-        </section>
       </main>
-
       <footer className="border-t border-foreground/10 py-6 text-center text-sm text-foreground/60">
         Built for serious problem solvers.
       </footer>
