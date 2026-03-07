@@ -40,10 +40,22 @@ export default function MePage() {
     </div>
   );
   if (user) return (
-    <div className="flex items-center justify-center min-h-screen">
+    <div className="flex flex-col items-center justify-center min-h-screen gap-6">
       <div className="bg-green-100 text-green-700 px-6 py-4 rounded shadow text-lg">
         Welcome, {user.email}!
       </div>
+      <button
+        className="bg-red-600 text-white font-semibold px-6 py-2 rounded hover:bg-red-700 transition"
+        onClick={async () => {
+          await fetch(`${BACKEND_URL}/api/auth/logout`, {
+            method: "POST",
+            credentials: "include",
+          });
+          window.location.href = "/login";
+        }}
+      >
+        Logout
+      </button>
     </div>
   );
 }
