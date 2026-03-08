@@ -1,0 +1,349 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum ContestVisibility {
+  PUBLIC
+  INVITE
+  PRIVATE
+}
+
+enum SubmissionStatus {
+  QUEUED
+  RUNNING
+  ACCEPTED
+  WRONG_ANSWER
+  TLE // Time Limit Exceeded
+  MLE // Memory Limit Exceeded
+  RUNTIME_ERROR
+  COMPILE_ERROR
+}
+
+// Phase 1 = run against ~10% test cases during contest (fast feedback)
+// Phase 2 = run against all test cases post-deadline (official result)
+enum JudgePhase {
+  PRACTICE
+  CONTEST_PHASE1
+  CONTEST_PHASE2
+}
+
+enum PlagiarismStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+}
+
+enum RejudgeStatus {
+  PENDING
+  RUNNING
+  DONE
+  FAILED
+}
+
+// ---------------------------------------------------------------------------
+// Auth
+// ---------------------------------------------------------------------------
+
+model User {
+  id       String  @id @default(uuid())
+  email    String  @unique
+  role     Role    @default(USER)
+  username String? @unique
+
+  submissions        Submission[]
+  leaderboardEntries LeaderboardEntry[]
+  sessions           Session[]
+  magicLinks         MagicLinkToken[]
+  ratings            UserRating[]
+  rejudgesTriggered  RejudgeJob[]       @relation("triggeredBy")
+  plagiarismReviews  PlagiarismReport[] @relation("reviewedBy")
+
+  createdAt DateTime @default(now())
+}
+
+model MagicLinkToken {
+  id        String    @id @default(uuid())
+  email     String
+  tokenHash String    @unique
+  userId    String?
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([email])
+  @@index([expiresAt])
+}
+
+model Session {
+  id        String    @id @default(uuid())
+  tokenHash String    @unique
+  userId    String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// ---------------------------------------------------------------------------
+// Problems (Challenges)
+// ---------------------------------------------------------------------------
+
+model Challenge {
+  id         String     @id @default(uuid())
+  title      String
+  slug       String     @unique
+  difficulty Difficulty @default(MEDIUM)
+
+  // Statement — notionDocId is kept for MVP; move to `statement` field later
+  notionDocId String?
+  statement   String? // markdown, populated once migrated off Notion
+
+  editorial String? // markdown, published after contest ends
+  tags      String[] // e.g. ["dp", "graphs", "binary-search"]
+
+  // Execution limits
+  timeLimitMs   Int @default(2000) // base limit; per-language multipliers applied at runtime
+  memoryLimitKb Int @default(262144) // 256 MB default
+
+  // Custom checker for problems with multiple valid outputs
+  hasCustomChecker Boolean @default(false)
+  checkerCode      String? // judge-side checker script
+
+  isPublic Boolean @default(false) // false = only visible inside a contest
+
+  testCases   TestCase[]
+  submissions Submission[]
+  contests    ContestProblem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TestCase {
+  id             String  @id @default(uuid())
+  challengeId    String
+  input          String
+  expectedOutput String
+  isSample       Boolean @default(false) // true = shown to user; false = hidden
+  points         Int     @default(0) // for partial/subtask scoring
+
+  challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  @@index([challengeId])
+}
+
+// ---------------------------------------------------------------------------
+// Contests
+// ---------------------------------------------------------------------------
+
+model Contest {
+  id         String            @id @default(uuid())
+  title      String
+  slug       String            @unique
+  startTime  DateTime
+  endTime    DateTime
+  visibility ContestVisibility @default(PUBLIC)
+  isRated    Boolean           @default(false)
+
+  // Leaderboard freeze: hide rankings after this time until contest ends
+  // null = no freeze
+  freezeTime DateTime?
+
+  // Practice mode: problems visible but no leaderboard/rating effect
+  isPractice Boolean @default(false)
+
+  registrationOpen Boolean @default(true)
+
+  problems      ContestProblem[]
+  submissions   Submission[]
+  leaderboard   LeaderboardEntry[]
+  announcements ContestAnnouncement[]
+  ratings       UserRating[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ContestProblem {
+  id          String @id @default(uuid())
+  contestId   String
+  challengeId String
+  index       Int // display order: A, B, C, D...
+  points      Int // per-contest point value (overrides challenge.maxPoints)
+
+  contest   Contest   @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  @@unique([contestId, challengeId])
+  @@unique([contestId, index])
+}
+
+model ContestAnnouncement {
+  id        String   @id @default(uuid())
+  contestId String
+  message   String
+  createdAt DateTime @default(now())
+
+  contest Contest @relation(fields: [contestId], references: [id], onDelete: Cascade)
+
+  @@index([contestId])
+}
+
+// ---------------------------------------------------------------------------
+// Submissions
+// ---------------------------------------------------------------------------
+
+model Submission {
+  id          String  @id @default(uuid())
+  userId      String
+  challengeId String
+  contestId   String?
+
+  code       String
+  language   String // e.g. "python", "cpp", "java", "javascript"
+  status     SubmissionStatus
+  judgePhase JudgePhase       @default(PRACTICE)
+
+  // Scoring
+  points        Int @default(0)
+  wrongAttempts Int @default(0) // cumulative wrong attempts before AC on this problem
+
+  // Performance
+  executionTimeMs Float?
+  memoryUsedKb    Float?
+
+  // Compiler / judge output
+  compilerOutput String? // CE message
+  judgeOutput    String? // partial stderr for RE/TLE
+
+  createdAt DateTime @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  contest   Contest?  @relation(fields: [contestId], references: [id], onDelete: Cascade)
+
+  plagiarismReports PlagiarismReport[]
+
+  @@index([userId])
+  @@index([challengeId])
+  @@index([contestId])
+  @@index([createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Leaderboard
+// ---------------------------------------------------------------------------
+
+model LeaderboardEntry {
+  id        String @id @default(uuid())
+  contestId String
+  userId    String
+
+  totalPoints  Int       @default(0)
+  solved       Int       @default(0)
+  penaltyMins  Int       @default(0) // total penalty minutes from wrong attempts
+  lastSolvedAt DateTime? // timestamp of last AC — used as tie-breaker
+  rank         Int? // materialised rank, updated after each submission
+
+  isFrozen Boolean @default(false) // true during leaderboard freeze window
+
+  contest Contest @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([contestId, userId])
+  @@index([contestId, totalPoints, penaltyMins]) // composite index for ranking queries
+}
+
+// ---------------------------------------------------------------------------
+// Ratings
+// ---------------------------------------------------------------------------
+
+model UserRating {
+  id           String   @id @default(uuid())
+  userId       String
+  contestId    String
+  ratingBefore Int
+  ratingAfter  Int
+  rank         Int // final rank in that contest
+  createdAt    DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contest Contest @relation(fields: [contestId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, contestId])
+  @@index([userId])
+}
+
+// ---------------------------------------------------------------------------
+// Plagiarism
+// ---------------------------------------------------------------------------
+
+model PlagiarismReport {
+  id              String           @id @default(uuid())
+  submissionId    String
+  matchedWithId   String? // the other submission it was compared against
+  similarityScore Float
+  status          PlagiarismStatus @default(PENDING)
+
+  reviewedById String?
+  reviewedAt   DateTime?
+
+  createdAt DateTime @default(now())
+
+  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  reviewedBy User?      @relation("reviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([submissionId])
+  @@index([status])
+}
+
+// ---------------------------------------------------------------------------
+// Rejudge
+// ---------------------------------------------------------------------------
+
+model RejudgeJob {
+  id            String        @id @default(uuid())
+  challengeId   String // which problem to rejudge
+  contestId     String? // scope to a specific contest, or null = all submissions
+  triggeredById String
+  status        RejudgeStatus @default(PENDING)
+  totalCount    Int           @default(0)
+  doneCount     Int           @default(0)
+  errorLog      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  triggeredBy User @relation("triggeredBy", fields: [triggeredById], references: [id], onDelete: Cascade)
+
+  @@index([challengeId])
+  @@index([status])
+}
