@@ -203,4 +203,4 @@ docker run \
 
 ---
 
-system design: https://systemdesignschool.io/problems/leetcode/solution
+[system design](./design.md)
