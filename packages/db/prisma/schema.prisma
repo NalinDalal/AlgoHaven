@@ -9,27 +9,32 @@ generator client {
   output   = "../generated/prisma"
 }
 
+// Database connection configuration
 datasource db {
   provider = "postgresql"
 }
 
+// User roles: regular user or admin
 enum Role {
   USER
   ADMIN
 }
 
+// Problem difficulty levels
 enum Difficulty {
   EASY
   MEDIUM
   HARD
 }
 
+// Contest visibility options
 enum ContestVisibility {
   PUBLIC
   INVITE
   PRIVATE
 }
 
+// Submission status codes for judging
 enum SubmissionStatus {
   QUEUED
   RUNNING
@@ -41,6 +46,7 @@ enum SubmissionStatus {
   COMPILE_ERROR
 }
 
+// Judge phases for contest/practice
 // Phase 1 = run against ~10% test cases during contest (fast feedback)
 // Phase 2 = run against all test cases post-deadline (official result)
 enum JudgePhase {
@@ -49,12 +55,14 @@ enum JudgePhase {
   CONTEST_PHASE2
 }
 
+// Plagiarism report status
 enum PlagiarismStatus {
   PENDING
   CONFIRMED
   REJECTED
 }
 
+// Rejudge job status
 enum RejudgeStatus {
   PENDING
   RUNNING
@@ -62,10 +70,7 @@ enum RejudgeStatus {
   FAILED
 }
 
-// ---------------------------------------------------------------------------
-// Auth
-// ---------------------------------------------------------------------------
-
+// User represents a platform participant (admin or regular user)
 model User {
   id       String  @id @default(uuid())
   email    String  @unique
@@ -83,6 +88,7 @@ model User {
   createdAt DateTime @default(now())
 }
 
+// MagicLinkToken is used for passwordless authentication
 model MagicLinkToken {
   id        String    @id @default(uuid())
   email     String
@@ -98,6 +104,7 @@ model MagicLinkToken {
   @@index([expiresAt])
 }
 
+// Session tracks user login sessions
 model Session {
   id        String    @id @default(uuid())
   tokenHash String    @unique
@@ -112,10 +119,9 @@ model Session {
   @@index([expiresAt])
 }
 
-// ---------------------------------------------------------------------------
-// Problems (Challenges)
-// ---------------------------------------------------------------------------
-
+//  Storing Individual Problems Challenges
+// Problems are created by admins/setters and can be used in multiple contests.
+// After a contest ends, problems typically become visible in the public problem set.
 model Challenge {
   id         String     @id @default(uuid())
   title      String
@@ -147,6 +153,8 @@ model Challenge {
   updatedAt DateTime @updatedAt
 }
 
+// TestCase stores input/output pairs for a Challenge.
+// Used for judging submissions and showing samples to users.
 model TestCase {
   id             String  @id @default(uuid())
   challengeId    String
@@ -160,10 +168,8 @@ model TestCase {
   @@index([challengeId])
 }
 
-// ---------------------------------------------------------------------------
-// Contests
-// ---------------------------------------------------------------------------
-
+// Contests represents a coding competition event.
+// Contains metadata, timing, visibility, and links to problems and leaderboard.
 model Contest {
   id         String            @id @default(uuid())
   title      String
@@ -192,6 +198,10 @@ model Contest {
   updatedAt DateTime @updatedAt
 }
 
+// maps a Challenge (problem) to a specific Contest.
+// Defines the order and points for the problem in that contest.
+// When a contest is created, problems are linked via ContestProblem.
+// After the contest ends, the linked Challenge can be shown in the public problem set.
 model ContestProblem {
   id          String @id @default(uuid())
   contestId   String
@@ -206,6 +216,7 @@ model ContestProblem {
   @@unique([contestId, index])
 }
 
+// ContestAnnouncement stores messages for contest participants.
 model ContestAnnouncement {
   id        String   @id @default(uuid())
   contestId String
@@ -217,10 +228,8 @@ model ContestAnnouncement {
   @@index([contestId])
 }
 
-// ---------------------------------------------------------------------------
-// Submissions
-// ---------------------------------------------------------------------------
-
+// Submissions represents a user's solution attempt for a Challenge (optionally in a Contest).
+// Tracks code, language, status, scoring, and judge output.
 model Submission {
   id          String  @id @default(uuid())
   userId      String
@@ -258,10 +267,7 @@ model Submission {
   @@index([createdAt])
 }
 
-// ---------------------------------------------------------------------------
-// Leaderboard
-// ---------------------------------------------------------------------------
-
+// Leaderboard - tracks user scores and ranks in a Contest
 model LeaderboardEntry {
   id        String @id @default(uuid())
   contestId String
@@ -282,10 +288,7 @@ model LeaderboardEntry {
   @@index([contestId, totalPoints, penaltyMins]) // composite index for ranking queries
 }
 
-// ---------------------------------------------------------------------------
-// Ratings
-// ---------------------------------------------------------------------------
-
+// Ratings- UserRating stores rating changes for a user after a Contest.
 model UserRating {
   id           String   @id @default(uuid())
   userId       String
@@ -302,10 +305,7 @@ model UserRating {
   @@index([userId])
 }
 
-// ---------------------------------------------------------------------------
-// Plagiarism
-// ---------------------------------------------------------------------------
-
+// PlagiarismReport tracks suspected plagiarism between submissions.
 model PlagiarismReport {
   id              String           @id @default(uuid())
   submissionId    String
@@ -325,10 +325,7 @@ model PlagiarismReport {
   @@index([status])
 }
 
-// ---------------------------------------------------------------------------
-// Rejudge
-// ---------------------------------------------------------------------------
-
+// RejudgeJob manages rejudging tasks for problems or contests.
 model RejudgeJob {
   id            String        @id @default(uuid())
   challengeId   String // which problem to rejudge

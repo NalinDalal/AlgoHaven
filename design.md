@@ -285,6 +285,12 @@ flowchart TD
     class K correct
 ```
 
+Testcases we want in cf style, no need for boilerplate code
+
+U need to directly put and submit the code, not like lc, where u run it different and then actual submit is different
+
+Show real time updates like running on test 1
+
 *Mermaid diagram: Test case verification flow with styled nodes for input, output, code, decisions, errors, timeout, and correct results.*
 
 ---
