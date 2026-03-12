@@ -5,6 +5,9 @@ import { join } from "path";
 import {handleRequestMagicLink, handleVerifyMagicLink, handleSignout, handleMe} from './routes/auth';
 import {handleProblemsList, handleProblemDetail} from './routes/problem';
 import {handleSubmitSolution, handleSubmissionStatus} from './routes/submission';
+
+import {listContest, getContestDetails, registerForContest, unregisterFromContest, listContestProblems, listContestProblemById,submitContestProblemSolution, createContest} from './routes/contest';
+
 type Handler = (req: Request) => Promise<Response> | Response;
 
 const routes: Record<string, Record<string, Handler>> = {
@@ -20,6 +23,17 @@ const routes: Record<string, Record<string, Handler>> = {
   // Submissions
   "/api/problems/:id/submission": { POST: handleSubmitSolution },
   "/api/submissions/:id/status":   { GET: handleSubmissionStatus },
+
+  //contest routes
+  '/api/contest':{GET: listContest},
+  '/api/contest/:id':{GET: getContestDetails},
+  '/api/contest/:id/register':{POST: registerForContest},
+  '/api/contest/:id/unregister':{POST: unregisterFromContest},
+  '/api/contest/:id/problems':{GET: listContestProblems},
+  '/api/contest/:id/problems/:problemId':{GET: listContestProblemById, POST: submitContestProblemSolution},
+  
+  '/api/contest/create':{POST: createContest},
+
 }
 
 
