@@ -51,8 +51,8 @@ enum SubmissionStatus {
 // Phase 2 = run against all test cases post-deadline (official result)
 enum JudgePhase {
   PRACTICE
-  CONTEST_PHASE1
-  CONTEST_PHASE2
+  CONTEST_PHASE1  //public TestCases during contest
+  CONTEST_PHASE2  //hidden TestCases after contest
 }
 
 // Plagiarism report status
@@ -119,10 +119,10 @@ model Session {
   @@index([expiresAt])
 }
 
-//  Storing Individual Problems Challenges
+//  Storing Individual Problems
 // Problems are created by admins/setters and can be used in multiple contests.
 // After a contest ends, problems typically become visible in the public problem set.
-model Challenge {
+model Problem {
   id         String     @id @default(uuid())
   title      String
   slug       String     @unique
@@ -130,7 +130,7 @@ model Challenge {
 
   // Statement — notionDocId is kept for MVP; move to `statement` field later
   notionDocId String?
-  statement   String? // markdown, populated once migrated off Notion
+  statement   String // markdown, populated once migrated off Notion
 
   editorial String? // markdown, published after contest ends
   tags      String[] // e.g. ["dp", "graphs", "binary-search"]
@@ -157,15 +157,15 @@ model Challenge {
 // Used for judging submissions and showing samples to users.
 model TestCase {
   id             String  @id @default(uuid())
-  challengeId    String
+  problemId    String
   input          String
   expectedOutput String
   isSample       Boolean @default(false) // true = shown to user; false = hidden
   points         Int     @default(0) // for partial/subtask scoring
 
-  challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
 
-  @@index([challengeId])
+  @@index([problemId])
 }
 
 // Contests represents a coding competition event.
@@ -198,21 +198,21 @@ model Contest {
   updatedAt DateTime @updatedAt
 }
 
-// maps a Challenge (problem) to a specific Contest.
+// maps a Problem to a specific Contest.
 // Defines the order and points for the problem in that contest.
 // When a contest is created, problems are linked via ContestProblem.
-// After the contest ends, the linked Challenge can be shown in the public problem set.
+// After the contest ends, the linked Problem can be shown in the public problem set.
 model ContestProblem {
   id          String @id @default(uuid())
   contestId   String
-  challengeId String
+  problemId   String
   index       Int // display order: A, B, C, D...
   points      Int // per-contest point value (overrides challenge.maxPoints)
 
   contest   Contest   @relation(fields: [contestId], references: [id], onDelete: Cascade)
-  challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
 
-  @@unique([contestId, challengeId])
+  @@unique([contestId, problemId])
   @@unique([contestId, index])
 }
 
@@ -228,12 +228,12 @@ model ContestAnnouncement {
   @@index([contestId])
 }
 
-// Submissions represents a user's solution attempt for a Challenge (optionally in a Contest).
+// Submissions represents a user's solution attempt for a Problem (optionally in a Contest).
 // Tracks code, language, status, scoring, and judge output.
 model Submission {
   id          String  @id @default(uuid())
   userId      String
-  challengeId String
+  problemId String
   contestId   String?
 
   code       String
@@ -256,13 +256,13 @@ model Submission {
   createdAt DateTime @default(now())
 
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
   contest   Contest?  @relation(fields: [contestId], references: [id], onDelete: Cascade)
 
   plagiarismReports PlagiarismReport[]
 
   @@index([userId])
-  @@index([challengeId])
+  @@index([problemId])
   @@index([contestId])
   @@index([createdAt])
 }
@@ -328,7 +328,7 @@ model PlagiarismReport {
 // RejudgeJob manages rejudging tasks for problems or contests.
 model RejudgeJob {
   id            String        @id @default(uuid())
-  challengeId   String // which problem to rejudge
+  problemId   String // which problem to rejudge
   contestId     String? // scope to a specific contest, or null = all submissions
   triggeredById String
   status        RejudgeStatus @default(PENDING)
@@ -341,6 +341,6 @@ model RejudgeJob {
 
   triggeredBy User @relation("triggeredBy", fields: [triggeredById], references: [id], onDelete: Cascade)
 
-  @@index([challengeId])
+  @@index([problemId])
   @@index([status])
 }
