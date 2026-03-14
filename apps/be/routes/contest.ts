@@ -53,7 +53,7 @@ export async function getContestDetails(req: Request): Promise<Response> {
         select: {
           index: true,
           points: true,
-          challenge: {
+          problem: {
             select: {
               id: true,
               title: true,
@@ -219,7 +219,7 @@ export async function createContest(req: Request): Promise<Response> {
       problems: Array.isArray(problems)
         ? {
             create: problems.map((p: any, i: number) => ({
-              challengeId: p.challengeId,
+              problemId: p.problemId,
               index: i,
               points: p.points || 100
             }))
@@ -247,7 +247,7 @@ export async function listContestProblems(req: Request): Promise<Response> {
     where: { contestId },
     orderBy: { index: 'asc' },
     include: {
-      challenge: {
+      problem: {
         select: {
           id: true,
           title: true,
@@ -278,10 +278,10 @@ export async function listContestProblemById(req: Request): Promise<Response> {
     const problem = await prisma.contestProblem.findFirst({
       where: {
         contestId,
-        challengeId: problemId
+        problemId: problemId
       },
       include: {
-        challenge: {
+        problem: {
           select: {
             id: true,
             title: true,
@@ -291,13 +291,14 @@ export async function listContestProblemById(req: Request): Promise<Response> {
             memoryLimitKb: true,
             //return only public test cases for the problem in the contest
             testCases: {
-  where: {
-    isSample: true
-  },
-  select: {
-    input: true,
-    expectedOutput: true
-  }}
+              where: {
+                isSample: true
+              },
+              select: {
+                input: true,
+                expectedOutput: true
+              }
+            }
           }
         }
       }
@@ -345,7 +346,7 @@ export async function submitContestProblemSolution(req: Request): Promise<Respon
   const submission = await prisma.submission.create({
     data: {
       userId: user.id,
-      challengeId: problemId,
+      problemId: problemId,
       contestId,
       code,
       language,

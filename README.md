@@ -16,25 +16,23 @@ Start Docker container:
 docker run --name AlgoHaven \
   -e POSTGRES_USER=postgres \
   -e POSTGRES_PASSWORD=postgres \
-  -e POSTGRES_DB=mydb \
+  -e POSTGRES_DB=algohaven \
   -p 5432:5432 \
   -v algohaven_data:/var/lib/postgresql/data \
   -d postgres:16
 ```
 
-## ZenStack
-
-- Schema location: `packages/db/zenstack/schema.zmodel`
-- Generate client artifacts:
 
 ```sh
-bun run zen:generate
+bunx prisma migrate dev
 ```
 
-- Push schema to database:
 
+problem:
+so the db is seeded and it exists, but problem is that the backend is not able to call db
 ```sh
-bun run zen:db:push
+curl http://localhost:3001/api/problems
+{"error": "Internal Server Error"‚"details": "PrismaClientKnownRequestError: \nInvalid 'prisma-problem.findMany()' invocation: \n\n\nThe table 'public.Problem' does not exist in the current database."}«
 ```
 
 ---

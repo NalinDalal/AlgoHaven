@@ -11,7 +11,7 @@
   },
   "scripts": {
     "build": "bunx tsc --noEmit -p tsconfig.json",
-    "dev":"bun run index.ts"
+    "dev":"bun --env-file=../../.env run index.ts"
   },
   "dependencies": {
     "@prisma/client": "^7.4.2",

@@ -4,8 +4,8 @@ export async function handleSubmitSolution(req: Request): Promise<Response> {
 	// Parse request body
 	const url = new URL(req.url);
 	const idMatch = url.pathname.match(/\/api\/problems\/(.+)\/submission/);
-	const challengeId = idMatch ? idMatch[1] : null;
-	if (!challengeId) return new Response(JSON.stringify(
+	const problemId = idMatch ? idMatch[1] : null;
+	if (!problemId) return new Response(JSON.stringify(
 		{ error: 'Invalid problem id' }), 
 		{ status: 400 }
 	);
@@ -13,12 +13,12 @@ export async function handleSubmitSolution(req: Request): Promise<Response> {
 	const user_id = body.user_id;
 	const code = body.code;
 	const language = body.language;
-    
+
 	// Create submission
 	const submission = await prisma.submission.create({
 		data: {
 			userId: user_id,
-			challengeId,
+			problemId,
 			code,
 			language,
 			status: 'QUEUED',
@@ -45,7 +45,7 @@ export async function handleSubmissionStatus(req: Request): Promise<Response> {
 );
 	const submission = await prisma.submission.findUnique({
 		where: { id: submissionId },
-		include: { challenge: true },
+		include: { problem: true },
 	});
 	if (!submission) return new Response(JSON.stringify(
 		{ error: 'Not found' }
