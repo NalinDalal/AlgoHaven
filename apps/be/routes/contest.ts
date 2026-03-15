@@ -18,6 +18,76 @@ function getContestId(url: URL) {
   return match ? match[1] : null;
 }
 
+// GET /api/contest/:id/leaderboard
+// Returns top 50 users and (optionally) the requesting user's own rank
+export async function getContestLeaderboard(req: Request): Promise<Response> {
+  const url = new URL(req.url);
+  const contestId = getContestId(url);
+  if (!contestId) return Response.json({ error: 'Invalid contest id' }, { status: 400 });
+
+  // Get top 50
+  const top = await prisma.leaderboardEntry.findMany({
+    where: { contestId },
+    orderBy: [
+      { totalPoints: 'desc' },
+      { penaltyMins: 'asc' },
+      { lastSolvedAt: 'asc' },
+    ],
+    take: 50,
+    include: { user: { select: { id: true, username: true, email: true } } },
+  });
+
+  // Optionally, get current user's rank if authenticated
+  let userRank = null;
+  const authResult = await requireAuth(req);
+  if (!(authResult instanceof Response)) {
+    const user = authResult.user;
+    const entry = await prisma.leaderboardEntry.findUnique({
+      where: { contestId_userId: { contestId, userId: user.id } },
+    });
+    if (entry) {
+      // Build OR conditions for rank calculation
+      const orConditions: any[] = [
+        { totalPoints: { gt: entry.totalPoints } },
+        {
+          totalPoints: entry.totalPoints,
+          penaltyMins: { lt: entry.penaltyMins },
+        },
+      ];
+      if (entry.lastSolvedAt) {
+        orConditions.push({
+          totalPoints: entry.totalPoints,
+          penaltyMins: entry.penaltyMins,
+          lastSolvedAt: { lt: entry.lastSolvedAt },
+        });
+      }
+      const rank = await prisma.leaderboardEntry.count({
+        where: {
+          contestId,
+          OR: orConditions,
+        },
+      });
+      userRank = rank + 1;
+    }
+  }
+
+  return Response.json({ top, userRank });
+}
+
+// GET /api/contest/:id/ratings
+// Returns user ratings for a contest
+export async function getContestRatings(req: Request): Promise<Response> {
+  const url = new URL(req.url);
+  const contestId = getContestId(url);
+  if (!contestId) return Response.json({ error: 'Invalid contest id' }, { status: 400 });
+
+  const ratings = await prisma.userRating.findMany({
+    where: { contestId },
+    orderBy: { rank: 'asc' },
+    include: { user: { select: { id: true, username: true, email: true } } },
+  });
+  return Response.json({ ratings });
+}
 
 // GET /api/contest
 export async function listContest(req: Request): Promise<Response> {

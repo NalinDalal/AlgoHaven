@@ -74,13 +74,11 @@ const routes: Record<string, Record<string, Handler>> = {
 
 
   // ---------------- SUBMISSIONS ----------------
-
   "/api/submissions/:id/status": { GET: handleSubmissionStatus },
 
 
   // ---------------- CONTEST ----------------
   // NOTE: Static routes MUST come before dynamic routes.
-
   "/api/contest": { GET: listContest },
   "/api/contest/create": { POST: createContest },
   "/api/contest/:id": { GET: getContestDetails },
@@ -107,24 +105,21 @@ function matchRoute(pattern: string, pathname: string): Record<string, string> |
 
   const patternParts = pattern.split("/");
   const pathParts = pathname.split("/");
-
   if (patternParts.length !== pathParts.length) return null;
-
   const params: Record<string, string> = {};
-
   for (let i = 0; i < patternParts.length; i++) {
-
+    const patternPart = patternParts[i];
+    const pathPart = pathParts[i];
+    if (patternPart === undefined || pathPart === undefined) return null;
     // dynamic param (:id)
-    if (patternParts[i].startsWith(":")) {
-      params[patternParts[i].slice(1)] = pathParts[i];
+    if (patternPart.startsWith(":")) {
+      params[patternPart.slice(1)] = pathPart;
     }
-
     // static segment mismatch
-    else if (patternParts[i] !== pathParts[i]) {
+    else if (patternPart !== pathPart) {
       return null;
     }
   }
-
   return params;
 }
 
@@ -157,24 +152,18 @@ async function router(req: Request): Promise<Response> {
 
   // Iterate through route table
   for (const pattern of Object.keys(routes)) {
-
     const params = matchRoute(pattern, url.pathname);
-
-    if (params && routes[pattern][method]) {
-
+    const routeObj = routes[pattern];
+    if (params && routeObj && routeObj[method]) {
       // attach route params to request
       (req as any).params = params;
-
       try {
-
-        const response = await routes[pattern][method](req);
-
+        const response = await routeObj[method](req);
         // Merge CORS headers into response
         const headers = new Headers(response.headers);
         for (const [k, v] of Object.entries(CORS_HEADERS)) {
           headers.set(k, v);
         }
-
         /*
           IMPORTANT:
           We read response body as text first.
