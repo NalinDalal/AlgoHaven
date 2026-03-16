@@ -1,26 +1,189 @@
 @import "tailwindcss";
 
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #0a0a0a;
+  --surface: #111111;
+  --border: #1e1e1e;
+  --border-lit: #2e2e2e;
+  --text: #f0f0f0;
+  --muted: #666;
+  --accent: #e8ff47;
+  --accent-dim: #c8df2a;
+  --code-green: #4ade80;
+  --red: #ff4d4d;
+  --blue: #3b9eff;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-syne), sans-serif;
+  overflow-x: hidden;
+}
+
+/* ─── Keyframes ─── */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scrollLeft {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+/* ─── Utility classes ─── */
+.animate-fade-up {
+  animation: fadeUp 0.6s ease both;
+}
+
+.animate-fade-up-1 {
+  animation: fadeUp 0.6s 0.1s ease both;
+}
+
+.animate-fade-up-2 {
+  animation: fadeUp 0.6s 0.2s ease both;
+}
+
+.animate-fade-up-3 {
+  animation: fadeUp 0.6s 0.3s ease both;
+}
+
+.animate-fade-up-4 {
+  animation: fadeUp 0.6s 0.4s ease both;
+}
+
+.animate-fade-up-5 {
+  animation: fadeUp 0.6s 0.5s ease both;
+}
+
+.animate-scroll-left {
+  animation: scrollLeft 28s linear infinite;
+}
+
+.animate-pulse-dot {
+  animation: pulse 1.5s ease infinite;
+}
+
+.animate-blink {
+  animation: blink 1s step-end infinite;
+}
+
+/* ─── Grid background ─── */
+.grid-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(
+    ellipse 80% 60% at 50% 40%,
+    black 30%,
+    transparent 100%
+  );
+}
+
+/* ─── Verdict chips ─── */
+.v-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  padding: 4px 12px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.v-ac {
+  background: #0d2e16;
+  color: var(--code-green);
+  border: 1px solid #1a5c2d;
+}
+
+.v-wa {
+  background: #2d0d0d;
+  color: var(--red);
+  border: 1px solid #5c1a1a;
+}
+
+.v-tle {
+  background: #1a1a0d;
+  color: #ffd700;
+  border: 1px solid #4a4a1a;
+}
+
+.v-mle {
+  background: #0d1a2d;
+  color: var(--blue);
+  border: 1px solid #1a3a6e;
+}
+
+.v-re {
+  background: #2d1a0d;
+  color: #ff9500;
+  border: 1px solid #6e3a1a;
+}
+
+/* ─── Badge variants ─── */
+.badge-ac {
+  background: #0d2e16;
+  color: var(--code-green);
+  border: 1px solid #1a5c2d;
+}
+
+/* ─── Handle colors ─── */
+.handle-master {
+  color: #ef4444;
+}
+
+.handle-expert {
+  color: #a855f7;
+}
+
+.handle-candidate {
+  color: var(--blue);
 }
