@@ -274,7 +274,7 @@ export default function ProblemWrapper({
                 <button
                   onClick={handleSubmit}
                   disabled={submitting}
-                  className={`font-mono text-[13px] font-bold px-5 py-2 rounded-sm transition-all min-w-[100px] cursor-pointer
+                  className={`font-mono text-[13px] font-bold px-5 py-2 rounded-sm transition-all min-w-25 cursor-pointer
                     ${submitting
                       ? "bg-transparent border border-[#2e2e2e] text-zinc-600 cursor-not-allowed"
                       : "bg-[#e8ff47] text-black hover:bg-[#c8df2a] border-0"}`}
@@ -456,9 +456,9 @@ function SampleCaseStrip({ cases, active, setActive }: {
   setActive: (i: number) => void;
 }) {
   return (
-    <div className="border-t border-[#1e1e1e] bg-[#0d0d0d] shrink-0 max-h-[170px] flex flex-col">
+    <div className="border-t border-[#1e1e1e] bg-[#0d0d0d] shrink-0 max-h-42.5 flex flex-col">
       <div className="flex items-center gap-1.5 px-3.5 py-1.5 border-b border-[#1e1e1e] overflow-x-auto">
-        <span className="font-mono text-[9px] text-zinc-600 tracking-[.1em] mr-1 shrink-0">
+        <span className="font-mono text-[9px] text-zinc-600 tracking-widest mr-1 shrink-0">
           SAMPLE CASES
         </span>
         {cases.map((_, i) => (
@@ -496,13 +496,13 @@ function OutputPanel({ result }: { result: SubmissionResult }) {
   const text = result.compilerOutput || result.judgeOutput || "";
   const isCE = !!result.compilerOutput;
   return (
-    <div className="border-t border-[#1e1e1e] bg-[#0a0a0a] shrink-0 max-h-[140px]">
+    <div className="border-t border-[#1e1e1e] bg-[#0a0a0a] shrink-0 max-h-35">
       <div className="bg-[#0d0d0d] border-b border-[#1e1e1e] px-3.5 py-1">
-        <span className={`font-mono text-[9px] tracking-[.1em] ${isCE ? "text-purple-400" : "text-orange-400"}`}>
+        <span className={`font-mono text-[9px] tracking-widest ${isCE ? "text-purple-400" : "text-orange-400"}`}>
           {isCE ? "COMPILER OUTPUT" : "JUDGE OUTPUT"}
         </span>
       </div>
-      <pre className={`font-mono text-xs p-3.5 m-0 whitespace-pre-wrap overflow-y-auto max-h-[100px] opacity-85
+      <pre className={`font-mono text-xs p-3.5 m-0 whitespace-pre-wrap overflow-y-auto max-h-25 opacity-85
         ${isCE ? "text-purple-400" : "text-orange-400"}`}>
         {text}
       </pre>
@@ -512,7 +512,7 @@ function OutputPanel({ result }: { result: SubmissionResult }) {
 
 function SubmissionsTab() {
   return (
-    <div className="flex flex-col items-center justify-center h-[300px] font-mono text-zinc-600 gap-2 text-center">
+    <div className="flex flex-col items-center justify-center h-75 font-mono text-zinc-600 gap-2 text-center">
       <div className="text-[26px] text-zinc-800">[ ]</div>
       <div className="text-[13px]">No submissions yet.</div>
       <div className="text-[11px] text-zinc-800">Submit a solution to see results here.</div>
