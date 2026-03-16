@@ -1,5 +1,5 @@
 {
-  "name": "AlgoHaven",
+  "name": "algohaven",
   "private": true,
   "scripts": {
     "build": "turbo run build",
