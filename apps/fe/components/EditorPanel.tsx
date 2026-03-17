@@ -95,7 +95,7 @@ export default function EditorPanel({ problemId, samples, submitEndpoint, onVerd
           <button
             onClick={() => submit(code, lang)}
             disabled={submitting}
-            className={`font-mono text-[13px] font-bold px-5 py-2 rounded-sm transition-all min-w-[100px] cursor-pointer
+            className={`font-mono text-[13px] font-bold px-5 py-2 rounded-sm transition-all min-w-25 cursor-pointer
               ${submitting
                 ? "bg-transparent border border-[#2e2e2e] text-zinc-600 cursor-not-allowed"
                 : "bg-[#e8ff47] text-black hover:bg-[#c8df2a] border-0"}`}

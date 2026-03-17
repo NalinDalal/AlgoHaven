@@ -33,7 +33,7 @@ export default function ProblemPanel({ problem }: Props) {
                 : "bg-[#080808] text-zinc-600 hover:text-zinc-400 hover:bg-[#0b0b0b]"}`}
           >
             {activeTab === t && (
-              <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#e8ff47]" />
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#e8ff47]" />
             )}
             {activeTab === t ? `[ ${t} ]` : t}
           </button>
