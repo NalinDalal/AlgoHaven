@@ -1,47 +1,52 @@
 import { prisma } from '@/packages/db';
+import { requireAuth } from './auth';
 
 export async function handleSubmitSolution(req: Request): Promise<Response> {
-	// Parse request body
-	const url = new URL(req.url);
-	const idMatch = url.pathname.match(/\/api\/problems\/(.+)\/submission/);
-	const problemId = idMatch ? idMatch[1] : null;
-	if (!problemId) return new Response(JSON.stringify(
-		{ error: 'Invalid problem id' }), 
-		{ status: 400 }
-	);
-	const body = await req.json() as any;
-	const user_id = body.user_id;
-	const code = body.code;
-	const language = body.language;
+  // Authenticate user
+  const authResult = await requireAuth(req);
+  if (authResult instanceof Response) return authResult;
+  const { user } = authResult;
 
-	// Create submission
-	const submission = await prisma.submission.create({
-		data: {
-			userId: user_id,
-			problemId,
-			code,
-			language,
-			status: 'QUEUED',
-		},
-	});
-	// Return submission id
-	return new Response(JSON.stringify(
-		{ submission_id: submission.id, status: 'QUEUED' }
-	), 
-		{ status: 200, headers: { "Content-Type": "application/json" } }
-	);
+  // Parse request body
+  const url = new URL(req.url);
+  const idMatch = url.pathname.match(/\/api\/problems\/(.+)\/submission/);
+  const problemId = idMatch ? idMatch[1] : null;
+  if (!problemId) return new Response(JSON.stringify(
+    { error: 'Invalid problem id' }),
+    { status: 400 }
+  );
+  const body = await req.json() as any;
+  const code = body.code;
+  const language = body.language;
+
+  // Create submission
+  const submission = await prisma.submission.create({
+    data: {
+      userId: user.id,
+      problemId,
+      code,
+      language,
+      status: 'QUEUED',
+    },
+  });
+  // Return submission id
+  return new Response(JSON.stringify(
+    { submission_id: submission.id, status: 'QUEUED' }
+  ),
+    { status: 200, headers: { "Content-Type": "application/json" } }
+  );
 }
 
 export async function handleSubmissionStatus(req: Request): Promise<Response> {
-	// Extract submission id from URL
-	const url = new URL(req.url);
-	const idMatch = url.pathname.match(/\/api\/submissions\/(.+)\/status/);
-	const submissionId = idMatch ? idMatch[1] : null;
-	if (!submissionId) return new Response(JSON.stringify(
-		{ error: 'Invalid submission id' }
-	), { 
-		status: 400 
-	}
+  // Extract submission id from URL
+  const url = new URL(req.url);
+  const idMatch = url.pathname.match(/\/api\/submissions\/(.+)\/status/);
+  const submissionId = idMatch ? idMatch[1] : null;
+  if (!submissionId) return new Response(JSON.stringify(
+    { error: 'Invalid submission id' }
+  ), { 
+    status: 400 
+  }
 );
 	const submission = await prisma.submission.findUnique({
 		where: { id: submissionId },

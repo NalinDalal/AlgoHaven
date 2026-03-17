@@ -25,7 +25,6 @@ export default function ProblemDetailPage() {
 }
 
 // ─── Loading ──────────────────────────────────────────────────────────────────
-
 function LoadingSkeleton() {
   return (
     <>
@@ -41,7 +40,6 @@ function LoadingSkeleton() {
 }
 
 // ─── Not Found ────────────────────────────────────────────────────────────────
-
 function NotFound() {
   return (
     <>

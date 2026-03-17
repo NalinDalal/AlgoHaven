@@ -8,9 +8,6 @@ import { config } from "dotenv";
 */
 config();
 
-// Debug log to verify env is loaded
-console.log("DEBUG DATABASE_URL:", process.env.DATABASE_URL);
-
 // Prisma client
 import { prisma } from "@/packages/db";
 
