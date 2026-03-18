@@ -12,5 +12,13 @@ services:
     volumes:
       - algohaven_data:/var/lib/postgresql/data
 
+  redis:
+    image: redis:7.0.11
+    container_name: algohaven-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+
 volumes:
   algohaven_data:

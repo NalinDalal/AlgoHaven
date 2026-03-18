@@ -43,11 +43,7 @@
 
 ---
 
-## 6. Code Execution Service
-- Implement code execution microservice (Docker-based sandbox).
-- Integrate with backend: submissions are queued, judged, and verdicts/results are stored.
-- Support multiple languages and resource limits.
-- Secure sandboxing and result polling.
+## [6. Code Execution Service](./code-exec.md)
 
 ## 7. Contest Logic & Real-Time Features
 - Wire up contest registration, start/end logic, and problem visibility.

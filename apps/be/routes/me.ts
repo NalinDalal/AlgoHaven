@@ -177,3 +177,41 @@ export async function handleMe(req: Request): Promise<Response> {
     { status: 200, headers: { 'Content-Type': 'application/json' } }
   );
 }
+
+export async function handleMePost(req: Request): Promise<Response> {
+    const authResult = await requireAuth(req);
+    if (authResult instanceof Response) return authResult;
+    const { user } = authResult;
+
+    const { rating } = await req.json();
+
+    if (rating === null) {
+        return new Response(JSON.stringify({ error: 'Rating must be a number' }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
+        });
+    }
+
+    const ratingBefore = await prisma.userRating.findFirst({
+        where: { userId: user.id },
+        orderBy: { createdAt: 'desc' },
+        select: { ratingBefore: true },
+    });
+
+    if (ratingBefore?.ratingBefore === rating) {
+        return new Response(JSON.stringify({ error: 'Rating is unchanged' }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
+        });
+    }
+
+    await prisma.userRating.update({
+        where: { userId: user.id },
+        data: { ratingBefore: rating },
+    });
+
+    return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+    });
+}

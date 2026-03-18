@@ -16,17 +16,18 @@ import {
   handleRequestMagicLink,
   handleVerifyMagicLink,
   handleSignout,
-  handleMe
+  handleMe,
 } from "./routes/auth";
 
 import {
   handleProblemsList,
-  handleProblemDetail
+  handleProblemDetail,
+  handleProblemCreate,
 } from "./routes/problem";
 
 import {
   handleSubmitSolution,
-  handleSubmissionStatus
+  handleSubmissionStatus,
 } from "./routes/submission";
 
 import {
@@ -37,9 +38,8 @@ import {
   listContestProblems,
   listContestProblemById,
   submitContestProblemSolution,
-  createContest
+  createContest,
 } from "./routes/contest";
-
 
 // -----------------------------------------------------------------------------
 // Route handler type
@@ -47,14 +47,12 @@ import {
 
 type Handler = (req: Request) => Promise<Response> | Response;
 
-
 // -----------------------------------------------------------------------------
 // Route table
 // Maps URL patterns to handlers
 // -----------------------------------------------------------------------------
 
 const routes: Record<string, Record<string, Handler>> = {
-
   // ---------------- AUTH ----------------
 
   "/api/auth/magic-link": { POST: handleRequestMagicLink },
@@ -62,17 +60,17 @@ const routes: Record<string, Record<string, Handler>> = {
   "/api/auth/signout": { POST: handleSignout },
   "/api/auth/me": { GET: handleMe },
 
-
   // ---------------- PROBLEMS ----------------
 
   "/api/problems": { GET: handleProblemsList },
   "/api/problems/:id": { GET: handleProblemDetail },
   "/api/problems/:id/submission": { POST: handleSubmitSolution },
 
+  // ---------------- PUT UP QUESTIONS ----------------
+  "/api/problem/create": { POST: handleProblemCreate },
 
   // ---------------- SUBMISSIONS ----------------
   "/api/submissions/:id/status": { GET: handleSubmissionStatus },
-
 
   // ---------------- CONTEST ----------------
   // NOTE: Static routes MUST come before dynamic routes.
@@ -85,10 +83,9 @@ const routes: Record<string, Record<string, Handler>> = {
 
   "/api/contest/:id/problems/:problemId": {
     GET: listContestProblemById,
-    POST: submitContestProblemSolution
+    POST: submitContestProblemSolution,
   },
 };
-
 
 // -----------------------------------------------------------------------------
 // Route pattern matcher
@@ -98,8 +95,10 @@ const routes: Record<string, Record<string, Handler>> = {
 // result:  { id: "abc123" }
 // -----------------------------------------------------------------------------
 
-function matchRoute(pattern: string, pathname: string): Record<string, string> | null {
-
+function matchRoute(
+  pattern: string,
+  pathname: string,
+): Record<string, string> | null {
   const patternParts = pattern.split("/");
   const pathParts = pathname.split("/");
   if (patternParts.length !== pathParts.length) return null;
@@ -120,7 +119,6 @@ function matchRoute(pattern: string, pathname: string): Record<string, string> |
   return params;
 }
 
-
 // -----------------------------------------------------------------------------
 // CORS configuration
 // -----------------------------------------------------------------------------
@@ -132,13 +130,11 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Credentials": "true",
 };
 
-
 // -----------------------------------------------------------------------------
 // Main router
 // -----------------------------------------------------------------------------
 
 async function router(req: Request): Promise<Response> {
-
   const url = new URL(req.url);
   const method = req.method.toUpperCase();
 
@@ -170,42 +166,37 @@ async function router(req: Request): Promise<Response> {
 
         return new Response(body, {
           status: response.status,
-          headers
+          headers,
         });
-
       } catch (err) {
-  console.error("ROUTE ERROR:", err);
+        console.error("ROUTE ERROR:", err);
 
-  return new Response(
-    JSON.stringify({
-      error: "Internal Server Error",
-      details: String(err)
-    }),
-    {
-      status: 500,
-      headers: {
-        "Content-Type": "application/json",
-        ...CORS_HEADERS
+        return new Response(
+          JSON.stringify({
+            error: "Internal Server Error",
+            details: String(err),
+          }),
+          {
+            status: 500,
+            headers: {
+              "Content-Type": "application/json",
+              ...CORS_HEADERS,
+            },
+          },
+        );
       }
-    }
-  );
-}
     }
   }
 
   // No route matched
-  return new Response(
-    JSON.stringify({ error: "Not Found" }),
-    {
-      status: 404,
-      headers: {
-        "Content-Type": "application/json",
-        ...CORS_HEADERS
-      }
-    }
-  );
+  return new Response(JSON.stringify({ error: "Not Found" }), {
+    status: 404,
+    headers: {
+      "Content-Type": "application/json",
+      ...CORS_HEADERS,
+    },
+  });
 }
-
 
 // -----------------------------------------------------------------------------
 // Start server
@@ -215,7 +206,7 @@ const PORT = parseInt(process.env.BE_PORT || "3001");
 
 serve({
   port: PORT,
-  fetch: router
+  fetch: router,
 });
 
 console.log(`Backend running on http://localhost:${PORT}`);
