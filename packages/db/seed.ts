@@ -16,7 +16,7 @@ async function seed() {
   await prisma.magicLinkToken.deleteMany();
   await prisma.user.deleteMany();
 
-  console.log("🧹 Database cleared");
+  console.log(" Database cleared");
 
   // USERS
   const user1 = await prisma.user.create({
@@ -152,9 +152,9 @@ async function seed() {
     },
   });
 
-  console.log("📨 Submissions created");
+  console.log(" Submissions created");
 
-  console.log("✅ Seeding completed");
+  console.log(" Seeding completed");
 }
 
 seed()

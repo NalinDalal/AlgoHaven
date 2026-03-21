@@ -1,21 +1,34 @@
 "use client";
 
 import { useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 
-function DevLoginContent() {
+function VerifyContent() {
   const searchParams = useSearchParams();
-  const email = searchParams.get("email") || "admin@test.com";
+  const router = useRouter();
+  const token = searchParams.get("token");
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/auth/dev-login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-    }).then(() => {
-      window.location.href = "/admin";
+    if (!token) {
+      router.push("/auth");
+      return;
+    }
+
+    fetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/auth/verify?token=${token}`, {
+      method: "GET",
+    }).then((res) => {
+      if (res.ok) {
+        // Get session cookie from response headers
+        const setCookie = res.headers.get("set-cookie");
+        if (setCookie) {
+          document.cookie = setCookie;
+        }
+        router.push("/admin");
+      } else {
+        router.push("/auth?error=invalid");
+      }
     });
-  }, [email]);
+  }, [token, router]);
 
   return (
     <div
@@ -29,12 +42,12 @@ function DevLoginContent() {
         color: "var(--muted)",
       }}
     >
-      Logging in as {email}...
+      Verifying your login...
     </div>
   );
 }
 
-export default function DevLoginPage() {
+export default function VerifyPage() {
   return (
     <Suspense
       fallback={
@@ -53,7 +66,7 @@ export default function DevLoginPage() {
         </div>
       }
     >
-      <DevLoginContent />
+      <VerifyContent />
     </Suspense>
   );
 }
