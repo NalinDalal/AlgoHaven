@@ -1,5 +1,6 @@
 import { prisma } from "@/packages/db";
 import { requireAdmin } from "./auth";
+import { success, failure } from "@/packages/utils/response";
 
 export async function handleProblemsList(req: Request): Promise<Response> {
   // Parse pagination params
@@ -23,19 +24,13 @@ export async function handleProblemsList(req: Request): Promise<Response> {
     },
   });
 
-  return new Response(JSON.stringify({ problems }), {
-    status: 200,
-    headers: { "Content-Type": "application/json" },
-  });
+  return success("Problems retrieved", { problems });
 }
 
 export async function handleProblemDetail(req: Request): Promise<Response> {
   // Extract problem id from URL
   const param = (req as any).params?.id;
-  if (!param)
-    return new Response(JSON.stringify({ error: "Invalid problem id" }), {
-      status: 400,
-    });
+  if (!param) return failure("Invalid problem id", null, 400);
 
   const isUuid =
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
@@ -74,15 +69,10 @@ export async function handleProblemDetail(req: Request): Promise<Response> {
   });
 
   if (!problem) {
-    return new Response(JSON.stringify({ error: "Not found" }), {
-      status: 404,
-    });
+    return failure("Problem not found", null, 404);
   }
 
-  return new Response(JSON.stringify(problem), {
-    status: 200,
-    headers: { "Content-Type": "application/json" },
-  });
+  return success("Problem retrieved", problem);
 }
 
 export async function handleProblemCreate(req: Request): Promise<Response> {
@@ -124,18 +114,12 @@ export async function handleProblemCreate(req: Request): Promise<Response> {
   } = body;
 
   if (!title || !slug || !statement) {
-    return Response.json(
-      { error: "title, slug, and statement are required" },
-      { status: 400 },
-    );
+    return failure("title, slug, and statement are required", null, 400);
   }
 
   const existing = await prisma.problem.findUnique({ where: { slug } });
   if (existing) {
-    return Response.json(
-      { error: "A problem with this slug already exists" },
-      { status: 409 },
-    );
+    return failure("A problem with this slug already exists", null, 409);
   }
 
   const problem = await prisma.problem.create({
@@ -170,5 +154,5 @@ export async function handleProblemCreate(req: Request): Promise<Response> {
     include: { testCases: true },
   });
 
-  return Response.json({ problem }, { status: 201 });
+  return success("Problem created", { problem }, 201);
 }

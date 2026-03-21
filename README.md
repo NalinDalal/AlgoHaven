@@ -1,9 +1,11 @@
 # AlgoHaven
+
 Contest platform similar to Codeforces
 
 ---
 
 ## Auth
+
 - Magic link (email-based) auth
 - Session management
 
@@ -12,6 +14,7 @@ Contest platform similar to Codeforces
 ## Database Setup
 
 Start Docker container:
+
 ```sh
 docker run --name AlgoHaven \
   -e POSTGRES_USER=postgres \
@@ -22,17 +25,8 @@ docker run --name AlgoHaven \
   -d postgres:16
 ```
 
-
 ```sh
 bunx prisma migrate dev
-```
-
-
-problem:
-so the db is seeded and it exists, but problem is that the backend is not able to call db
-```sh
-curl http://localhost:3001/api/problems
-{"error": "Internal Server Error"‚"details": "PrismaClientKnownRequestError: \nInvalid 'prisma-problem.findMany()' invocation: \n\n\nThe table 'public.Problem' does not exist in the current database."}«
 ```
 
 ---
@@ -40,6 +34,7 @@ curl http://localhost:3001/api/problems
 ## Features
 
 ### 1. Code Submission History
+
 - `submissions` table: `id`, `user_id`, `question_id`, `code`, `language`, `status`, `verdict`, `execution_time_ms`, `memory_used_kb`, `created_at`
 - Verdict types: `AC` (Accepted), `WA` (Wrong Answer), `TLE` (Time Limit Exceeded), `MLE` (Memory Limit Exceeded), `RE` (Runtime Error), `CE` (Compile Error)
 - API endpoint to fetch user submission history per question
@@ -52,6 +47,7 @@ curl http://localhost:3001/api/problems
 ### 2. Admin Panel
 
 #### Question Management
+
 - Rich markdown editor with LaTeX support for problem statements
 - Difficulty tags (`Easy`, `Medium`, `Hard`) and topic tags (DP, Graphs, Trees, etc.)
 - Starter code templates per supported language (Python, C++, Java, JavaScript)
@@ -62,11 +58,13 @@ curl http://localhost:3001/api/problems
 - "Validate" button — runs admin's reference solution against all test cases
 
 #### Test Case Management
+
 - `test_cases` table: `id`, `problem_id`, `input`, `expected_output`, `is_sample`, `points`
 - Bulk upload test cases via CSV or ZIP
 - Custom checker support for problems with multiple valid outputs
 
 #### Contest Management
+
 - `contests` table: `id`, `name`, `start_time (UTC)`, `end_time`, `visibility` (`public` / `invite` / `private`)
 - `contest_problems` join table: `contest_id`, `problem_id`, `points`, `order`
 - Configurable leaderboard freeze (e.g. hide rankings in final 30 min, Codeforces-style)
@@ -80,6 +78,7 @@ curl http://localhost:3001/api/problems
 ### 3. Contest Mode (User-Facing)
 
 #### Scoring
+
 - Points per problem set by admin
 - Time penalty: +5 min per wrong submission on a solved problem
 - Tie-breaking: total points → finish time → fewest wrong attempts
@@ -88,6 +87,7 @@ curl http://localhost:3001/api/problems
 - Per-language time limits (e.g. C++ = 1s, Python = 3s for the same problem)
 
 #### Leaderboard
+
 - Real-time leaderboard via WebSockets
 - Redis Sorted Set (ZSET) for O(log n) score updates and top-N queries
 - Composite score stored as single value: `points * BIG_MULTIPLIER - finish_time_seconds`
@@ -96,6 +96,7 @@ curl http://localhost:3001/api/problems
 - `contest_submissions` table to track all submissions made during a contest
 
 #### Frontend
+
 - "Contests" page: upcoming, live, and past contests
 - Countdown timer for upcoming contests
 - Monaco editor with syntax highlighting and language selection
@@ -104,6 +105,7 @@ curl http://localhost:3001/api/problems
 ---
 
 ### 4. Post-Contest
+
 - Editorial unlock after contest ends
 - Upsolve mode: accept submissions after deadline (no ranking effect)
 - Leaderboard unfreeze ceremony showing final standings
@@ -113,6 +115,7 @@ curl http://localhost:3001/api/problems
 ---
 
 ### 5. Analytics for Users
+
 - Track: questions solved, time taken, verdicts breakdown, topics attempted
 - API endpoints for analytics data
 - Frontend "Analytics" section in user profile:
@@ -124,12 +127,14 @@ curl http://localhost:3001/api/problems
 ---
 
 ### 6. Dark Mode
+
 - Tailwind CSS dark mode toggle
 - Preference saved in DB per user
 
 ---
 
-### 7. Plagiarism Detection *(Important)*
+### 7. Plagiarism Detection _(Important)_
+
 - Integrate **Moss** or custom token-similarity solution
 - Compare submissions within the same contest for a given problem
 - `plagiarism_reports` table: flagged pairs, similarity score, admin review status
@@ -141,6 +146,7 @@ curl http://localhost:3001/api/problems
 ### 8. Docker-based Code Execution
 
 #### Architecture
+
 - Submissions → Message Queue → Code Execution Workers (Docker containers)
 - Async result retrieval: return `submission_id` immediately, client polls `GET /submissions/:id/status`
 - Two-phase processing for high-load contests:
@@ -148,6 +154,7 @@ curl http://localhost:3001/api/problems
   - **Phase 2 (post-deadline)**: run against all test cases for official results
 
 #### Security
+
 ```sh
 docker run \
   --cpus="0.5" \
@@ -157,12 +164,14 @@ docker run \
   --read-only \
   ...
 ```
+
 - Each submission runs in a fresh container, destroyed after execution
 - `seccomp` profile to restrict syscalls
 - Non-root user inside containers
 - No network access
 
 #### Scaling
+
 - Pre-scale worker pool before contest start to avoid cold-start lag
 - Kubernetes or Docker Swarm for managing workers under load
 
@@ -170,18 +179,18 @@ docker run \
 
 ## Schema Overview
 
-| Table | Key Fields |
-|---|---|
-| `users` | `id`, `email`, `rating`, `created_at` |
-| `problems` | `id`, `title`, `description`, `difficulty`, `time_limit_ms`, `memory_limit_mb`, `editorial`, `checker_code`, `is_public` |
-| `test_cases` | `id`, `problem_id`, `input`, `expected_output`, `is_sample`, `points` |
-| `contests` | `id`, `name`, `start_time`, `end_time`, `visibility`, `leaderboard_freeze_at` |
-| `contest_problems` | `contest_id`, `problem_id`, `points`, `order` |
-| `submissions` | `id`, `user_id`, `problem_id`, `code`, `language`, `verdict`, `execution_time_ms`, `memory_used_kb`, `created_at` |
-| `contest_submissions` | `id`, `submission_id`, `contest_id`, `wrong_attempts`, `solved_at` |
-| `user_ratings` | `user_id`, `rating`, `updated_at` |
-| `plagiarism_reports` | `id`, `submission_a_id`, `submission_b_id`, `similarity_score`, `reviewed_by`, `status` |
-| `rejudge_jobs` | `id`, `problem_id`, `triggered_by`, `status`, `created_at` |
+| Table                 | Key Fields                                                                                                               |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `users`               | `id`, `email`, `rating`, `created_at`                                                                                    |
+| `problems`            | `id`, `title`, `description`, `difficulty`, `time_limit_ms`, `memory_limit_mb`, `editorial`, `checker_code`, `is_public` |
+| `test_cases`          | `id`, `problem_id`, `input`, `expected_output`, `is_sample`, `points`                                                    |
+| `contests`            | `id`, `name`, `start_time`, `end_time`, `visibility`, `leaderboard_freeze_at`                                            |
+| `contest_problems`    | `contest_id`, `problem_id`, `points`, `order`                                                                            |
+| `submissions`         | `id`, `user_id`, `problem_id`, `code`, `language`, `verdict`, `execution_time_ms`, `memory_used_kb`, `created_at`        |
+| `contest_submissions` | `id`, `submission_id`, `contest_id`, `wrong_attempts`, `solved_at`                                                       |
+| `user_ratings`        | `user_id`, `rating`, `updated_at`                                                                                        |
+| `plagiarism_reports`  | `id`, `submission_a_id`, `submission_b_id`, `similarity_score`, `reviewed_by`, `status`                                  |
+| `rejudge_jobs`        | `id`, `problem_id`, `triggered_by`, `status`, `created_at`                                                               |
 
 ---
 
@@ -198,7 +207,7 @@ docker run \
 - [ ] Plagiarism detection
 - [ ] Virtual contests
 
-
 ---
 
 [system design](./design.md)
+

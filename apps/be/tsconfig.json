@@ -17,7 +17,8 @@
     "paths": {
       "@/packages/db": ["packages/db/index.ts"],
       "@/packages/auth": ["packages/auth/index.ts"],
-      "@/packages/auth/email": ["packages/auth/email.ts"]
+      "@/packages/auth/email": ["packages/auth/email.ts"],
+      "@/packages/utils/*": ["packages/utils/*"]
     },
 
     // Best practices
