@@ -9,11 +9,23 @@
 
 ---
 
+## To Do
+
+- [ ] Contest list page
+- [ ] Problem list page - BE Done
+- [ ] Submission flow (editor → judge → verdict)
+- [ ] User dashboard & analytics
+- [ ] Admin panel (problem + contest creation, test case upload)
+- [ ] Real-time leaderboard (WebSockets + Redis ZSET)
+- [ ] Docker execution sandbox
+- [ ] Rating system post-contest
+- [ ] Plagiarism detection
+- [ ] Virtual contests
+
 ## Next: Admin Panel (Frontend)
 
 ### 1. Admin Dashboard
 
-- `/admin` route with overview stats
 - Links to problem/contest management
 
 ### 2. Problem Management UI

@@ -7,6 +7,7 @@ const navLinks = [
   { href: "/contests", label: "Contests" },
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/editorial", label: "Editorial" },
+  { href: "/admin", label: "Admin" },
 ];
 
 export default function Nav() {

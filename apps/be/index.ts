@@ -17,6 +17,7 @@ import {
   handleVerifyMagicLink,
   handleSignout,
   handleMe,
+  handleDevLogin,
 } from "./routes/auth";
 
 import {
@@ -59,6 +60,7 @@ const routes: Record<string, Record<string, Handler>> = {
   "/api/auth/verify": { GET: handleVerifyMagicLink },
   "/api/auth/signout": { POST: handleSignout },
   "/api/auth/me": { GET: handleMe },
+  "/api/auth/dev-login": { POST: handleDevLogin },
 
   // ---------------- PROBLEMS ----------------
 

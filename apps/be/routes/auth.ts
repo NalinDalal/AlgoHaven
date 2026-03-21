@@ -114,6 +114,38 @@ export async function handleSignout(req: Request): Promise<Response> {
   });
 }
 
+// DEV ONLY: Create admin session for testing
+export async function handleDevLogin(req: Request): Promise<Response> {
+  if (process.env.NODE_ENV === "production") {
+    return failure("Not available in production", null, 404);
+  }
+
+  const { email } = (await req.json()) as { email?: string };
+  if (!email) return failure("Email required", null, 400);
+
+  let user = await prisma.user.findUnique({ where: { email } });
+  if (!user) {
+    user = await prisma.user.create({ data: { email, role: "USER" } });
+  }
+
+  const { raw, hash } = generateSessionToken();
+  await prisma.session.create({
+    data: {
+      tokenHash: hash,
+      userId: user.id,
+      expiresAt: new Date(Date.now() + SESSION_TTL_MS),
+    },
+  });
+
+  return new Response(null, {
+    status: 302,
+    headers: {
+      Location: "/admin",
+      "Set-Cookie": `session=${raw}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${SESSION_TTL_MS / 1000}`,
+    },
+  });
+}
+
 // GET /api/auth/me
 export async function handleMe(req: Request): Promise<Response> {
   const user = await getUserFromRequest(req);
