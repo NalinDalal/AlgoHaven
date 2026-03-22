@@ -2,49 +2,95 @@
 
 ## Current Status ✅
 
-- Database schema and migrations complete
-- Backend API: auth, problems, contests, submissions (all endpoints exist)
-- Magic link authentication working
-- Frontend: basic pages (home, problems, contests, me, auth)
+### Backend
+
+- [x] Magic link authentication (`/api/auth/*`)
+- [x] Session management with HttpOnly cookies
+- [x] Problem endpoints (`/api/problems/*`, `/api/problem/create`)
+- [x] Contest endpoints (`/api/contest/*`)
+- [x] Submission endpoints
+- [x] Admin auth middleware (`requireAdmin`)
+- [x] Dev login endpoint (`/api/auth/dev-login`)
+- [x] Beautified API responses (`success/failure` helpers)
+
+### Frontend
+
+- [x] Home page
+- [x] Problems list page
+- [x] Contests list page
+- [x] Auth page (magic link request)
+- [x] Auth verify page (token verification)
+- [x] Dev login page (`/dev-login`)
+- [x] Admin layout with auth check
+- [x] Admin dashboard (`/admin`)
+- [x] Admin problem creation form (`/admin/problems/new`)
+- [x] Admin contest creation form (`/admin/contests/new`)
+
+### Database
+
+- [x] Prisma schema complete
+- [x] All models defined (User, Problem, TestCase, Contest, etc.)
+- [x] Migrations run
 
 ---
 
-## To Do
+## Completed Features
 
-- [ ] Contest list page
-- [ ] Problem list page - BE Done
-- [ ] Submission flow (editor → judge → verdict)
-- [ ] User dashboard & analytics
-- [ ] Admin panel (problem + contest creation, test case upload)
-- [ ] Real-time leaderboard (WebSockets + Redis ZSET)
-- [ ] Docker execution sandbox
-- [ ] Rating system post-contest
-- [ ] Plagiarism detection
-- [ ] Virtual contests
+### Admin Panel
 
-## Next: Admin Panel (Frontend)
+- Dashboard with links to Problems, Contests, Submissions, Users
+- Auth check in layout (redirects non-admins)
+- Problem creation form with:
+  - Title, slug, difficulty, statement (markdown)
+  - Tags, time/memory limits
+  - Test case editor (add/remove, sample/hidden)
+- Contest creation form with:
+  - Title, slug, start/end times
+  - Visibility, rated, practice, freeze time
+  - Registration toggle
 
-### 1. Admin Dashboard
+### Authentication
 
-- Links to problem/contest management
+- Magic link flow: request → email → verify → session
+- Session cookies (HttpOnly, SameSite=Strict)
+- Dev login bypass for testing
 
-### 2. Problem Management UI
+### API Response Format
 
-- Create problem form: title, slug, difficulty, statement (markdown), tags, time/memory limits
-- Test case editor: add sample/hidden test cases (input/output pairs)
-- Problem list view with edit/delete actions
+```typescript
+// Success
+success("Operation completed", { data }, 200)
 
-### 3. Contest Management UI
+// Failure
+failure("Error message", null, 400)
 
-- Create contest form: title, slug, start/end time, visibility, isRated, freezeTime
-- Add problems to contest, set order and points
-- Contest list view with edit/delete
+// Response shape
+{
+  status: "success" | "error",
+  message: string,
+  data: T | null,
+  error: string | null,
+  timestamp: string
+}
+```
+
+---
+
+## Next: Admin Panel (Frontend) - Continued
+
+### Still Needed
+
+- [ ] Problem list view with edit/delete
+- [ ] Contest list view with edit/delete
+- [ ] User management (make users admin)
+- [ ] Problem editor (edit existing problems)
+- [ ] Contest editor (edit existing contests)
 
 ---
 
 ## Future Features
 
-### Code Execution Service
+### Code Execution Service 🔜
 
 - Docker sandbox for running user code
 - Worker service to judge submissions
@@ -52,18 +98,33 @@
 
 ### Contest Features
 
-- Real-time leaderboard (WebSockets/Redis)
+- Real-time leaderboard (WebSockets + Redis ZSET)
+- Two-phase evaluation (during contest / post-deadline)
 - Contest freeze/unfreeze
 - Ratings calculation
 
 ### User Features
 
-- Submission history
-- Analytics (solved count, streaks, topic breakdown)
-- Dark mode
+- User dashboard & analytics
+- Submission history with verdict breakdown
+- Topic/skill breakdown
+- Rating history graph
 
 ### Advanced
 
 - Rejudge functionality
-- Plagiarism detection
-- Virtual contests
+- Plagiarism detection (Moss/token-similarity)
+- Virtual contests (replay past contests solo)
+
+---
+
+## Testing Checklist
+
+- [ ] Magic link flow (request → email link → verify → logged in)
+- [ ] Dev login bypass (`/dev-login`)
+- [ ] Create problem via admin form
+- [ ] Create contest via admin form
+- [ ] View problems list
+- [ ] View contests list
+- [ ] Submit solution (basic flow)
+- [ ] Check submission status

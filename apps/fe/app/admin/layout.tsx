@@ -103,6 +103,17 @@ export default function AdminLayout({
               Dashboard
             </Link>
             <Link
+              href="/admin/problems"
+              style={{
+                fontFamily: "var(--font-mono), monospace",
+                fontSize: 13,
+                color: "var(--muted)",
+                textDecoration: "none",
+              }}
+            >
+              Problems
+            </Link>
+            <Link
               href="/admin/problems/new"
               style={{
                 fontFamily: "var(--font-mono), monospace",
@@ -111,7 +122,7 @@ export default function AdminLayout({
                 textDecoration: "none",
               }}
             >
-              New Problem
+              + Problem
             </Link>
             <Link
               href="/admin/contests/new"
@@ -122,7 +133,7 @@ export default function AdminLayout({
                 textDecoration: "none",
               }}
             >
-              New Contest
+              + Contest
             </Link>
           </div>
         </div>

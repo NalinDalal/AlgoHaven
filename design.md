@@ -1,7 +1,7 @@
 # LeetCode System Design
 
 Library of multiple Questions
-for each question u can write, compile and submit code against test cases and get immediate feedback on correctness. 
+for each question u can write, compile and submit code against test cases and get immediate feedback on correctness.
 
 admin can set up contest
 contest: timed slot where users solve a set of question and compete with each other
@@ -11,47 +11,48 @@ real time updates, once contest ends leaderboard freezes
 ---
 
 **Functional Requirements & API Endpoints**
-- View Problems(Read Operation):  
-	- GET `/problems?start={start}&end={end}` (list of questions, paginated)  
-        ```json
-            //response
-            {
-                problems: [
-                    { id: string, title: string, difficulty: string }
-                ]
-            }
-        ```
 
-	- GET `/problems/:problem_id` (specific problem)
-        ```json
-            //response
-            {
-                id: string,
-                title: string,
-                difficulty: string,
-                description: string,
-                constraints: string,
-                examples: [{
-                    input: string,
-                    output: string
-                }],
-                starter_code: {
-                    language: string,
-                    code: string
-                }
+- View Problems(Read Operation):
+  - GET `/problems?start={start}&end={end}` (list of questions, paginated)  
+     `json
+        //response
+        {
+            problems: [
+                { id: string, title: string, difficulty: string }
+            ]
+        }
+    `
+
+  - GET `/problems/:problem_id` (specific problem)
+    `json
+        //response
+        {
+            id: string,
+            title: string,
+            difficulty: string,
+            description: string,
+            constraints: string,
+            examples: [{
+                input: string,
+                output: string
+            }],
+            starter_code: {
+                language: string,
+                code: string
             }
-        ```
+        }
+    `
 
 - Submit Solution(Create+Read Operation):
-	- POST `/problems/:problem_id/submission` (submit code)
-        ```json
-            //request
-            {
-                user_id: string,
-                code: string,
-                language: string
-            }
-        ```
+  - POST `/problems/:problem_id/submission` (submit code)
+    `json
+        //request
+        {
+            user_id: string,
+            code: string,
+            language: string
+        }
+    `
 
         ```json
             //response
@@ -63,23 +64,23 @@ real time updates, once contest ends leaderboard freezes
             }
         ```
 
-	- GET `/submissions/:submission_id/status` (poll for result)
+  - GET `/submissions/:submission_id/status` (poll for result)
 
 - Coding Contest & Leaderboard:
-	- GET `/contests/:contest_id/leaderboard` (top 50 and user rank itself, real-time)
-        ```json
-            //response
-            {
-                ranking: [
-                    { user_id: string, score: number }
-                ]
-            }
-        ```
+  - GET `/contests/:contest_id/leaderboard` (top 50 and user rank itself, real-time)
+    `json
+        //response
+        {
+            ranking: [
+                { user_id: string, score: number }
+            ]
+        }
+    `
 
-code retention policy of 1 month(after that code gets deleted)
----
+## code retention policy of 1 month(after that code gets deleted)
 
 **High-Level Architecture**
+
 - Client: Sends HTTP requests, polls for results.
 - Problems Service: Handles problem viewing, stores problem metadata.
 - Code Evaluation Service: Receives submissions, validates, pushes to queue.
@@ -91,23 +92,25 @@ code retention policy of 1 month(after that code gets deleted)
 ---
 
 **Key Design Decisions**
-- **Isolation & Security:**  
-	- Run user code in containers (Docker) with strict resource limits (CPU, memory, network, read-only FS).
-	- Use seccomp, cap-drop, and network isolation for sandboxing.
-- **Scalability:**  
-	- Pre-scale execution workers before contest start.
-	- Use message queue to absorb submission spikes.
-	- Two-phase processing: partial test cases during contest, full after.
-- **Leaderboard:**  
-	- Use Redis ZSET for real-time ranking (O(log n) updates, O(n) top-N queries).
-	- Composite score (points + time + penalties) packed into single numeric value.
-- **Async Feedback:**  
-	- Immediate submission response with ID.
-	- Client polls for result; avoids long-lived connections.
+
+- **Isolation & Security:**
+  - Run user code in containers (Docker) with strict resource limits (CPU, memory, network, read-only FS).
+  - Use seccomp, cap-drop, and network isolation for sandboxing.
+- **Scalability:**
+  - Pre-scale execution workers before contest start.
+  - Use message queue to absorb submission spikes.
+  - Two-phase processing: partial test cases during contest, full after.
+- **Leaderboard:**
+  - Use Redis ZSET for real-time ranking (O(log n) updates, O(n) top-N queries).
+  - Composite score (points + time + penalties) packed into single numeric value.
+- **Async Feedback:**
+  - Immediate submission response with ID.
+  - Client polls for result; avoids long-lived connections.
 
 ---
 
 **Non-Functional Requirements**
+
 - High availability (24/7)
 - High scalability (10k concurrent users)
 - Low latency (real-time leaderboard, fast feedback)
@@ -117,6 +120,7 @@ code retention policy of 1 month(after that code gets deleted)
 ---
 
 **Deep Dive Topics**
+
 - Test case verification: Compare output files to expected results.
 - Score calculation: Points for correct solutions, time as tie-breaker, penalties for wrong attempts.
 - Redis score packing: Encode points and time for correct ranking.
@@ -153,6 +157,7 @@ Each submission runs in a fresh container with strict resource limits. After exe
 
 Code execution can take several seconds, so we can't have the API call just wait. We need an async approach.
 The solution: return a submission ID immediately, then let the client check back for results.
+
 1. **Immediate response**: Code Evaluation Service returns `{"submission_id": "abc123", "status": "pending"}` in under 100ms
 2. **Polling**: Client polls GET `/submissions/abc123/status` every 1-2 seconds
 3. **Result delivery**: When execution completes, the endpoint returns `{"status": "success", "passed": 8, "failed": 2, "time": 45ms}`
@@ -167,9 +172,9 @@ This is how LeetCode works in production—you can see it in Chrome DevTools:
 
 - The client polls the `check/` endpoint repeatedly after submission.
 - The response transitions through states:
-    - `{ "state": "PENDING" }`
-    - `{ "state": "STARTED" }`
-    - Final response contains detailed result data, e.g.:
+  - `{ "state": "PENDING" }`
+  - `{ "state": "STARTED" }`
+  - Final response contains detailed result data, e.g.:
 
 ```json
 {
@@ -185,11 +190,9 @@ This is how LeetCode works in production—you can see it in Chrome DevTools:
 
 This polling pattern allows the client to provide real-time feedback on submission status and results, without requiring long-lived connections.
 
-
-----
+---
 
 **Coding Contest**
-
 
 User can participate in coding contest. The contest is a timed event with a fixed duration of 2 hours consisting of four questions. The score is calculated based on the number of questions solved and the time taken to solve them. The results will be displayed in real time. The leaderboard will show the top 50 users with their usernames and scores.
 
@@ -204,7 +207,6 @@ A SQL database would struggle. The query `SELECT * FROM leaderboard ORDER BY sco
 This points to an in-memory data structure like Redis sorted sets. When you insert a score, Redis maintains order using a skip list internally—no separate sort step needed. Querying top 50 is O(log n + 50), not O(n log n). Updates happen in O(log n). This matches our access pattern: frequent writes, frequent sorted queries.
 
 We'll use a Contest Service to orchestrate this. When Code Evaluation Service finishes grading a submission, it notifies Contest Service. Contest Service calculates the new score (combining points and time penalties) and updates Redis. The leaderboard API queries Redis sorted set for top 50.
-
 
 ```mermaid
 graph TD
@@ -231,10 +233,10 @@ The Code Evaluation Service decides if a submission is correct by comparing the 
 
 need a language-agnostic way to store test cases so we don't have to maintain separate test cases for Python, Java, C++, etc.
 
-
 Test case files:
 
 `test_case_1.in`
+
 ```txt
 2, 3
 ```
@@ -246,10 +248,51 @@ Test case files:
 ```
 
 `test_case_1.out`
+
 ```txt
 5
 ```
+
 The Code Evaluation Service will run the code with the input and get an output file `test_case_1.out`. It will then compare `test_case_1.out` with `test_case_1_expected_output.out`. If they are the same, the submission is marked as correct. Otherwise, it's marked as incorrect.
+
+---
+
+### Test Case Database Storage (Implemented)
+
+Test cases are stored as **relational rows** in PostgreSQL via Prisma:
+
+```prisma
+model TestCase {
+  id             String  @id @default(uuid())
+  problemId      String
+  input          String
+  expectedOutput String
+  isSample       Boolean @default(false)
+  points         Int     @default(0)
+
+  problem Problem @relation(fields: [problemId], references: [id])
+}
+```
+
+**Why Relational (not JSON)?**
+| Use Case | Relational | JSON |
+|----------|------------|------|
+| Update single test case | Easy | Parse → modify → rewrite |
+| Delete test case | Easy | Parse → filter → rewrite |
+| Query hidden tests only | `WHERE isSample = false` | Filter in code |
+| Per-test-case scoring | `points` field | Need array structure |
+| Database indexes | On `problemId` | None possible |
+| Judge targeting specific test | Direct query | Load all, filter |
+
+**Alternatives Considered:**
+
+1. **JSON array in problem row**: All test cases as `testCases Json[]`
+   - Simpler schema but harder updates
+   - No database-level filtering
+2. **Separate table per problem**: `problem_123_testcases`
+   - Extreme isolation but hard to query across problems
+
+**Conclusion**: Relational is best for CP platforms (matches Codeforces/AtCoder patterns).
 
 ---
 
@@ -291,7 +334,7 @@ U need to directly put and submit the code, not like lc, where u run it differen
 
 Show real time updates like running on test 1
 
-*Mermaid diagram: Test case verification flow with styled nodes for input, output, code, decisions, errors, timeout, and correct results.*
+_Mermaid diagram: Test case verification flow with styled nodes for input, output, code, decisions, errors, timeout, and correct results._
 
 ---
 
@@ -320,7 +363,6 @@ This limits the code execution to use at most 0.5 CPU, 512 MB of memory, disable
 
 ### implement a leaderboard that supports top N queries in real time
 
-
 For real-time leaderboards, Redis Sorted Set (ZSET) is the best option. It stores user scores in an in-memory sorted set, allowing fast updates and queries.
 
 - **How it works:**
@@ -340,22 +382,23 @@ For real-time leaderboards, Redis Sorted Set (ZSET) is the best option. It store
   - Add scores: `ZADD leaderboard 100 user1`
   - Get top N: `ZREVRANGE leaderboard 0 1` (returns top 2 users)
 
-This matches contest needs: frequent updates, fast top-N queries, and temporary data.
----
+## This matches contest needs: frequent updates, fast top-N queries, and temporary data.
 
 ### Contest Scores
-A fair ranking system must answer: 
-- who solved harder problems, 
-- who solved them faster, and 
-- who made fewer failed submissions to discourage guessing. 
+
+A fair ranking system must answer:
+
+- who solved harder problems,
+- who solved them faster, and
+- who made fewer failed submissions to discourage guessing.
 
 This leads us to a three-component score.
 
-*Points*: The primary factor. Harder problems award more points. If User A solves 3 problems worth 500+1000+2000=3500 points and User B solves 2 problems worth 500+1000=1500 points, User A ranks higher regardless of time.
+_Points_: The primary factor. Harder problems award more points. If User A solves 3 problems worth 500+1000+2000=3500 points and User B solves 2 problems worth 500+1000=1500 points, User A ranks higher regardless of time.
 
-*Time*: The tie-breaker when points are equal. We track when you submit your last correct solution. Between two users with 1500 points, the one who finished at minute 30 beats the one who finished at minute 45.
+_Time_: The tie-breaker when points are equal. We track when you submit your last correct solution. Between two users with 1500 points, the one who finished at minute 30 beats the one who finished at minute 45.
 
-*Penalties*: Wrong submissions add time. Each failed attempt typically adds 5 minutes. This discourages guessing.
+_Penalties_: Wrong submissions add time. Each failed attempt typically adds 5 minutes. This discourages guessing.
 
 this was leetcode;
 
@@ -363,67 +406,69 @@ codeforces: adds time pressure by decaying problem values (a 500-point problem d
 
 **Storing Composite Scores(points + time) in Redis sorted sets**
 
-
 Rankings depend on points (primary) and time (tie-breaker), but Redis sorted sets only accept one numeric score per member. Here are three ways to pack both values:
 
-1. Decimal Offset Method
-For small scoreboards, use decimals:
+1.  Decimal Offset Method
+    For small scoreboards, use decimals:
 
-    redis_score = points + 1/(1 + time_in_seconds)
+        redis_score = points + 1/(1 + time_in_seconds)
 
 Example:
+
 - User A: 5 solved, 120s → 5.008264
 - User B: 5 solved, 90s → 5.010989
 - User C: 6 solved, 500s → 6.001996
 
 Rankings: C > B > A. Simple and readable, but not reliable for large scores due to floating-point precision.
 
-2. Big Multiplier Formula
-Multiply points by a large constant, add inverted time:
+2.  Big Multiplier Formula
+    Multiply points by a large constant, add inverted time:
 
-    redis_score = (points × 1,000,000,000) + (1,000,000,000 - time_in_seconds)
+        redis_score = (points × 1,000,000,000) + (1,000,000,000 - time_in_seconds)
 
 Example:
+
 - User A: 5 solved, 120s → 5,999,999,880
 - User B: 5 solved, 90s → 5,999,999,910
 - User C: 6 solved, 500s → 6,999,999,500
 
 This works reliably at any scale and avoids precision issues.
 
-3. Bit-Packing
-Store points in high 32 bits, inverted time in low 32 bits:
+3.  Bit-Packing
+    Store points in high 32 bits, inverted time in low 32 bits:
 
-    MAX_TIME = 0xFFFFFFFF
-    redis_score = (points << 32) | (MAX_TIME - time_in_seconds)
+        MAX_TIME = 0xFFFFFFFF
+        redis_score = (points << 32) | (MAX_TIME - time_in_seconds)
 
 Efficient and precise, but harder to debug.
 
-
 **Industry standard:** Use the big multiplier formula for contests. It’s simple, reliable, and avoids floating-point issues.
-
 
 ### Large Submission at Same Time/Two-Phase Processing for Contest Submissions
 
 To handle high submission volume, use a two-phase evaluation:
 
 **Phase 1 (During Contest): Partial Evaluation**
+
 - Run submissions against ~10% of test cases.
 - Provide immediate feedback and partial standings.
 
 **Phase 2 (Post-Contest): Full Evaluation**
+
 - After the contest ends, run submissions on all test cases.
 - Official results are based on full evaluation.
 
 **Benefits:**
+
 - Reduces system load during contest by 90%.
 - Enables fast feedback for users.
 - Final results are more accurate.
 
 This approach is proven at scale (e.g., Codeforces). Users get quick feedback to debug and resubmit, while final validation happens after the deadline when code changes are no longer allowed.
 
-----
+---
 
-----
+---
 
 # Final Architecture
 

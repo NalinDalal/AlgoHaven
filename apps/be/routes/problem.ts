@@ -13,7 +13,6 @@ export async function handleProblemsList(req: Request): Promise<Response> {
   const problems = await prisma.problem.findMany({
     skip,
     take,
-    where: { isPublic: true },
     orderBy: { createdAt: "desc" },
     select: {
       id: true,
@@ -21,6 +20,14 @@ export async function handleProblemsList(req: Request): Promise<Response> {
       difficulty: true,
       slug: true,
       tags: true,
+      isPublic: true,
+      createdAt: true,
+      _count: {
+        select: {
+          testCases: true,
+          submissions: true,
+        },
+      },
     },
   });
 
@@ -155,4 +162,31 @@ export async function handleProblemCreate(req: Request): Promise<Response> {
   });
 
   return success("Problem created", { problem }, 201);
+}
+
+export async function handleProblemDelete(req: Request): Promise<Response> {
+  const authResult = await requireAdmin(req);
+  if (authResult instanceof Response) return authResult;
+
+  const param = (req as any).params?.id;
+  if (!param) return failure("Invalid problem id", null, 400);
+
+  const isUuid =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      param,
+    );
+
+  const problem = await prisma.problem.findUnique({
+    where: isUuid ? { id: param } : { slug: param },
+  });
+
+  if (!problem) {
+    return failure("Problem not found", null, 404);
+  }
+
+  await prisma.problem.delete({
+    where: { id: problem.id },
+  });
+
+  return success("Problem deleted", { id: problem.id });
 }

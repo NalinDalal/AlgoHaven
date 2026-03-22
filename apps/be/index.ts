@@ -24,6 +24,7 @@ import {
   handleProblemsList,
   handleProblemDetail,
   handleProblemCreate,
+  handleProblemDelete,
 } from "./routes/problem";
 
 import {
@@ -65,7 +66,10 @@ const routes: Record<string, Record<string, Handler>> = {
   // ---------------- PROBLEMS ----------------
 
   "/api/problems": { GET: handleProblemsList },
-  "/api/problems/:id": { GET: handleProblemDetail },
+  "/api/problems/:id": {
+    GET: handleProblemDetail,
+    DELETE: handleProblemDelete,
+  },
   "/api/problems/:id/submission": { POST: handleSubmitSolution },
 
   // ---------------- PUT UP QUESTIONS ----------------
