@@ -8,6 +8,8 @@
 - [x] Session management with HttpOnly cookies
 - [x] Problem endpoints (`/api/problems/*`, `/api/problem/create`)
 - [x] Problem delete endpoint (`DELETE /api/problems/:id`)
+- [x] Contest delete endpoint (`DELETE /api/contest/:id`)
+- [x] Contest update endpoint (`PUT /api/contest/:id`)
 - [x] Contest endpoints (`/api/contest/*`)
 - [x] Submission endpoints
 - [x] Admin auth middleware (`requireAdmin`)
@@ -28,6 +30,7 @@
 - [x] Admin problem creation form (`/admin/problems/new`)
 - [x] Admin contest list view (`/admin/contests`)
 - [x] Admin contest creation form (`/admin/contests/new`)
+- [x] Contest delete button in list view
 
 ### Database
 
@@ -132,6 +135,7 @@ failure("Error message", null, 400)
 - [ ] Delete problem
 - [ ] Create contest via admin form
 - [ ] View contests list
+- [ ] Delete contest
 - [ ] Magic link flow (request → email link → verify → logged in)
 - [ ] Submit solution (basic flow)
 - [ ] Check submission status

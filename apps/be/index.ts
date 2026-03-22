@@ -41,6 +41,8 @@ import {
   listContestProblemById,
   submitContestProblemSolution,
   createContest,
+  deleteContest,
+  updateContest,
 } from "./routes/contest";
 
 // -----------------------------------------------------------------------------
@@ -82,7 +84,11 @@ const routes: Record<string, Record<string, Handler>> = {
   // NOTE: Static routes MUST come before dynamic routes.
   "/api/contest": { GET: listContest },
   "/api/contest/create": { POST: createContest },
-  "/api/contest/:id": { GET: getContestDetails },
+  "/api/contest/:id": {
+    GET: getContestDetails,
+    DELETE: deleteContest,
+    PUT: updateContest,
+  },
   "/api/contest/:id/register": { POST: registerForContest },
   "/api/contest/:id/unregister": { POST: unregisterFromContest },
   "/api/contest/:id/problems": { GET: listContestProblems },

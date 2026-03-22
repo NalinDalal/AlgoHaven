@@ -23,6 +23,7 @@ export default function AdminContestsPage() {
   const router = useRouter();
   const [contests, setContests] = useState<Contest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/contest`, {
@@ -37,6 +38,31 @@ export default function AdminContestsPage() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
+
+  const handleDelete = async (id: string, title: string) => {
+    if (!confirm(`Delete contest "${title}"? This cannot be undone.`)) return;
+
+    setDeleting(id);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BE_URL}/api/contest/${id}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        },
+      );
+      const data = await res.json();
+      if (data.status === "success") {
+        setContests(contests.filter((c) => c.id !== id));
+      } else {
+        alert(data.message || "Failed to delete");
+      }
+    } catch (err) {
+      alert("Failed to delete");
+    } finally {
+      setDeleting(null);
+    }
+  };
 
   const getStatusBadge = (contest: Contest) => {
     const now = new Date();
@@ -301,6 +327,23 @@ export default function AdminContestsPage() {
                       >
                         Edit
                       </Link>
+                      <button
+                        onClick={() => handleDelete(contest.id, contest.title)}
+                        disabled={deleting === contest.id}
+                        style={{
+                          padding: "4px 8px",
+                          fontFamily: "var(--font-mono), monospace",
+                          fontSize: 11,
+                          color: "var(--red)",
+                          background: "transparent",
+                          border: "none",
+                          cursor:
+                            deleting === contest.id ? "not-allowed" : "pointer",
+                          opacity: deleting === contest.id ? 0.5 : 1,
+                        }}
+                      >
+                        {deleting === contest.id ? "..." : "Delete"}
+                      </button>
                     </div>
                   </td>
                 </tr>

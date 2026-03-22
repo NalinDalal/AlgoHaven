@@ -625,3 +625,97 @@ export async function createContest(req: Request): Promise<Response> {
 
   return success("Contest created", { contest }, 201);
 }
+
+// DELETE /api/contest/:id
+export async function deleteContest(req: Request): Promise<Response> {
+  const authResult = await requireAdmin(req);
+  if (authResult instanceof Response) return authResult;
+
+  const param = (req as any).params?.id;
+  if (!param) return failure("Invalid contest id", null, 400);
+
+  const isUuid =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      param,
+    );
+
+  const contest = await prisma.contest.findUnique({
+    where: isUuid ? { id: param } : { slug: param },
+  });
+
+  if (!contest) {
+    return failure("Contest not found", null, 404);
+  }
+
+  await prisma.contest.delete({
+    where: { id: contest.id },
+  });
+
+  return success("Contest deleted", { id: contest.id });
+}
+
+// PUT /api/contest/:id
+export async function updateContest(req: Request): Promise<Response> {
+  const authResult = await requireAdmin(req);
+  if (authResult instanceof Response) return authResult;
+
+  const param = (req as any).params?.id;
+  if (!param) return failure("Invalid contest id", null, 400);
+
+  const isUuid =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      param,
+    );
+
+  const contest = await prisma.contest.findUnique({
+    where: isUuid ? { id: param } : { slug: param },
+  });
+
+  if (!contest) {
+    return failure("Contest not found", null, 404);
+  }
+
+  const body = (await req.json().catch(() => ({}))) as {
+    title?: string;
+    slug?: string;
+    startTime?: string;
+    endTime?: string;
+    visibility?: string;
+    isRated?: boolean;
+    freezeTime?: string | null;
+    isPractice?: boolean;
+    registrationOpen?: boolean;
+  };
+  const {
+    title,
+    slug,
+    startTime,
+    endTime,
+    visibility,
+    isRated,
+    freezeTime,
+    isPractice,
+    registrationOpen,
+  } = body;
+
+  const updated = await prisma.contest.update({
+    where: { id: contest.id },
+    data: {
+      ...(title && { title }),
+      ...(slug && { slug }),
+      ...(startTime && { startTime: new Date(startTime) }),
+      ...(endTime && { endTime: new Date(endTime) }),
+      ...(visibility && {
+        visibility: visibility as "PUBLIC" | "INVITE" | "PRIVATE",
+      }),
+      ...(isRated !== undefined && { isRated }),
+      ...(freezeTime !== undefined && {
+        freezeTime: freezeTime ? new Date(freezeTime) : null,
+      }),
+      ...(isPractice !== undefined && { isPractice }),
+      ...(registrationOpen !== undefined && { registrationOpen }),
+    },
+  });
+
+  return success("Contest updated", { contest: updated });
+}
