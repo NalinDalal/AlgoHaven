@@ -168,21 +168,24 @@ model TestCase {
 
 - [x] Magic link authentication
 - [x] Session management
-- [x] Problem CRUD (backend)
+- [x] Problem CRUD (backend + frontend)
+- [x] Problem delete endpoint
 - [x] Contest CRUD (backend)
 - [x] Submission handling
 - [x] Leaderboard (basic)
 - [x] User ratings (basic)
 - [x] Admin auth middleware
 - [x] Admin dashboard (frontend)
+- [x] Admin problem list view
+- [x] Admin contest list view
 - [x] Problem creation form
 - [x] Contest creation form
 - [x] Beautified API responses
 
 ### In Progress 🚧
 
-- Admin problem/contest list views
-- Problem edit functionality
+- [ ] User management (make users admin)
+- [ ] Problem/contest edit functionality
 
 ### Todo 📋
 

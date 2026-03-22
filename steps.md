@@ -7,6 +7,7 @@
 - [x] Magic link authentication (`/api/auth/*`)
 - [x] Session management with HttpOnly cookies
 - [x] Problem endpoints (`/api/problems/*`, `/api/problem/create`)
+- [x] Problem delete endpoint (`DELETE /api/problems/:id`)
 - [x] Contest endpoints (`/api/contest/*`)
 - [x] Submission endpoints
 - [x] Admin auth middleware (`requireAdmin`)
@@ -23,7 +24,9 @@
 - [x] Dev login page (`/dev-login`)
 - [x] Admin layout with auth check
 - [x] Admin dashboard (`/admin`)
+- [x] Admin problem list view (`/admin/problems`)
 - [x] Admin problem creation form (`/admin/problems/new`)
+- [x] Admin contest list view (`/admin/contests`)
 - [x] Admin contest creation form (`/admin/contests/new`)
 
 ### Database
@@ -40,6 +43,11 @@
 
 - Dashboard with links to Problems, Contests, Submissions, Users
 - Auth check in layout (redirects non-admins)
+- Problem list view with:
+  - Title, slug, difficulty badges
+  - Public/Hidden status
+  - Test case count
+  - Edit/Delete actions
 - Problem creation form with:
   - Title, slug, difficulty, statement (markdown)
   - Tags, time/memory limits
@@ -53,7 +61,7 @@
 
 - Magic link flow: request → email → verify → session
 - Session cookies (HttpOnly, SameSite=Strict)
-- Dev login bypass for testing
+- Dev login bypass for testing (`/dev-login`)
 
 ### API Response Format
 
@@ -76,12 +84,10 @@ failure("Error message", null, 400)
 
 ---
 
-## Next: Admin Panel (Frontend) - Continued
+## Next: Admin Panel - In Progress
 
 ### Still Needed
 
-- [ ] Problem list view with edit/delete
-- [ ] Contest list view with edit/delete
 - [ ] User management (make users admin)
 - [ ] Problem editor (edit existing problems)
 - [ ] Contest editor (edit existing contests)
@@ -120,11 +126,12 @@ failure("Error message", null, 400)
 
 ## Testing Checklist
 
-- [ ] Magic link flow (request → email link → verify → logged in)
-- [ ] Dev login bypass (`/dev-login`)
+- [x] Dev login bypass (`/dev-login`)
 - [ ] Create problem via admin form
-- [ ] Create contest via admin form
 - [ ] View problems list
+- [ ] Delete problem
+- [ ] Create contest via admin form
 - [ ] View contests list
+- [ ] Magic link flow (request → email link → verify → logged in)
 - [ ] Submit solution (basic flow)
 - [ ] Check submission status
