@@ -30,6 +30,7 @@ import {
 import {
   handleSubmitSolution,
   handleSubmissionStatus,
+  handleWorkerUpdateSubmission,
 } from "./routes/submission";
 
 import {
@@ -79,6 +80,9 @@ const routes: Record<string, Record<string, Handler>> = {
 
   // ---------------- SUBMISSIONS ----------------
   "/api/submissions/:id/status": { GET: handleSubmissionStatus },
+
+  // ---------------- WORKER ----------------
+  "/api/worker/update-submission": { POST: handleWorkerUpdateSubmission },
 
   // ---------------- CONTEST ----------------
   // NOTE: Static routes MUST come before dynamic routes.

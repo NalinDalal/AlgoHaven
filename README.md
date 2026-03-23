@@ -172,6 +172,7 @@ model TestCase {
 - [x] Problem delete endpoint
 - [x] Contest CRUD (backend)
 - [x] Submission handling
+- [x] Docker code execution sandbox
 - [x] Leaderboard (basic)
 - [x] User ratings (basic)
 - [x] Admin auth middleware
@@ -186,10 +187,10 @@ model TestCase {
 
 - [ ] User management (make users admin)
 - [ ] Problem/contest edit functionality
+- [ ] Add more languages (C++, Java, Go)
 
 ### Todo 📋
 
-- [ ] Docker code execution sandbox
 - [ ] Real-time leaderboard (WebSockets + Redis)
 - [ ] User dashboard & analytics
 - [ ] Rating system post-contest

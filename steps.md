@@ -97,9 +97,64 @@ failure("Error message", null, 400)
 
 ---
 
+## Completed: Code Execution Service ✅
+
+### Worker Service
+
+- Runs on port 3002
+- Endpoints:
+  - `POST /api/worker/enqueue` - Add submission to queue
+  - `GET /api/worker/health` - Health check
+
+### Docker Sandbox
+
+- Isolated containers with security options:
+  - `--cpus=0.5`, `--memory=256m`
+  - `--network=none`
+  - `--user=1000` (non-root)
+  - `--cap-drop=ALL`
+  - `--security-opt=no-new-privileges`
+  - `--pids-limit=50`
+
+### Supported Languages
+
+- Python (`python:3.11-slim`)
+- JavaScript (`node:20-slim`)
+
+### Integration
+
+- Backend sends submissions to worker via HTTP
+- Worker uses base64 encoding to avoid shell escaping issues
+- Worker updates submission status in DB via `/api/worker/update-submission`
+- Protected by `WORKER_SECRET` env var
+
+### Env Vars Added
+
+```env
+WORKER_SECRET="dev-secret-change-in-prod"
+WORKER_URL="http://localhost:3002"
+BACKEND_URL="http://localhost:3001"
+```
+
+### Flow
+
+```
+User submits code → Backend creates submission (QUEUED)
+  ↓
+Sends to Worker via /api/worker/enqueue
+  ↓
+Worker runs Docker container with code
+  ↓
+Worker calls /api/worker/update-submission (ACCEPTED/WRONG_ANSWER/etc)
+  ↓
+User polls /api/submissions/:id/status
+```
+
+---
+
 ## Future Features
 
-### Code Execution Service 🔜
+### Contest Features
 
 - Docker sandbox for running user code
 - Worker service to judge submissions
@@ -130,12 +185,14 @@ failure("Error message", null, 400)
 ## Testing Checklist
 
 - [x] Dev login bypass (`/dev-login`)
-- [ ] Create problem via admin form
-- [ ] View problems list
-- [ ] Delete problem
-- [ ] Create contest via admin form
-- [ ] View contests list
-- [ ] Delete contest
+- [x] Create problem via admin form
+- [x] View problems list
+- [x] Delete problem
+- [x] Create contest via admin form
+- [x] View contests list
+- [x] Delete contest
 - [ ] Magic link flow (request → email link → verify → logged in)
-- [ ] Submit solution (basic flow)
-- [ ] Check submission status
+- [x] Submit solution (basic flow)
+- [x] Check submission status
+- [x] Docker code execution (Python)
+- [x] Docker code execution (JavaScript)
