@@ -154,13 +154,17 @@ User polls /api/submissions/:id/status
 
 ## Future Features
 
-### Contest Features
+### Todo
 
-- Docker sandbox for running user code
-- Worker service to judge submissions
-- Queue system for async processing
+- [ ] Add more languages (C++, Java, Go) to worker
+- [ ] User management (make users admin from admin panel)
+- [ ] Problem editor (edit existing problems)
+- [ ] Contest editor (edit existing contests)
+- [ ] Frontend code submission page with Monaco editor
+- [ ] Real-time leaderboard (WebSockets + Redis)
+- [ ] Rating system
 
-### Contest Features
+### Additional Features
 
 - Real-time leaderboard (WebSockets + Redis ZSET)
 - Two-phase evaluation (during contest / post-deadline)
