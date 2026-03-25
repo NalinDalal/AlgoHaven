@@ -9,6 +9,28 @@ const LANGUAGE_CONFIG: Record<string, { image: string; timeout: number }> = {
   javascript: { image: "node:20-slim", timeout: 5 },
 };
 
+function withTimeout<T>(
+  promise: Promise<T>,
+  ms: number,
+  abort: () => void,
+): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const id = setTimeout(() => {
+      abort();
+      reject(new Error("TLE"));
+    }, ms);
+    promise
+      .then((v) => {
+        clearTimeout(id);
+        resolve(v);
+      })
+      .catch((e) => {
+        clearTimeout(id);
+        reject(e);
+      });
+  });
+}
+
 const DOCKER_OPTIONS = [
   "--rm",
   "--cpus=0.5",
@@ -18,6 +40,8 @@ const DOCKER_OPTIONS = [
   "--cap-drop=ALL",
   "--security-opt=no-new-privileges",
   "--pids-limit=50",
+  "--read-only",
+  "--tmpfs=/tmp:size=64m",
 ];
 
 function toBase64(str: string): string {
@@ -81,7 +105,9 @@ async function runCode(
 
     const proc = Bun.spawn(cmd);
 
-    const exitCode = await proc.exited;
+    const exitCode = await withTimeout(proc.exited, config.timeout * 1000, () =>
+      proc.kill(),
+    );
 
     let stdout = "";
     let stderr = "";
@@ -112,6 +138,14 @@ async function runCode(
     }
   } catch (error: unknown) {
     const errMsg = error instanceof Error ? error.message : "Execution failed";
+    if (errMsg === "TLE") {
+      return {
+        status: "TLE",
+        stdout: "",
+        stderr: "Time limit exceeded",
+        executionTimeMs: config.timeout * 1000,
+      };
+    }
     return {
       status: "RUNTIME_ERROR",
       stdout: "",

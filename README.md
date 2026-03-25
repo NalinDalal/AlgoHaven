@@ -160,6 +160,53 @@ model TestCase {
 | ----------------------------- | ------ | ---- | --------------------- |
 | `/api/submissions/:id/status` | GET    | USER | Get submission status |
 
+### Worker (port 3002)
+
+| Endpoint              | Method | Auth | Description              |
+| --------------------- | ------ | ---- | ------------------------ |
+| `/api/worker/health`  | GET    | -    | Worker health check      |
+| `/api/worker/enqueue` | POST   | -    | Enqueue code for execute |
+
+---
+
+## Testing with curl
+
+```bash
+# Login to get session cookie
+curl -c cookies.txt -X POST http://localhost:3001/api/auth/dev-login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@test.com"}'
+
+# Submit solution (replace :problemId)
+curl -X POST "http://localhost:3001/api/problems/:problemId/submission" \
+  -H "Content-Type: application/json" \
+  -b cookies.txt \
+  -d '{"code":"console.log(1)","language":"javascript"}'
+
+# Check submission status (replace :submissionId)
+curl "http://localhost:3001/api/submissions/:submissionId/status" -b cookies.txt
+
+# Worker health
+curl http://localhost:3002/api/worker/health
+
+# Worker enqueue (direct)
+curl -X POST http://localhost:3002/api/worker/enqueue \
+  -H "Content-Type: application/json" \
+  -d '{"code":"console.log(1+1)"}'
+```
+
+---
+
+## Next Steps
+
+1. **Add more languages** - Extend worker to support C++, Java, Go
+2. **Problem/contest edit** - Add PUT endpoints for editing
+3. **Real-time updates** - WebSockets + Redis for live leaderboard
+4. **User dashboard** - Add analytics and submission history
+5. **Rating system** - Calculate and update ratings after contests
+6. **Plagiarism detection** - Compare submissions for similarity
+7. **Virtual contests** - Allow practice mode on past contests
+
 ---
 
 ## Features
