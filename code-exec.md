@@ -41,13 +41,24 @@ docker run \
 | Flag                                 | Purpose                      |
 | ------------------------------------ | ---------------------------- |
 | `--cpus="0.5"`                       | Limit CPU to 0.5 cores       |
-| `--memory="512M"`                    | Limit RAM to 512MB           |
+| `--memory="256M"`                    | Limit RAM to 256MB           |
 | `--network="none"`                   | No network access            |
 | `--read-only`                        | Read-only filesystem         |
+| `--tmpfs=/tmp:size=64m`              | Writable temp in memory      |
 | `--user=1000`                        | Run as non-root              |
 | `--cap-drop="ALL"`                   | Drop all capabilities        |
 | `--security-opt="no-new-privileges"` | Prevent privilege escalation |
 | `--pids-limit=50`                    | Limit process count          |
+
+### Additional Protections
+
+| Protection  | Limit           |
+| ----------- | --------------- |
+| Timeout     | 5 seconds       |
+| Code size   | 50 KB           |
+| Input size  | 10 KB           |
+| Output size | 100 KB          |
+| Auth header | x-worker-secret |
 
 ---
 

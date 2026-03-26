@@ -103,7 +103,7 @@ failure("Error message", null, 400)
 
 - Runs on port 3002
 - Endpoints:
-  - `POST /api/worker/enqueue` - Add submission to queue
+  - `POST /api/worker/enqueue` - Add submission to queue (auth: x-worker-secret header)
   - `GET /api/worker/health` - Health check
 
 ### Docker Sandbox
@@ -115,6 +115,18 @@ failure("Error message", null, 400)
   - `--cap-drop=ALL`
   - `--security-opt=no-new-privileges`
   - `--pids-limit=50`
+  - `--read-only` (new)
+  - `--tmpfs=/tmp:size=64m` (new)
+
+### Security Enhancements
+
+- Timeout enforcement (kills stuck containers after limit)
+- Code size limit: 50KB
+- Input size limit: 10KB per test case
+- Output truncation: 100KB max
+- Auth required on enqueue endpoint
+- JSON parse error handling
+- Concurrency guard (single job at a time)
 
 ### Supported Languages
 

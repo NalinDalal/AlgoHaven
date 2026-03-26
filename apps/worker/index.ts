@@ -9,6 +9,10 @@ const LANGUAGE_CONFIG: Record<string, { image: string; timeout: number }> = {
   javascript: { image: "node:20-slim", timeout: 5 },
 };
 
+const MAX_CODE_SIZE = 50 * 1024;
+const MAX_INPUT_SIZE = 10 * 1024;
+const MAX_OUTPUT_SIZE = 100 * 1024;
+
 function withTimeout<T>(
   promise: Promise<T>,
   ms: number,
@@ -115,6 +119,12 @@ async function runCode(
     try {
       stdout = await new Response(proc.stdout).text();
       stderr = await new Response(proc.stderr).text();
+      if (stdout.length > MAX_OUTPUT_SIZE) {
+        stdout = stdout.slice(0, MAX_OUTPUT_SIZE) + "\n[truncated]";
+      }
+      if (stderr.length > MAX_OUTPUT_SIZE) {
+        stderr = stderr.slice(0, MAX_OUTPUT_SIZE) + "\n[truncated]";
+      }
     } catch (e) {
       console.log(`[Worker] Decode error:`, e);
     }
@@ -163,6 +173,8 @@ const jobQueue: {
   testCases: { input: string; expectedOutput: string }[];
 }[] = [];
 
+let isProcessing = false;
+
 async function enqueueSubmission(
   submissionId: string,
   code: string,
@@ -174,8 +186,9 @@ async function enqueueSubmission(
 }
 
 async function processNext() {
-  if (jobQueue.length === 0) return;
+  if (jobQueue.length === 0 || isProcessing) return;
 
+  isProcessing = true;
   const job = jobQueue.shift();
   if (job) {
     console.log(`[Worker] Processing submission ${job.submissionId}`);
@@ -239,18 +252,57 @@ async function processNext() {
     } catch (err) {
       console.error(`[Worker] Error updating submission:`, err);
     }
+
+    isProcessing = false;
   }
 
   setTimeout(processNext, 100);
 }
 
 async function handleEnqueue(req: Request): Promise<Response> {
-  const body = await req.json();
+  const authHeader = req.headers.get("x-worker-secret");
+  if (!authHeader || authHeader !== WORKER_SECRET) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+    });
+  }
+
+  let body;
+  try {
+    body = await req.json();
+  } catch {
+    return new Response(JSON.stringify({ error: "Invalid JSON" }), {
+      status: 400,
+    });
+  }
+
   const { submissionId, code, language, testCases } = body;
 
   if (!submissionId || !code || !language) {
     return new Response(
       JSON.stringify({ error: "submissionId, code, and language required" }),
+      { status: 400 },
+    );
+  }
+
+  if (code.length > MAX_CODE_SIZE) {
+    return new Response(
+      JSON.stringify({
+        error: `Code exceeds max size of ${MAX_CODE_SIZE} bytes`,
+      }),
+      { status: 400 },
+    );
+  }
+
+  if (
+    testCases?.some(
+      (tc: { input: string }) => tc.input?.length > MAX_INPUT_SIZE,
+    )
+  ) {
+    return new Response(
+      JSON.stringify({
+        error: `Input exceeds max size of ${MAX_INPUT_SIZE} bytes`,
+      }),
       { status: 400 },
     );
   }
