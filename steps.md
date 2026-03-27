@@ -175,6 +175,7 @@ User polls /api/submissions/:id/status
 - [ ] Frontend code submission page with Monaco editor
 - [ ] Real-time leaderboard (WebSockets + Redis)
 - [ ] Rating system
+- [ ] Read more about code-execution services- [code](https://github.com/judge0/judge0/tree/master), [container](https://hub.docker.com/r/judge0/judge0)
 
 ### Additional Features
 

@@ -6,7 +6,7 @@ import { config } from "dotenv";
  MUST be called before importing anything that depends on env variables
  (like Prisma).
 */
-config();
+config({ path: "../../.env" });
 
 // Prisma client
 import { prisma } from "@/packages/db";

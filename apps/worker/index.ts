@@ -7,11 +7,42 @@ const WORKER_SECRET = process.env.WORKER_SECRET || "dev-secret-change-in-prod";
 const LANGUAGE_CONFIG: Record<string, { image: string; timeout: number }> = {
   python: { image: "python:3.11-slim", timeout: 5 },
   javascript: { image: "node:20-slim", timeout: 5 },
+  cpp: { image: "gcc:13.2.0", timeout: 10 },
+  java: { image: "eclipse-temurin:21-jdk", timeout: 15 },
+  go: { image: "golang:1.21", timeout: 10 },
 };
+
+const DOCKER_OPTIONS = [
+  "--rm",
+  "--cpus=0.5",
+  "--memory=256m",
+  "--network=none",
+  "--user=1000",
+  "--cap-drop=ALL",
+  "--security-opt=no-new-privileges",
+  "--pids-limit=50",
+  "--read-only",
+  "--tmpfs=/tmp:size=64m",
+];
+
+const DOCKER_OPTIONS_NO_READONLY = [
+  "--rm",
+  "--cpus=0.5",
+  "--memory=256m",
+  "--network=none",
+  "--user=1000",
+  "--cap-drop=ALL",
+  "--security-opt=no-new-privileges",
+  "--pids-limit=50",
+];
 
 const MAX_CODE_SIZE = 50 * 1024;
 const MAX_INPUT_SIZE = 10 * 1024;
 const MAX_OUTPUT_SIZE = 100 * 1024;
+
+function toBase64(str: string): string {
+  return Buffer.from(str).toString("base64");
+}
 
 function withTimeout<T>(
   promise: Promise<T>,
@@ -33,23 +64,6 @@ function withTimeout<T>(
         reject(e);
       });
   });
-}
-
-const DOCKER_OPTIONS = [
-  "--rm",
-  "--cpus=0.5",
-  "--memory=256m",
-  "--network=none",
-  "--user=1000",
-  "--cap-drop=ALL",
-  "--security-opt=no-new-privileges",
-  "--pids-limit=50",
-  "--read-only",
-  "--tmpfs=/tmp:size=64m",
-];
-
-function toBase64(str: string): string {
-  return Buffer.from(str).toString("base64");
 }
 
 async function runCode(
@@ -104,6 +118,64 @@ async function runCode(
         "bash",
         "-c",
         `printf '%s' '${codeB64}' | base64 -d > ${codeFilePath} && printf '%s\\n' '${inputB64}' | base64 -d | node ${codeFilePath}`,
+      ];
+    } else if (language === "cpp") {
+      const codeFilePath = `/tmp/submission.cpp`;
+      const exeFilePath = `/tmp/submission`;
+
+      cmd = [
+        "docker",
+        "run",
+        "--rm",
+        "--cpus=0.5",
+        "--memory=256m",
+        "--network=none",
+        "--cap-drop=ALL",
+        "--security-opt=no-new-privileges",
+        "--pids-limit=50",
+        "-i",
+        config.image,
+        "bash",
+        "-c",
+        `printf '%s' '${codeB64}' | base64 -d > ${codeFilePath} && g++ -o ${exeFilePath} ${codeFilePath} -std=c++17 && printf '%s' '${inputB64}' | base64 -d | ${exeFilePath}`,
+      ];
+    } else if (language === "java") {
+      const codeFilePath = `/tmp/Submission.java`;
+      const className = "Submission";
+
+      cmd = [
+        "docker",
+        "run",
+        "--rm",
+        "--cpus=0.5",
+        "--memory=256m",
+        "--network=none",
+        "--cap-drop=ALL",
+        "--security-opt=no-new-privileges",
+        "--pids-limit=50",
+        "-i",
+        config.image,
+        "bash",
+        "-c",
+        `printf '%s' '${codeB64}' | base64 -d > ${codeFilePath} && javac ${codeFilePath} && cd /tmp && printf '%s' '${inputB64}' | base64 -d | java ${className}`,
+      ];
+    } else if (language === "go") {
+      const codeFilePath = `/tmp/submission.go`;
+
+      cmd = [
+        "docker",
+        "run",
+        "--rm",
+        "--network=none",
+        "-e",
+        "GOCACHE=/tmp/go-cache",
+        "-e",
+        "GOPATH=/tmp/go",
+        "-i",
+        "golang:1.21",
+        "bash",
+        "-c",
+        `mkdir -p /tmp/go-cache /tmp/go && printf '%s' '${codeB64}' | base64 -d > ${codeFilePath} && printf '%s' '${inputB64}' | base64 -d | go run ${codeFilePath}`,
       ];
     }
 
@@ -206,6 +278,13 @@ async function processNext() {
       // Compare output
       const actual = result.stdout.trim();
       const expected = testCase.expectedOutput.trim();
+
+      console.log(`[Worker] Test case result:`);
+      console.log(`[Worker]   Status: ${result.status}`);
+      console.log(`[Worker]   Expected: "${expected}"`);
+      console.log(`[Worker]   Actual: "${actual}"`);
+      console.log(`[Worker]   Actual bytes: ${JSON.stringify(actual)}`);
+      console.log(`[Worker]   Expected bytes: ${JSON.stringify(expected)}`);
 
       if (result.status === "TLE") {
         console.log(`[Worker] Test case TLE`);

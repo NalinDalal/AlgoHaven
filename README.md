@@ -9,13 +9,7 @@ Contest platform similar to Codeforces
 ### 1. Start Database (Docker)
 
 ```sh
-docker run --name AlgoHaven \
-  -e POSTGRES_USER=postgres \
-  -e POSTGRES_PASSWORD=postgres \
-  -e POSTGRES_DB=algohaven \
-  -p 5432:5432 \
-  -v algohaven_data:/var/lib/postgresql/data \
-  -d postgres:16
+docker compose up
 ```
 
 ### 2. Run Migrations
