@@ -1,9 +1,26 @@
 "use client";
 
+/**
+ * Admin Problems List Page
+ * 
+ * Displays a table of all problems in the system.
+ * Provides functionality to:
+ * - View all problems with their details
+ * - Navigate to create new problem
+ * - Edit existing problems
+ * - Delete problems
+ * 
+ * Route: /admin/problems
+ */
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+/**
+ * Interface representing a problem in the list
+ * Contains summary fields for display in the table
+ */
 interface Problem {
   id: string;
   title: string;
@@ -17,15 +34,27 @@ interface Problem {
   };
 }
 
+/**
+ * Main Admin Problems Page Component
+ * 
+ * Fetches and displays all problems in a sortable table.
+ * Provides action buttons for edit and delete operations.
+ * 
+ * @returns JSX element with problems table
+ */
 export default function AdminProblemsPage() {
   const router = useRouter();
-  const [problems, setProblems] = useState<Problem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [deleting, setDeleting] = useState<string | null>(null);
+  const [problems, setProblems] = useState<Problem[]>([]);  // Problems list state
+  const [loading, setLoading] = useState(true);            // Loading state
+  const [deleting, setDeleting] = useState<string | null>(null);  // Track deletion in progress
 
+  /**
+   * Effect hook to fetch problems on component mount
+   * Loads all problems from the API
+   */
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/problems`, {
-      credentials: "include",
+      credentials: "include",  // Include cookies for authentication
     })
       .then((res) => res.json())
       .then((data) => {
@@ -37,17 +66,25 @@ export default function AdminProblemsPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  /**
+   * Handles problem deletion
+   * Shows confirmation dialog before deleting
+   * 
+   * @param id - The ID of the problem to delete
+   * @param title - The title for confirmation message
+   */
   const handleDelete = async (id: string, title: string) => {
+    // Show confirmation dialog
     if (!confirm(`Delete problem "${title}"? This cannot be undone.`)) return;
 
-    setDeleting(id);
+    setDeleting(id);  // Show loading for this row
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BE_URL}/api/problem/${id}`,
+        `${process.env.NEXT_PUBLIC_BE_URL}/api/problems/${id}`,
         {
           method: "DELETE",
-          credentials: "include",
-        },
+          credentials: "include",  // Include cookies for admin auth
+        };
       );
       const data = await res.json();
       if (data.status === "success") {

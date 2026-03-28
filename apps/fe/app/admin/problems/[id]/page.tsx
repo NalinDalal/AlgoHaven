@@ -1,24 +1,24 @@
 "use client";
 
 /**
- * New Problem Creation Page
+ * Problem Editor Page
  *
- * Provides a form for admin users to create new problems.
- * Includes fields for:
+ * This page allows admin users to edit existing problems.
+ * It fetches the current problem data and provides a form to modify:
  * - Basic information (title, slug, difficulty, tags)
  * - Problem statement and editorial (markdown)
  * - Time and memory limits
  * - Visibility settings
- * - Test cases (input/output pairs)
+ * - Test cases
  *
- * Route: /admin/problems/new
+ * Route: /admin/problems/[id]
  */
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
 
 /**
- * Interface representing a test case
+ * Interface representing a test case for a problem
  * Test cases define inputs and expected outputs for judging solutions
  */
 interface TestCase {
@@ -29,36 +29,67 @@ interface TestCase {
 }
 
 /**
- * Main New Problem Page Component
- *
- * Renders a form for creating new problems.
- * Handles form submission to create problem via API.
- *
- * @returns JSX element with problem creation form
+ * Interface representing the full problem data structure
+ * Includes all editable fields from the backend
  */
-export default function NewProblemPage() {
+interface Problem {
+  id: string;
+  title: string;
+  slug: string;
+  difficulty: "EASY" | "MEDIUM" | "HARD";
+  statement: string;
+  editorial?: string;
+  tags: string[];
+  timeLimitMs: number;
+  memoryLimitKb: number;
+  isPublic: boolean;
+  hasCustomChecker: boolean;
+  checkerCode?: string;
+  testCases: TestCase[];
+}
+
+/**
+ * Main Edit Problem Page Component
+ *
+ * Handles loading problem data on mount and saving changes.
+ * Uses React state to manage form inputs and test cases.
+ *
+ * @returns JSX element representing the edit problem form
+ */
+export default function EditProblemPage() {
+  // Next.js navigation and routing hooks
   const router = useRouter();
-  const [loading, setLoading] = useState(false); // Form submission state
+  const params = useParams();
+
+  // Extract the problem ID from URL parameters
+  const id = params.id as string;
+
+  // UI state management
+  const [loading, setLoading] = useState(true); // Initial data loading state
+  const [saving, setSaving] = useState(false); // Form submission state
   const [error, setError] = useState<string | null>(null); // Error message state
 
   /**
    * Form state for problem fields
-   * Stores all basic problem information
-   * Tags are stored as comma-separated string (converted to array on submit)
+   * mirrors the Problem interface but with tags as comma-separated string
    */
   const [form, setForm] = useState({
     title: "",
     slug: "",
-    difficulty: "MEDIUM", // Default difficulty
+    difficulty: "MEDIUM",
     statement: "",
+    editorial: "",
     tags: "",
-    timeLimitMs: 2000, // Default: 2 seconds
-    memoryLimitKb: 262144, // Default: 256 MB
-    isPublic: false, // Default: private
+    timeLimitMs: 2000,
+    memoryLimitKb: 262144,
+    isPublic: false,
+    hasCustomChecker: false,
+    checkerCode: "",
   });
 
   /**
    * Test cases state
+   * Array of test case objects for the problem
    * Initialized with one empty sample test case
    */
   const [testCases, setTestCases] = useState<TestCase[]>([
@@ -66,22 +97,80 @@ export default function NewProblemPage() {
   ]);
 
   /**
+   * Effect hook to fetch problem data on component mount
+   * Loads all problem fields including admin-only data
+   */
+  useEffect(() => {
+    // Fetch problem details from the API
+    // Includes all fields since we're in admin section
+    fetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/problems/${id}`, {
+      credentials: "include", // Include cookies for authentication
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.status === "success") {
+          // Populate form with fetched problem data
+          const problem: Problem = data.data;
+          setForm({
+            title: problem.title,
+            slug: problem.slug,
+            difficulty: problem.difficulty,
+            statement: problem.statement,
+            editorial: problem.editorial || "",
+            tags: problem.tags?.join(", ") || "",
+            timeLimitMs: problem.timeLimitMs,
+            memoryLimitKb: problem.memoryLimitKb,
+            isPublic: problem.isPublic,
+            hasCustomChecker: problem.hasCustomChecker || false,
+            checkerCode: problem.checkerCode || "",
+          });
+
+          // Populate test cases if available
+          if (problem.testCases && problem.testCases.length > 0) {
+            setTestCases(
+              problem.testCases.map((tc) => ({
+                id: tc.id || Date.now().toString(),
+                input: tc.input,
+                expectedOutput: tc.expectedOutput,
+                isSample: tc.isSample,
+              })),
+            );
+          }
+        } else {
+          // Handle API error response
+          setError(data.message || "Failed to load problem");
+        }
+      })
+      .catch((err) => {
+        // Handle network/connection errors
+        setError("Failed to load problem");
+        console.error(err);
+      })
+      .finally(() => {
+        // Stop loading spinner regardless of success/failure
+        setLoading(false);
+      });
+  }, [id]); // Re-run only if problem ID changes
+
+  /**
    * Handles form submission
-   * Sends POST request to create a new problem
+   * Sends PUT request to update the problem with new data
    *
    * @param e - React form event
    */
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); // Prevent default form submission
-    setLoading(true); // Show loading indicator
-    setError(null); // Clear previous errors
+    e.preventDefault(); // Prevent default form submission behavior
+    setSaving(true); // Show saving indicator
+    setError(null); // Clear any previous errors
 
     try {
+      // Send PUT request to update problem
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BE_URL}/api/problem/create`,
+        `${process.env.NEXT_PUBLIC_BE_URL}/api/problems/${id}`,
         {
-          method: "POST",
+          method: "PUT",
           headers: { "Content-Type": "application/json" },
+          credentials: "include", // Include authentication cookies
           body: JSON.stringify({
             // Spread form data
             ...form,
@@ -92,6 +181,7 @@ export default function NewProblemPage() {
               .filter(Boolean),
             // Format test cases for API
             testCases: testCases.map((tc) => ({
+              id: tc.id,
               input: tc.input,
               expectedOutput: tc.expectedOutput,
               isSample: tc.isSample,
@@ -103,18 +193,18 @@ export default function NewProblemPage() {
       const data = await response.json();
 
       if (data.status === "success") {
-        // Redirect to admin dashboard on success
-        router.push("/admin");
+        // Redirect to problems list on success
+        router.push("/admin/problems");
       } else {
         // Display API error message
-        setError(data.message || "Failed to create problem");
+        setError(data.message || "Failed to update problem");
       }
     } catch (err) {
       // Handle network errors
       setError("Network error");
     } finally {
-      // Stop loading indicator
-      setLoading(false);
+      // Stop saving indicator
+      setSaving(false);
     }
   };
 
@@ -163,20 +253,65 @@ export default function NewProblemPage() {
     );
   };
 
+  /**
+   * Loading state rendering
+   * Shows while fetching problem data
+   */
+  if (loading) {
+    return (
+      <div
+        style={{
+          padding: "3rem",
+          textAlign: "center",
+          color: "var(--muted)",
+          fontFamily: "var(--font-mono), monospace",
+        }}
+      >
+        Loading problem...
+      </div>
+    );
+  }
+
   return (
     <div style={{ maxWidth: 900, margin: "0 auto", padding: "2rem" }}>
-      <h1
+      {/* Header with back button */}
+      <div
         style={{
-          fontFamily: "var(--font-syne), sans-serif",
-          fontWeight: 800,
-          fontSize: "1.75rem",
-          color: "var(--text)",
+          display: "flex",
+          alignItems: "center",
+          gap: "1rem",
           marginBottom: "2rem",
         }}
       >
-        Create New Problem
-      </h1>
+        <button
+          onClick={() => router.push("/admin/problems")}
+          style={{
+            background: "transparent",
+            border: "1px solid var(--border)",
+            borderRadius: 2,
+            padding: "8px 12px",
+            fontFamily: "var(--font-mono), monospace",
+            fontSize: 12,
+            color: "var(--muted)",
+            cursor: "pointer",
+          }}
+        >
+          ← Back
+        </button>
+        <h1
+          style={{
+            fontFamily: "var(--font-syne), sans-serif",
+            fontWeight: 800,
+            fontSize: "1.75rem",
+            color: "var(--text)",
+            margin: 0,
+          }}
+        >
+          Edit Problem
+        </h1>
+      </div>
 
+      {/* Error display */}
       {error && (
         <div
           style={{
@@ -194,8 +329,9 @@ export default function NewProblemPage() {
         </div>
       )}
 
+      {/* Main form */}
       <form onSubmit={handleSubmit}>
-        {/* Basic Info */}
+        {/* Basic Information Section */}
         <div
           style={{
             background: "var(--surface)",
@@ -236,6 +372,7 @@ export default function NewProblemPage() {
               hint="URL-friendly identifier"
             />
 
+            {/* Difficulty and Tags in same row */}
             <div
               style={{
                 display: "grid",
@@ -243,6 +380,7 @@ export default function NewProblemPage() {
                 gap: "1rem",
               }}
             >
+              {/* Difficulty dropdown */}
               <div>
                 <label
                   style={{
@@ -278,6 +416,7 @@ export default function NewProblemPage() {
                 </select>
               </div>
 
+              {/* Tags input */}
               <div>
                 <label
                   style={{
@@ -302,7 +441,7 @@ export default function NewProblemPage() {
           </div>
         </div>
 
-        {/* Statement */}
+        {/* Problem Statement Section */}
         <div
           style={{
             background: "var(--surface)",
@@ -339,7 +478,43 @@ export default function NewProblemPage() {
           />
         </div>
 
-        {/* Limits */}
+        {/* Editorial Section (Optional) */}
+        <div
+          style={{
+            background: "var(--surface)",
+            border: "1px solid var(--border)",
+            borderRadius: 4,
+            padding: "1.5rem",
+            marginBottom: "1.5rem",
+          }}
+        >
+          <h3
+            style={{
+              fontFamily: "var(--font-mono), monospace",
+              fontSize: 12,
+              color: "var(--accent)",
+              letterSpacing: ".1em",
+              textTransform: "uppercase",
+              marginBottom: "1.5rem",
+            }}
+          >
+            Editorial (Optional)
+          </h3>
+
+          <textarea
+            value={form.editorial}
+            onChange={(e) => setForm({ ...form, editorial: e.target.value })}
+            placeholder="Write your editorial in markdown..."
+            style={{
+              ...inputStyle,
+              minHeight: 150,
+              resize: "vertical",
+              fontFamily: "var(--font-mono), monospace",
+            }}
+          />
+        </div>
+
+        {/* Limits & Visibility Section */}
         <div
           style={{
             background: "var(--surface)",
@@ -387,6 +562,7 @@ export default function NewProblemPage() {
               }
             />
 
+            {/* Visibility checkbox */}
             <div>
               <label
                 style={{
@@ -428,7 +604,7 @@ export default function NewProblemPage() {
           </div>
         </div>
 
-        {/* Test Cases */}
+        {/* Test Cases Section */}
         <div
           style={{
             background: "var(--surface)",
@@ -438,6 +614,7 @@ export default function NewProblemPage() {
             marginBottom: "1.5rem",
           }}
         >
+          {/* Section header with add button */}
           <div
             style={{
               display: "flex",
@@ -475,6 +652,7 @@ export default function NewProblemPage() {
             </button>
           </div>
 
+          {/* Test case cards */}
           <div style={{ display: "grid", gap: "1.5rem" }}>
             {testCases.map((tc, idx) => (
               <div
@@ -486,6 +664,7 @@ export default function NewProblemPage() {
                   padding: "1rem",
                 }}
               >
+                {/* Test case header with controls */}
                 <div
                   style={{
                     display: "flex",
@@ -510,6 +689,7 @@ export default function NewProblemPage() {
                       gap: "1rem",
                     }}
                   >
+                    {/* Sample checkbox */}
                     <label
                       style={{
                         display: "flex",
@@ -536,6 +716,7 @@ export default function NewProblemPage() {
                         Sample
                       </span>
                     </label>
+                    {/* Remove button - hidden if only one test case */}
                     {testCases.length > 1 && (
                       <button
                         type="button"
@@ -555,6 +736,7 @@ export default function NewProblemPage() {
                   </div>
                 </div>
 
+                {/* Input and Expected Output fields */}
                 <div
                   style={{
                     display: "grid",
@@ -562,6 +744,7 @@ export default function NewProblemPage() {
                     gap: "1rem",
                   }}
                 >
+                  {/* Input field */}
                   <div>
                     <label
                       style={{
@@ -584,6 +767,7 @@ export default function NewProblemPage() {
                       required
                     />
                   </div>
+                  {/* Expected Output field */}
                   <div>
                     <label
                       style={{
@@ -612,13 +796,14 @@ export default function NewProblemPage() {
           </div>
         </div>
 
-        {/* Submit */}
+        {/* Form action buttons */}
         <div
           style={{ display: "flex", gap: "1rem", justifyContent: "flex-end" }}
         >
+          {/* Cancel button - returns to problems list */}
           <button
             type="button"
-            onClick={() => router.push("/admin")}
+            onClick={() => router.push("/admin/problems")}
             style={{
               background: "transparent",
               border: "1px solid var(--border)",
@@ -632,9 +817,10 @@ export default function NewProblemPage() {
           >
             Cancel
           </button>
+          {/* Submit button */}
           <button
             type="submit"
-            disabled={loading}
+            disabled={saving}
             style={{
               background: "var(--accent)",
               border: "none",
@@ -644,11 +830,11 @@ export default function NewProblemPage() {
               fontSize: 13,
               fontWeight: 700,
               color: "#000",
-              cursor: loading ? "not-allowed" : "pointer",
-              opacity: loading ? 0.7 : 1,
+              cursor: saving ? "not-allowed" : "pointer",
+              opacity: saving ? 0.7 : 1,
             }}
           >
-            {loading ? "Creating..." : "Create Problem"}
+            {saving ? "Saving..." : "Save Changes"}
           </button>
         </div>
       </form>

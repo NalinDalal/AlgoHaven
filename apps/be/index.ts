@@ -25,6 +25,7 @@ import {
   handleProblemDetail,
   handleProblemCreate,
   handleProblemDelete,
+  handleProblemUpdate,
 } from "./routes/problem";
 
 import {
@@ -67,15 +68,23 @@ const routes: Record<string, Record<string, Handler>> = {
   "/api/auth/dev-login": { POST: handleDevLogin },
 
   // ---------------- PROBLEMS ----------------
+  // Problem CRUD operations
+  // - GET /api/problems - List all problems (paginated)
+  // - GET /api/problems/:id - Get problem details (admin gets full data, public gets limited)
+  // - PUT /api/problems/:id - Update problem (admin only)
+  // - DELETE /api/problems/:id - Delete problem (admin only)
 
   "/api/problems": { GET: handleProblemsList },
   "/api/problems/:id": {
     GET: handleProblemDetail,
+    PUT: handleProblemUpdate,
     DELETE: handleProblemDelete,
   },
   "/api/problems/:id/submission": { POST: handleSubmitSolution },
 
-  // ---------------- PUT UP QUESTIONS ----------------
+  // ---------------- CREATE PROBLEM ----------------
+  // POST /api/problem/create - Create new problem (admin only)
+
   "/api/problem/create": { POST: handleProblemCreate },
 
   // ---------------- SUBMISSIONS ----------------
@@ -141,7 +150,7 @@ function matchRoute(
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": process.env.NEXT_PUBLIC_BE_URL || "*",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Cookie",
   "Access-Control-Allow-Credentials": "true",
 };

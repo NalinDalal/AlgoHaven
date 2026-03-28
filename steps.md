@@ -87,24 +87,38 @@ failure("Error message", null, 400)
 
 ---
 
-## Next: Admin Panel - In Progress
+## Next: Contest Features
 
-### Still Needed
+### Todo
 
-- [ ] User management (make users admin)
 - [ ] Problem editor (edit existing problems)
 - [ ] Contest editor (edit existing contests)
+- [ ] Frontend code submission page with Monaco editor
+- [ ] Real-time leaderboard (WebSockets + Redis)
+- [ ] Rating system
 
 ---
 
 ## Completed: Code Execution Service ✅
 
-### Worker Service
+### Worker Service (apps/worker/)
 
+- Modular structure for easy debugging
 - Runs on port 3002
 - Endpoints:
   - `POST /api/worker/enqueue` - Add submission to queue (auth: x-worker-secret header)
   - `GET /api/worker/health` - Health check
+
+### File Structure
+
+```
+apps/worker/
+├── index.ts      # Main entry point
+├── config.ts     # Language & Docker config
+├── docker.ts    # Docker execution logic
+├── queue.ts      # Job queue management
+└── api.ts       # HTTP handlers
+```
 
 ### Docker Sandbox
 
@@ -115,23 +129,18 @@ failure("Error message", null, 400)
   - `--cap-drop=ALL`
   - `--security-opt=no-new-privileges`
   - `--pids-limit=50`
-  - `--read-only` (new)
-  - `--tmpfs=/tmp:size=64m` (new)
-
-### Security Enhancements
-
-- Timeout enforcement (kills stuck containers after limit)
-- Code size limit: 50KB
-- Input size limit: 10KB per test case
-- Output truncation: 100KB max
-- Auth required on enqueue endpoint
-- JSON parse error handling
-- Concurrency guard (single job at a time)
+  - `--read-only` (interpreted languages)
+  - `--tmpfs=/tmp:size=64m`
 
 ### Supported Languages
 
-- Python (`python:3.11-slim`)
-- JavaScript (`node:20-slim`)
+| Language   | Docker Image             | Timeout |
+| ---------- | ------------------------ | ------- |
+| Python     | `python:3.11-slim`       | 5s      |
+| JavaScript | `node:20-slim`           | 5s      |
+| C++        | `gcc:13.2.0`             | 10s     |
+| Java       | `eclipse-temurin:21-jdk` | 15s     |
+| Go         | `golang:1.21`            | 10s     |
 
 ### Integration
 
@@ -168,14 +177,12 @@ User polls /api/submissions/:id/status
 
 ### Todo
 
-- [ ] Add more languages (C++, Java, Go) to worker
 - [ ] User management (make users admin from admin panel)
 - [ ] Problem editor (edit existing problems)
 - [ ] Contest editor (edit existing contests)
 - [ ] Frontend code submission page with Monaco editor
 - [ ] Real-time leaderboard (WebSockets + Redis)
 - [ ] Rating system
-- [ ] Read more about code-execution services- [code](https://github.com/judge0/judge0/tree/master), [container](https://hub.docker.com/r/judge0/judge0)
 
 ### Additional Features
 
@@ -213,3 +220,6 @@ User polls /api/submissions/:id/status
 - [x] Check submission status
 - [x] Docker code execution (Python)
 - [x] Docker code execution (JavaScript)
+- [x] Docker code execution (C++)
+- [x] Docker code execution (Java)
+- [x] Docker code execution (Go)
