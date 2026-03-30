@@ -65,6 +65,13 @@ export async function handleSubmitSolution(req: Request): Promise<Response> {
     return failure("Problem not found", null, 404);
   }
 
+    if(problem.testCases.length>200){
+        //return top 3 test cases
+        const testCases=problem.testCases.slice(0,3);
+        return success('submission created',{testCases},201);
+console.log('success');
+    }
+
   // Create submission
   const submission = await prisma.submission.create({
     data: {
