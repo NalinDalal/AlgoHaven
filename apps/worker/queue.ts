@@ -12,21 +12,31 @@ export interface Job {
 
 const jobQueue: Job[] = [];
 let isProcessing = false;
+let currentJob: Job | null = null;
 
 export function enqueueSubmission(job: Job): void {
   jobQueue.push(job);
 }
 
 export function getQueueLength(): number {
-  return jobQueue.length;
+  return jobQueue.length + (currentJob ? 1 : 0);
 }
 
 export function isQueueProcessing(): boolean {
   return isProcessing;
 }
 
+export function getCurrentJob(): Job | null {
+  return currentJob;
+}
+
 export function getNextJob(): Job | undefined {
-  return jobQueue.shift();
+  currentJob = jobQueue.shift() ?? null;
+  return currentJob ?? undefined;
+}
+
+export function clearCurrentJob(): void {
+  currentJob = null;
 }
 
 export function setProcessing(value: boolean): void {
@@ -39,6 +49,7 @@ export function markProcessing(): void {
 
 export function markIdle(): void {
   isProcessing = false;
+  currentJob = null;
 }
 
 export async function processNext(
@@ -66,6 +77,8 @@ export async function processNext(
     isProcessing = false;
     return;
   }
+
+  currentJob = job;
 
   console.log(`[Worker] Processing submission ${job.submissionId}`);
   console.log(
@@ -113,5 +126,6 @@ export async function processNext(
   }
 
   isProcessing = false;
+  currentJob = null;
   setTimeout(() => processNext(runCode, updateSubmission), 100);
 }
