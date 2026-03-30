@@ -229,9 +229,32 @@ async function router(req: Request): Promise<Response> {
 
 const PORT = parseInt(process.env.BE_PORT || "3001");
 
-serve({
+const server = serve({
   port: PORT,
   fetch: router,
 });
 
 console.log(`Backend running on http://localhost:${PORT}`);
+
+// -----------------------------------------------------------------------------
+// Graceful shutdown
+// -----------------------------------------------------------------------------
+
+let isShuttingDown = false;
+
+async function shutdown(signal: string) {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+
+  console.log(`\n[Server] Received ${signal}, shutting down gracefully...`);
+
+  server.stop();
+
+  await prisma.$disconnect();
+
+  console.log("[Server] Shutdown complete");
+  process.exit(0);
+}
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
