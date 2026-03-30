@@ -6,6 +6,7 @@ import {
 } from "@/packages/auth";
 import { sendMagicLinkEmail } from "@/packages/auth/email";
 import { success, failure } from "@/packages/utils/response";
+import { getCookie } from "@/packages/utils/cookies";
 
 const MAGIC_LINK_TTL_MS = 15 * 60 * 1000; // 15 minutes
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -158,11 +159,9 @@ export async function handleMe(req: Request): Promise<Response> {
 // ---------------------------------------------------------------------------
 
 export function getSessionTokenFromRequest(req: Request): string | null {
-  const cookie = req.headers.get("cookie");
-  if (cookie) {
-    const match = cookie.match(/(?:^|;\s*)session=([^;]+)/);
-    if (match) return match[1] ?? null;
-  }
+  const sessionCookie = getCookie(req, "session");
+  if (sessionCookie) return sessionCookie;
+
   const auth = req.headers.get("authorization");
   if (auth?.startsWith("Bearer ")) return auth.slice(7);
   return null;
