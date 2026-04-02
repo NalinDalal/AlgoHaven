@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "bun run index.ts",
     "start": "bun run index.ts",
-        "build": "bunx tsc --noEmit -p tsconfig.json",
+    "build": "bunx tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
     "bun": "latest"

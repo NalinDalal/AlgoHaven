@@ -8,7 +8,7 @@ import {
   markIdle,
   isQueueProcessing,
   getCurrentJob,
-  Job,
+  type Job,
 } from "./queue";
 import { handleEnqueue, handleHealth } from "./api";
 
@@ -38,15 +38,15 @@ async function updateSubmission(
 }
 
 function startQueueProcessor(): void {
-  const processJob = async () => {
+  const runJob = async () => {
     if (getQueueLength() === 0 || isQueueProcessing()) {
-      setTimeout(processJob, 100);
+      setTimeout(runJob, 100);
       return;
     }
 
     const job = getNextJob();
     if (!job) {
-      setTimeout(processJob, 100);
+      setTimeout(runJob, 100);
       return;
     }
 
@@ -54,10 +54,10 @@ function startQueueProcessor(): void {
     await processJob(job);
     markIdle();
 
-    setTimeout(processJob, 100);
+    setTimeout(runJob, 100);
   };
 
-  setTimeout(processJob, 100);
+  setTimeout(runJob, 100);
 }
 
 async function processJob(job: Job): Promise<void> {
