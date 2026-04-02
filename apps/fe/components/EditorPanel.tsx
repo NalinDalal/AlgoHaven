@@ -25,13 +25,6 @@ const TERMINAL_STATUSES = new Set([
   "COMPILE_ERROR",
 ]);
 
-interface RunResult {
-  status: string;
-  stdout: string;
-  stderr: string;
-  executionTimeMs: number;
-}
-
 interface Props {
   problemId: string;
   samples: SampleTestCase[];
@@ -48,10 +41,7 @@ export default function EditorPanel({
   const [lang, setLang] = useState<Lang>("cpp");
   const [code, setCode] = useState(STARTER_CODE.cpp);
   const [activeSample, setActiveSample] = useState(0);
-  const [runResult, setRunResult] = useState<RunResult | null>(null);
-  const [running, setRunning] = useState(false);
   const [saved, setSaved] = useState(true);
-  const [runMsg, setRunMsg] = useState("");
   const { submitting, result, judgeMsg, submit } = useSubmission(
     problemId,
     submitEndpoint,
@@ -94,58 +84,6 @@ export default function EditorPanel({
     setCode(savedCode ?? STARTER_CODE[l]);
   };
 
-  // Run code against current sample (no submission)
-  const runCode = useCallback(async () => {
-    if (!samples[activeSample]) return;
-
-    setRunning(true);
-    setRunResult(null);
-    setRunMsg("Running on samples...");
-
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BE_URL}/api/problems/${problemId}/run`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({ code, language: lang }),
-        },
-      );
-
-      const d = await res.json();
-      const runId = d.data?.runId;
-
-      if (runId) {
-        // Poll for results (simulate for now - worker needs to support run queries)
-        // For now, just show sample I/O
-        setTimeout(() => {
-          const input = samples[activeSample].input;
-          const expected = samples[activeSample].expectedOutput;
-          setRunResult({
-            status: "READY",
-            stdout: `Sample #${activeSample + 1}\n\nInput:\n${input}\n\nExpected Output:\n${expected}`,
-            stderr: "Click Submit to run against all test cases",
-            executionTimeMs: 0,
-          });
-          setRunning(false);
-          setRunMsg("");
-        }, 500);
-      }
-    } catch (err) {
-      setRunResult({
-        status: "ERROR",
-        stdout: "",
-        stderr: "Failed to run code",
-        executionTimeMs: 0,
-      });
-      setRunning(false);
-      setRunMsg("");
-    }
-  }, [code, lang, problemId, samples, activeSample]);
-
   const formatTime = (ms: number | null) => {
     if (ms === null) return "-";
     if (ms < 1000) return `${ms}ms`;
@@ -174,22 +112,6 @@ export default function EditorPanel({
           className="font-mono text-[10px] text-zinc-500 bg-transparent border border-[#252525] px-3 py-1.5 rounded cursor-pointer hover:text-zinc-300 hover:border-[#353535] transition-colors"
         >
           Reset
-        </button>
-
-        {/* Run button */}
-        <button
-          onClick={runCode}
-          disabled={running || !samples.length}
-          className="font-mono text-[11px] flex items-center gap-1.5 bg-[#151515] text-zinc-400 border border-[#252525] px-3 py-1.5 rounded cursor-pointer hover:text-zinc-200 hover:border-[#353535] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {running ? (
-            <span className="w-3 h-3 border border-zinc-500 border-t-zinc-300 rounded-full animate-spin" />
-          ) : (
-            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-            </svg>
-          )}
-          Run
         </button>
 
         {/* Spacer */}
@@ -268,38 +190,6 @@ export default function EditorPanel({
           active={activeSample}
           setActive={setActiveSample}
         />
-      )}
-
-      {/* Run output */}
-      {runResult && (
-        <div className="border-t border-[#1e1e1e] bg-[#0c0c0c]">
-          <div className="flex items-center gap-2 px-3 py-2 border-b border-[#1e1e1e]">
-            <span className="font-mono text-[10px] font-bold text-zinc-500">
-              RUN OUTPUT
-            </span>
-            <span
-              className={`font-mono text-[10px] px-2 py-0.5 rounded ${
-                runResult.status === "READY"
-                  ? "text-green-400 bg-green-950"
-                  : runResult.status === "ERROR"
-                    ? "text-red-400 bg-red-950"
-                    : "text-zinc-400 bg-zinc-900"
-              }`}
-            >
-              {runResult.status}
-            </span>
-            {runResult.executionTimeMs > 0 && (
-              <span className="font-mono text-[9px] text-zinc-600 ml-auto">
-                {formatTime(runResult.executionTimeMs)}
-              </span>
-            )}
-          </div>
-          <div className="px-3 py-2 max-h-32 overflow-auto">
-            <pre className="font-mono text-[11px] text-zinc-400 whitespace-pre-wrap">
-              {runResult.stdout || runResult.stderr || "No output"}
-            </pre>
-          </div>
-        </div>
       )}
 
       {/* Compiler / judge output */}
