@@ -8,11 +8,68 @@ Docker-based code execution sandbox for competitive programming. Each submission
 
 ## Architecture
 
+```mermaid
+flowchart TD
+    A[Client] -->|POST /api/problems/:id/submission| B[Backend<br/>port 3001]
+    B -->|Save to DB<br/>status: QUEUED| C[(PostgreSQL)]
+    B -->|POST /api/worker/enqueue<br/>x-worker-secret| D[Worker<br/>port 3002]
+    D -->|Spawn Docker<br/>Run code| E[Docker Container]
+    E -->|Compare output| D
+    D -->|POST /api/worker/update-submission| B
+    B -->|Update DB| C
+    A -->|GET /api/submissions/:id/status| B
 ```
-User Submit → Backend API → Queue → Worker → Docker Container → Result
-                                   ↓
-                              PostgreSQL ← Results stored
+
+### Components
+
+| Component | Port | Description                                        |
+| --------- | ---- | -------------------------------------------------- |
+| Backend   | 3001 | Handles submissions, stores results in DB          |
+| Worker    | 3002 | Executes code in Docker, judges against test cases |
+
+---
+
+## Implementation
+
+### Backend Routes
+
+**Submit solution** - `POST /api/problems/:id/submission`
+
+```typescript
+// Request
+{
+  code: string,
+  language: "python" | "javascript" | "cpp" | "java" | "go"
+}
+
+// Response
+{
+  status: "success",
+  data: { submission_id: string, status: "QUEUED" }
+}
 ```
+
+**Check status** - `GET /api/submissions/:id/status`
+
+```typescript
+// Response
+{
+  status: "success",
+  data: { status: "ACCEPTED" | "WRONG_ANSWER" | "TLE" | ... }
+}
+```
+
+### Worker API
+
+**Enqueue job** - `POST /api/worker/enqueue`
+
+- Header: `x-worker-secret` (auth verification)
+- Body: `{ submissionId, code, language, testCases[] }`
+
+**Update submission** - `POST /api/worker/update-submission`
+
+- Header: `x-worker-secret`
+- Body: `{ submissionId, status, points, executionTimeMs }`
 
 ---
 
@@ -20,20 +77,18 @@ User Submit → Backend API → Queue → Worker → Docker Container → Result
 
 ### Container Hardening
 
-```dockerfile
-# Security flags
+```bash
 docker run \
+  --rm \
   --cpus="0.5" \
-  --memory="512M" \
-  --memory-swap="512M" \
+  --memory="256m" \
   --pids-limit=50 \
   --cap-drop="ALL" \
   --network="none" \
-  --read-only \
   --user=1000 \
   --security-opt="no-new-privileges" \
-  --tmpfs /tmp:rw,noexec,nosuid,size=64m \
-  code-runner
+  python:3.11-slim \
+  python /tmp/submission.py < /tmp/input.txt
 ```
 
 ### Key Security Measures
@@ -41,7 +96,7 @@ docker run \
 | Flag                                 | Purpose                      |
 | ------------------------------------ | ---------------------------- |
 | `--cpus="0.5"`                       | Limit CPU to 0.5 cores       |
-| `--memory="256M"`                    | Limit RAM to 256MB           |
+| `--memory="256m"`                    | Limit RAM to 256MB           |
 | `--network="none"`                   | No network access            |
 | `--read-only`                        | Read-only filesystem         |
 | `--tmpfs=/tmp:size=64m`              | Writable temp in memory      |
@@ -50,92 +105,101 @@ docker run \
 | `--security-opt="no-new-privileges"` | Prevent privilege escalation |
 | `--pids-limit=50`                    | Limit process count          |
 
-### Additional Protections
+### Resource Limits
 
-| Protection  | Limit           |
-| ----------- | --------------- |
-| Timeout     | 5 seconds       |
-| Code size   | 50 KB           |
-| Input size  | 10 KB           |
-| Output size | 100 KB          |
-| Auth header | x-worker-secret |
+| Protection  | Limit                       |
+| ----------- | --------------------------- |
+| Timeout     | 5-15 seconds (per language) |
+| Code size   | 50 KB                       |
+| Input size  | 10 KB                       |
+| Output size | 100 KB                      |
 
 ---
 
 ## Supported Languages
 
-| Language   | Compiler/Interpreter | Docker Image         | Time Multiplier |
-| ---------- | -------------------- | -------------------- | --------------- |
-| Python     | Python 3.11          | `python:3.11-slim`   | 3x              |
-| C++        | GCC 13               | `gcc:13`             | 1x              |
-| Java       | OpenJDK 21           | `openjdk:21-slim`    | 2x              |
-| JavaScript | Node 20              | `node:20-slim`       | 2x              |
-| Go         | Go 1.21              | `golang:1.21-alpine` | 2x              |
+| Language   | Docker Image             | Timeout (s) |
+| ---------- | ------------------------ | ----------- |
+| Python     | `python:3.11-slim`       | 5           |
+| JavaScript | `node:20-slim`           | 5           |
+| C++        | `gcc:13.2.0`             | 10          |
+| Java       | `eclipse-temurin:21-jdk` | 15          |
+| Go         | `golang:1.21`            | 10          |
 
 ---
 
 ## Execution Flow
 
-### 1. Submission Entry
+### 1. User Submits Code
+
+```bash
+curl -X POST "http://localhost:3001/api/problems/:id/submission" \
+  -H "Content-Type: application/json" \
+  -d '{"code":"import sys\n...", "language":"python"}'
+```
+
+### 2. Backend Processing
+
+1. Save submission to DB (status: QUEUED)
+2. Fetch test cases for problem
+3. POST to worker API with code + test cases
+
+### 3. Worker Processing
+
+1. Receive job via `/api/worker/enqueue`
+2. For each test case:
+   - Spawn Docker container
+   - Run code with test input
+   - Capture stdout/stderr
+   - Compare output to expected
+3. Update submission status via `/api/worker/update-submission`
+
+### 4. User Polls Status
+
+```bash
+curl "http://localhost:3001/api/submissions/:id/status"
+# Returns: { status: "ACCEPTED", executionTimeMs: 418 }
+```
+
+---
+
+## Code Execution (Worker)
+
+### Docker Command Building
 
 ```typescript
-POST /api/problems/:id/submission
-{
-  code: string,
-  language: "python" | "cpp" | "java" | "javascript" | "go"
+// Python example
+function buildDockerCommand(code: string, input: string): string[] {
+  const codeB64 = toBase64(code);
+  const inputB64 = toBase64(input);
+
+  return [
+    "docker",
+    "run",
+    "--rm",
+    "--cpus=0.5",
+    "--memory=256m",
+    "--network=none",
+    "--user=1000",
+    "python:3.11-slim",
+    "bash",
+    "-c",
+    `printf '%s' '${codeB64}' | base64 -d > /tmp/submission.py && python3 /tmp/submission.py`,
+  ];
 }
 ```
 
-### 2. Worker Processing
+### Output Comparison
 
-```
-1. Pull Docker image (cached)
-2. Write user code to temp file
-3. Write test case input to temp file
-4. Run container with timeout
-5. Capture stdout/stderr
-6. Compare output to expected
-7. Record verdict per test case
-8. Destroy container
-```
+```typescript
+const actual = result.stdout.trim();
+const expected = testCase.expectedOutput.trim();
 
-### 3. Multi-Stage Build (C++ Example)
-
-```dockerfile
-# Build stage - compile code
-FROM gcc:13 AS builder
-WORKDIR /build
-COPY code.cpp .
-RUN g++ -o solution -O2 -pipe -static code.cpp
-
-# Runner stage - minimal image
-FROM ubuntu:22.04
-COPY --from=builder /build/solution /app/solution
-USER 1000
-CMD ["/app/solution"]
-```
-
-### 4. Execution Command
-
-```bash
-# Python
-docker run --rm \
-  --network none \
-  --memory=256m \
-  --cpus=0.25 \
-  --user 1000 \
-  -v /tmp/input.txt:/input.txt:ro \
-  python:3.11-slim \
-  python /code/main.py < /input.txt
-
-# C++ (pre-compiled)
-docker run --rm \
-  --network none \
-  --memory=256m \
-  --cpus=0.5 \
-  --user 1000 \
-  -v /tmp/input.txt:/input.txt:ro \
-  compiled-runner
+if (actual === expected) {
+  // Test case passed
+} else {
+  // Wrong answer
+}
 ```
 
 ---
@@ -146,12 +210,12 @@ Test cases stored in PostgreSQL as relational rows:
 
 ```sql
 -- Sample test case (shown to users)
-INSERT INTO "TestCase" (id, "problemId", input, "expectedOutput", "isSample")
-VALUES (gen_random_uuid(), :problemId, '1 2', '3', true);
+INSERT INTO "TestCase" ("problemId", input, "expectedOutput", "isSample")
+VALUES (:problemId, '4\n2 7 11 15\n9', '0 1', true);
 
 -- Hidden test case (judging only)
-INSERT INTO "TestCase" (id, "problemId", input, "expectedOutput", "isSample")
-VALUES (gen_random_uuid(), :problemId, '10 20', '30', false);
+INSERT INTO "TestCase" ("problemId", input, "expectedOutput", "isSample")
+VALUES (:problemId, '3\n3 2 4\n6', '1 2', false);
 ```
 
 ---
@@ -160,6 +224,8 @@ VALUES (gen_random_uuid(), :problemId, '10 20', '30', false);
 
 | Status          | Description              |
 | --------------- | ------------------------ |
+| `QUEUED`        | Submission received      |
+| `RUNNING`       | Currently being judged   |
 | `ACCEPTED`      | All test cases passed    |
 | `WRONG_ANSWER`  | Output mismatch          |
 | `TLE`           | Time limit exceeded      |
@@ -171,24 +237,22 @@ VALUES (gen_random_uuid(), :problemId, '10 20', '30', false);
 
 ## Queue System
 
-### Simple Queue (In-Memory for MVP)
+### Current Implementation (In-Memory)
 
 ```typescript
-const queue: SubmissionJob[] = [];
+// apps/worker/queue.ts
+const jobQueue: Job[] = [];
 
-async function enqueueSubmission(job: SubmissionJob) {
-  queue.push(job);
-  processNext();
+export function enqueueSubmission(job: Job): void {
+  jobQueue.push(job);
 }
 
-async function processNext() {
-  if (queue.length === 0) return;
-  const job = queue.shift();
-  await processSubmission(job);
+export function getNextJob(): Job | undefined {
+  return jobQueue.shift();
 }
 ```
 
-### Production Queue (Redis Bull)
+### Production (Future - Redis Bull)
 
 ```typescript
 import Queue from "bull";
@@ -196,12 +260,21 @@ const submissionQueue = new Queue("submissions", "redis://localhost:6379");
 
 await submissionQueue.add({
   submissionId: submission.id,
-  problemId: submission.problemId,
   code: submission.code,
   language: submission.language,
   testCases: testCases,
 });
 ```
+
+---
+
+## Environment Variables
+
+| Variable        | Value                      |
+| --------------- | -------------------------- |
+| `WORKER_SECRET` | Auth secret for worker API |
+| `WORKER_URL`    | `http://localhost:3002`    |
+| `BACKEND_URL`   | `http://localhost:3001`    |
 
 ---
 
@@ -212,14 +285,10 @@ await submissionQueue.add({
 ```bash
 # Pre-pull images before contest
 docker pull python:3.11-slim
-docker pull gcc:13
-docker pull openjdk:21-slim
 docker pull node:20-slim
-
-# Pre-warm containers
-for i in {1..10}; do
-  docker create --name warmup-$i python:3.11-slim sleep 1
-done
+docker pull gcc:13.2.0
+docker pull eclipse-temurin:21-jdk
+docker pull golang:1.21
 ```
 
 ### Horizontal Scaling
@@ -230,35 +299,13 @@ done
 
 ---
 
-## Implementation Checklist
+## Files
 
-- [ ] Docker setup on server
-- [ ] Worker service with queue
-- [ ] Language images (Python, C++, Java, JS, Go)
-- [ ] Time/memory limits per language
-- [ ] Compile step for C++, Java, Go
-- [ ] Output comparison
-- [ ] Verdict recording
-- [ ] Frontend result display
-- [ ] Queue monitoring
-
----
-
-built a code execution service with:
-
-1. Worker service (apps/worker/index.ts) - runs on port 3002
-2. Docker sandbox - executes user code in isolated containers with:
-   - CPU/memory limits
-   - Network disabled
-   - Non-root user (uid 1000)
-   - Various security options
-3. Backend integration:
-   - Added /api/worker/update-submission endpoint
-   - Worker updates submission status in DB after judging
-   - Env vars: WORKER_SECRET, BACKEND_URL, WORKER_URL
-4. Languages supported:
-   - Python (python:3.11-slim)
-   - JavaScript (node:20-slim)
-5. Fixed shell escaping issue - Used base64 encoding + printf to write code files inside containers
-   The full submission flow now works:
-   User submits code → Backend creates submission → Sends to worker → Worker runs Docker → Updates status in DB → User polls status
+| File                           | Description                  |
+| ------------------------------ | ---------------------------- |
+| `apps/worker/index.ts`         | Main worker service          |
+| `apps/worker/queue.ts`         | In-memory job queue          |
+| `apps/worker/docker.ts`        | Docker command execution     |
+| `apps/worker/config.ts`        | Language config & limits     |
+| `apps/worker/api.ts`           | HTTP handlers                |
+| `apps/be/routes/submission.ts` | Backend submission endpoints |

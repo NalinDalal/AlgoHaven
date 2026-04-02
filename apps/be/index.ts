@@ -32,6 +32,7 @@ import {
   handleSubmitSolution,
   handleSubmissionStatus,
   handleWorkerUpdateSubmission,
+  handleRunSolution,
 } from "./routes/submission";
 
 import {
@@ -81,6 +82,7 @@ const routes: Record<string, Record<string, Handler>> = {
     DELETE: handleProblemDelete,
   },
   "/api/problems/:id/submission": { POST: handleSubmitSolution },
+  "/api/problems/:id/run": { POST: handleRunSolution },
 
   // ---------------- CREATE PROBLEM ----------------
   // POST /api/problem/create - Create new problem (admin only)
