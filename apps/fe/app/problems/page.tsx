@@ -49,7 +49,7 @@ export default function ProblemsPage() {
     fetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/problems?start=0&end=20`)
       .then((res) => res.json())
       .then((data) => {
-        setProblems(data.problems || []);
+        setProblems(data.data?.problems || []);
         setLoading(false);
       })
       .catch(() => {
@@ -178,10 +178,10 @@ export default function ProblemsPage() {
                         ? `1px solid ${ds?.border ?? "var(--accent)"}`
                         : "1px solid var(--border)",
                       background: isActive
-                        ? ds?.bg ?? "rgba(232,255,71,.08)"
+                        ? (ds?.bg ?? "rgba(232,255,71,.08)")
                         : "transparent",
                       color: isActive
-                        ? ds?.color ?? "var(--accent)"
+                        ? (ds?.color ?? "var(--accent)")
                         : "var(--muted)",
                       cursor: "pointer",
                       transition: "all .15s",
@@ -196,7 +196,9 @@ export default function ProblemsPage() {
         </div>
 
         {/* Table */}
-        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 2.5rem 4rem" }}>
+        <div
+          style={{ maxWidth: 1100, margin: "0 auto", padding: "0 2.5rem 4rem" }}
+        >
           {loading ? (
             <SkeletonTable />
           ) : error ? (
@@ -274,9 +276,7 @@ function ProblemRow({ problem, index }: { problem: Problem; index: number }) {
       onMouseEnter={(e) =>
         (e.currentTarget.style.background = "var(--surface)")
       }
-      onMouseLeave={(e) =>
-        (e.currentTarget.style.background = "transparent")
-      }
+      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
     >
       {/* Index */}
       <td
@@ -309,12 +309,8 @@ function ProblemRow({ problem, index }: { problem: Problem; index: number }) {
             textDecoration: "none",
             transition: "color .12s",
           }}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.color = "var(--accent)")
-          }
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.color = "var(--text)")
-          }
+          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent)")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text)")}
         >
           {problem.title}
         </Link>
@@ -394,7 +390,9 @@ function ProblemRow({ problem, index }: { problem: Problem; index: number }) {
               }}
             />
           </div>
-          <span style={{ color: "var(--muted)", minWidth: 36, textAlign: "right" }}>
+          <span
+            style={{ color: "var(--muted)", minWidth: 36, textAlign: "right" }}
+          >
             {acceptance}%
           </span>
         </div>
@@ -418,12 +416,8 @@ function ProblemRow({ problem, index }: { problem: Problem; index: number }) {
             textDecoration: "none",
             transition: "color .12s",
           }}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.color = "var(--accent)")
-          }
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.color = "var(--muted)")
-          }
+          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent)")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--muted)")}
         >
           →
         </Link>
@@ -492,7 +486,13 @@ function EmptyState() {
         textAlign: "center",
       }}
     >
-      <div style={{ fontSize: 32, marginBottom: "1rem", color: "var(--border-lit)" }}>
+      <div
+        style={{
+          fontSize: 32,
+          marginBottom: "1rem",
+          color: "var(--border-lit)",
+        }}
+      >
         {"{ }"}
       </div>
       <div style={{ fontSize: 14 }}>No problems match your filters.</div>
