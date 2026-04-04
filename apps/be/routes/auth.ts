@@ -1,103 +1,106 @@
 import { prisma } from "@/packages/db";
 import {
-  generateMagicLinkToken,
   generateSessionToken,
   hashToken,
+  hashPassword,
+  verifyPassword,
 } from "@/packages/auth";
-import { sendMagicLinkEmail } from "@/packages/auth/email";
 import { success, failure } from "@/packages/utils/response";
 import { getCookie } from "@/packages/utils/cookies";
 
-const MAGIC_LINK_TTL_MS = 15 * 60 * 1000; // 15 minutes
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
-// POST /api/auth/magic-link
-// Body: { email }
-// Creates a MagicLinkToken and emails the link to the user.
-export async function handleRequestMagicLink(req: Request): Promise<Response> {
-  const { email } = (await req.json()) as { email?: string };
+// POST /api/auth/register
+// Body: { email, password, username? }
+export async function handleRegister(req: Request): Promise<Response> {
+  const { email, password, username } = (await req.json()) as {
+    email?: string;
+    password?: string;
+    username?: string;
+  };
 
   if (!email || !email.includes("@")) {
     return failure("Valid email required", null, 400);
   }
-
-  // Upsert user — create on first login, find on subsequent ones
-  const user = await prisma.user.upsert({
-    where: { email },
-    update: {},
-    create: { email },
-  });
-
-  // Invalidate any existing unused tokens for this email to prevent token pile-up
-  await prisma.magicLinkToken.updateMany({
-    where: { email, usedAt: null, expiresAt: { gt: new Date() } },
-    data: { expiresAt: new Date() }, // expire them immediately
-  });
-
-  const { raw, hash } = generateMagicLinkToken();
-  await prisma.magicLinkToken.create({
-    data: {
-      email,
-      tokenHash: hash,
-      userId: user.id,
-      expiresAt: new Date(Date.now() + MAGIC_LINK_TTL_MS),
-    },
-  });
-
-  const magicLinkUrl = `${process.env.APP_URL}/auth/verify?token=${raw}`;
-  await sendMagicLinkEmail({ to: email, url: magicLinkUrl });
-
-  // Always return 200 — don't leak whether the email exists
-  return success(
-    "If that email is registered, a magic link has been sent.",
-    null,
-    200,
-  );
-}
-
-// GET /api/auth/verify?token=<raw>
-// Validates the token, creates a session, redirects to app.
-export async function handleVerifyMagicLink(req: Request): Promise<Response> {
-  const url = new URL(req.url);
-  const raw = url.searchParams.get("token");
-
-  if (!raw) {
-    return failure("Token required", null, 400);
+  if (!password || password.length < 6) {
+    return failure("Password must be at least 6 characters", null, 400);
   }
 
-  const hash = hashToken(raw);
-  const magic = await prisma.magicLinkToken.findUnique({
-    where: { tokenHash: hash },
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing) {
+    return failure("Email already registered", null, 409);
+  }
+
+  if (username) {
+    const usernameTaken = await prisma.user.findUnique({ where: { username } });
+    if (usernameTaken) {
+      return failure("Username already taken", null, 409);
+    }
+  }
+
+  const passwordHash = hashPassword(password);
+  const user = await prisma.user.create({
+    data: { email, passwordHash, username: username || null },
   });
 
-  if (!magic) return failure("Invalid token", null, 401);
-  if (magic.usedAt) return failure("Token already used", null, 401);
-  if (magic.expiresAt < new Date()) return failure("Token expired", null, 401);
-
-  // Mark token as used
-  await prisma.magicLinkToken.update({
-    where: { tokenHash: hash },
-    data: { usedAt: new Date() },
-  });
-
-  // Create session
-  const { raw: sessionRaw, hash: sessionHash } = generateSessionToken();
+  const { raw, hash } = generateSessionToken();
   await prisma.session.create({
     data: {
-      tokenHash: sessionHash,
-      userId: magic.userId!,
+      tokenHash: hash,
+      userId: user.id,
       expiresAt: new Date(Date.now() + SESSION_TTL_MS),
     },
   });
 
-  // Redirect to app with session cookie set
-  return new Response(null, {
-    status: 302,
-    headers: {
-      Location: `${process.env.APP_URL}/dashboard`,
-      "Set-Cookie": `session=${sessionRaw}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${SESSION_TTL_MS / 1000}`,
+  return success("Registration successful", {
+    user: { id: user.id, email: user.email, role: user.role },
+  });
+}
+
+// POST /api/auth/login
+// Body: { email, password }
+export async function handleLogin(req: Request): Promise<Response> {
+  const { email, password } = (await req.json()) as {
+    email?: string;
+    password?: string;
+  };
+
+  if (!email || !password) {
+    return failure("Email and password required", null, 400);
+  }
+
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user || !user.passwordHash) {
+    return failure("Invalid email or password", null, 401);
+  }
+
+  if (!verifyPassword(password, user.passwordHash)) {
+    return failure("Invalid email or password", null, 401);
+  }
+
+  const { raw, hash } = generateSessionToken();
+  await prisma.session.create({
+    data: {
+      tokenHash: hash,
+      userId: user.id,
+      expiresAt: new Date(Date.now() + SESSION_TTL_MS),
     },
   });
+
+  return new Response(
+    JSON.stringify({
+      status: "success",
+      message: "Login successful",
+      data: { user: { id: user.id, email: user.email, role: user.role } },
+    }),
+    {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Set-Cookie": `session=${raw}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${SESSION_TTL_MS / 1000};`,
+      },
+    },
+  );
 }
 
 // POST /api/auth/signout
@@ -138,13 +141,20 @@ export async function handleDevLogin(req: Request): Promise<Response> {
     },
   });
 
-  return new Response(null, {
-    status: 302,
-    headers: {
-      Location: "/admin",
-      "Set-Cookie": `session=${raw}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${SESSION_TTL_MS / 1000}`,
+  return new Response(
+    JSON.stringify({
+      status: "success",
+      message: "Login successful",
+      data: { user: { id: user.id, email: user.email, role: user.role } },
+    }),
+    {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Set-Cookie": `session=${raw}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${SESSION_TTL_MS / 1000}`,
+      },
     },
-  });
+  );
 }
 
 // GET /api/auth/me

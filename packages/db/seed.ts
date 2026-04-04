@@ -1,4 +1,13 @@
-import {prisma} from "./index";
+import { prisma } from "./index";
+import { createHash, randomBytes } from "crypto";
+
+function hashPassword(password: string): string {
+  const salt = randomBytes(16).toString("hex");
+  const hash = createHash("sha256")
+    .update(salt + password)
+    .digest("hex");
+  return `${salt}:${hash}`;
+}
 
 async function seed() {
   console.log("Seeding database...");
@@ -8,12 +17,12 @@ async function seed() {
   await prisma.submission.deleteMany();
   await prisma.testCase.deleteMany();
   await prisma.contestProblem.deleteMany();
+  await prisma.contestAnnouncement.deleteMany();
   await prisma.contest.deleteMany();
   await prisma.problem.deleteMany();
   await prisma.userRating.deleteMany();
   await prisma.leaderboardEntry.deleteMany();
   await prisma.session.deleteMany();
-  await prisma.magicLinkToken.deleteMany();
   await prisma.user.deleteMany();
 
   console.log(" Database cleared");
@@ -23,6 +32,7 @@ async function seed() {
     data: {
       email: "user1@example.com",
       username: "user1",
+      passwordHash: hashPassword("password123"),
     },
   });
 
@@ -30,6 +40,7 @@ async function seed() {
     data: {
       email: "user2@example.com",
       username: "user2",
+      passwordHash: hashPassword("password123"),
     },
   });
 
@@ -38,6 +49,7 @@ async function seed() {
       email: "admin@example.com",
       username: "admin",
       role: "ADMIN",
+      passwordHash: hashPassword("admin123"),
     },
   });
 
@@ -49,7 +61,8 @@ async function seed() {
       title: "Two Sum",
       slug: "two-sum",
       difficulty: "EASY",
-      statement: "Given an array of integers, return indices of two numbers that add up to a target.",
+      statement:
+        "Given an array of integers, return indices of two numbers that add up to a target.",
       tags: ["arrays", "hashmap"],
       isPublic: true,
       testCases: {

@@ -72,36 +72,20 @@ enum RejudgeStatus {
 
 // User represents a platform participant (admin or regular user)
 model User {
-  id       String  @id @default(uuid())
-  email    String  @unique
-  role     Role    @default(USER)
-  username String? @unique
+  id          String  @id @default(uuid())
+  email       String  @unique
+  passwordHash String? // null if using magic link only
+  role        Role    @default(USER)
+  username    String? @unique
 
   submissions        Submission[]
   leaderboardEntries LeaderboardEntry[]
   sessions           Session[]
-  magicLinks         MagicLinkToken[]
   ratings            UserRating[]
   rejudgesTriggered  RejudgeJob[]       @relation("triggeredBy")
   plagiarismReviews  PlagiarismReport[] @relation("reviewedBy")
 
   createdAt DateTime @default(now())
-}
-
-// MagicLinkToken is used for passwordless authentication
-model MagicLinkToken {
-  id        String    @id @default(uuid())
-  email     String
-  tokenHash String    @unique
-  userId    String?
-  expiresAt DateTime
-  usedAt    DateTime?
-  createdAt DateTime  @default(now())
-
-  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
-
-  @@index([email])
-  @@index([expiresAt])
 }
 
 // Session tracks user login sessions
