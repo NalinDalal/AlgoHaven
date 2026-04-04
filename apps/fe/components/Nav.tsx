@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
 const navLinks = [
@@ -10,7 +11,36 @@ const navLinks = [
   { href: "/admin", label: "Admin" },
 ];
 
+interface User {
+  id: string;
+  email: string;
+  username: string | null;
+  role: string;
+}
+
 export default function Nav() {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/auth/me`, {
+      credentials: "include",
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.status === "success") setUser(d.data.user);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleSignOut = async () => {
+    await fetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/auth/signout`, {
+      method: "POST",
+      credentials: "include",
+    });
+    setUser(null);
+  };
   return (
     <nav
       className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-10 h-15 border-b"
@@ -63,28 +93,59 @@ export default function Nav() {
       </ul>
 
       {/* CTA */}
-      <Link
-        href="/register"
-        style={{
-          fontFamily: "var(--font-mono), monospace",
-          fontSize: 13,
-          fontWeight: 700,
-          background: "var(--accent)",
-          color: "#0a0a0a",
-          padding: "8px 20px",
-          borderRadius: 2,
-          textDecoration: "none",
-          transition: "background .15s",
-        }}
-        onMouseEnter={(e) =>
-          (e.currentTarget.style.background = "var(--accent-dim)")
-        }
-        onMouseLeave={(e) =>
-          (e.currentTarget.style.background = "var(--accent)")
-        }
-      >
-        Register →
-      </Link>
+      {loading ? null : user ? (
+        <div className="flex items-center gap-4">
+          <Link
+            href="/me"
+            style={{
+              fontFamily: "var(--font-mono), monospace",
+              fontSize: 13,
+              color: "var(--muted)",
+              textDecoration: "none",
+            }}
+          >
+            {user.username || user.email}
+          </Link>
+          <button
+            onClick={handleSignOut}
+            style={{
+              fontFamily: "var(--font-mono), monospace",
+              fontSize: 13,
+              color: "var(--text)",
+              background: "transparent",
+              border: "1px solid var(--border)",
+              padding: "8px 16px",
+              borderRadius: 2,
+              cursor: "pointer",
+            }}
+          >
+            Sign Out
+          </button>
+        </div>
+      ) : (
+        <Link
+          href="/auth"
+          style={{
+            fontFamily: "var(--font-mono), monospace",
+            fontSize: 13,
+            fontWeight: 700,
+            background: "var(--accent)",
+            color: "#0a0a0a",
+            padding: "8px 20px",
+            borderRadius: 2,
+            textDecoration: "none",
+            transition: "background .15s",
+          }}
+          onMouseEnter={(e) =>
+            (e.currentTarget.style.background = "var(--accent-dim)")
+          }
+          onMouseLeave={(e) =>
+            (e.currentTarget.style.background = "var(--accent)")
+          }
+        >
+          Sign In
+        </Link>
+      )}
     </nav>
   );
 }

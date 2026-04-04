@@ -65,7 +65,7 @@ function LoadingSkeleton() {
   return (
     <>
       <Nav />
-      <div className="min-h-screen bg-[#0a0a0a] pt-20 flex items-center justify-center">
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
         <span className="font-mono text-[13px] text-zinc-600 flex items-center gap-2.5">
           <span className="inline-block w-2 h-2 rounded-full bg-[#e8ff47] animate-pulse" />
           Fetching problem...
@@ -80,7 +80,7 @@ function NotFound() {
   return (
     <>
       <Nav />
-      <div className="min-h-screen bg-[#0a0a0a] pt-20 flex flex-col items-center justify-center font-mono gap-3">
+      <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center font-mono gap-3">
         <div className="text-[13px] text-red-400 border border-red-900 bg-red-950 px-6 py-2.5 rounded-sm">
           404 · Problem not found
         </div>
@@ -102,7 +102,7 @@ function ErrorState({ error }: { error: string }) {
   return (
     <>
       <Nav />
-      <div className="min-h-screen bg-[#0a0a0a] pt-20 flex flex-col items-center justify-center font-mono gap-3">
+      <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center font-mono gap-3">
         <div className="text-[13px] border px-6 py-2.5 rounded-sm bg-red-950 border-red-900 text-red-400">
           {isNotFound ? "404 · Problem not found" : "Error loading problem"}
         </div>

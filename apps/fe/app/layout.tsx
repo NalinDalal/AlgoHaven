@@ -27,7 +27,17 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${jetbrainsMono.variable} ${syne.variable}`}>
-      <body>{children}</body>
+      <body
+        className="min-w-0 overflow-x-hidden block"
+        style={{
+          paddingTop: "60px",
+          minHeight: "100vh",
+          position: "relative",
+          overflowY: "clip",
+        }}
+      >
+        {children}
+      </body>
     </html>
   );
 }
