@@ -16,9 +16,11 @@ import {
   handleLogin,
   handleRegister,
   handleSignout,
-  handleMe,
+  handleMe as handleAuthMe,
   handleDevLogin,
 } from "./routes/auth";
+
+import { handleMe } from "./routes/me";
 
 import {
   handleProblemsList,
@@ -68,7 +70,8 @@ const routes: Record<string, Record<string, Handler>> = {
   "/api/auth/login": { POST: handleLogin },
   "/api/auth/register": { POST: handleRegister },
   "/api/auth/signout": { POST: handleSignout },
-  "/api/auth/me": { GET: handleMe },
+  "/api/auth/me": { GET: handleAuthMe },
+  "/api/me": { GET: handleMe },
   "/api/auth/dev-login": { POST: handleDevLogin },
 
   // ---------------- PROBLEMS ----------------

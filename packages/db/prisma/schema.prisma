@@ -239,16 +239,19 @@ model Submission {
 
   createdAt DateTime @default(now())
 
+  @@index([userId])
+  @@index([problemId])
+  @@index([contestId])
+  @@index([createdAt])
+  @@index([userId, status])
+  @@index([userId, createdAt])
+  @@index([userId, status, createdAt])
+
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
   contest   Contest?  @relation(fields: [contestId], references: [id], onDelete: Cascade)
 
   plagiarismReports PlagiarismReport[]
-
-  @@index([userId])
-  @@index([problemId])
-  @@index([contestId])
-  @@index([createdAt])
 }
 
 // Leaderboard - tracks user scores and ranks in a Contest
