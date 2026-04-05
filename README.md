@@ -195,11 +195,10 @@ curl -X POST http://localhost:3002/api/worker/enqueue \
 
 1. **Add more languages** - Extend worker to support C++, Java, Go
 2. **Problem/contest edit** - Add PUT endpoints for editing
-3. **Real-time updates** - WebSockets + Redis for live leaderboard
-4. **User dashboard** - Add analytics and submission history
-5. **Rating system** - Calculate and update ratings after contests
-6. **Plagiarism detection** - Compare submissions for similarity
-7. **Virtual contests** - Allow practice mode on past contests
+3. **User dashboard** - Add analytics and submission history
+4. **Rating system** - Calculate and update ratings after contests
+5. **Plagiarism detection** - Compare submissions for similarity
+6. **Virtual contests** - Allow practice mode on past contests
 
 ---
 
@@ -215,6 +214,7 @@ curl -X POST http://localhost:3002/api/worker/enqueue \
 - [x] Submission handling
 - [x] Docker code execution sandbox
 - [x] Leaderboard (basic)
+- [x] Real-time leaderboard (SSE + Redis)
 - [x] User ratings (basic)
 - [x] Admin auth middleware
 - [x] Admin dashboard (frontend)
@@ -223,6 +223,7 @@ curl -X POST http://localhost:3002/api/worker/enqueue \
 - [x] Problem creation form
 - [x] Contest creation form
 - [x] Beautified API responses
+- [x] Monaco editor for code submission
 
 ### In Progress 🚧
 
@@ -232,7 +233,6 @@ curl -X POST http://localhost:3002/api/worker/enqueue \
 
 ### Todo 📋
 
-- [ ] Real-time leaderboard (WebSockets + Redis)
 - [ ] User dashboard & analytics
 - [ ] Rating system post-contest
 - [ ] Plagiarism detection
@@ -242,22 +242,103 @@ curl -X POST http://localhost:3002/api/worker/enqueue \
 
 ## Architecture
 
-```
-Client (Next.js)
-    ↓ HTTP
-Backend (Bun/Hono)
-    ↓ Prisma
-PostgreSQL
+```mermaid
+flowchart TB
+    subgraph Client["Frontend (Next.js - :3000)"]
+        FE[Next.js App]
+        Monaco[Monaco Editor]
+        SSE[SSE Client]
+    end
+
+    subgraph Backend["Backend (Bun - :3001)"]
+        API[API Server]
+        Auth[Auth Middleware]
+        Prisma[Prisma ORM]
+    end
+
+    subgraph Worker["Worker (Bun - :3002)"]
+        Queue[Job Queue]
+        Docker[Docker Sandbox]
+    end
+
+    subgraph Realtime["Real-time Server (Bun - :3003)"]
+        SSE_Server[SSE Handler]
+        RedisSub[Redis Subscriber]
+    end
+
+    subgraph Data["Data Layer"]
+        PG[(PostgreSQL)]
+        Redis[(Redis)]
+    end
+
+    FE -->|HTTP| API
+    FE -->|SSE /ws/contest/:id| SSE_Server
+    Monaco -->|Submit Code| API
+    API --> Prisma
+    API -->|Enqueue Job| Queue
+    Queue --> Docker
+    Docker -->|Update Result| API
+    API -->|Publish Update| Redis
+    RedisSub -->|Subscribe| Redis
+    SSE_Server -->|Broadcast| FE
+    Prisma --> PG
 ```
 
-### Future Architecture (planned)
+### Service Ports
 
+| Service   | Port | Purpose         |
+| --------- | ---- | --------------- |
+| Frontend  | 3000 | Next.js UI      |
+| Backend   | 3001 | REST API        |
+| Worker    | 3002 | Code execution  |
+| Real-time | 3003 | SSE / WebSocket |
+
+### Data Flow: Submission
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant FE as Frontend
+    participant BE as Backend
+    participant DB as PostgreSQL
+    participant W as Worker
+    participant Redis
+    participant SSE as Real-time
+
+    User->>FE: Submit code
+    FE->>BE: POST /api/problems/:id/submission
+    BE->>DB: Create submission (QUEUED)
+    BE->>W: Enqueue job
+    W->>W: Process in Docker
+    W->>BE: Update status (ACCEPTED/WRONG_ANSWER)
+    BE->>DB: Update submission
+    BE->>DB: Calculate leaderboard
+    BE->>Redis: Publish LEADERBOARD_UPDATE
+    Redis->>SSE: Push update
+    SSE->>FE: Broadcast to clients
+    FE->>User: Live leaderboard update
 ```
-Client → Load Balancer → Backend → PostgreSQL
-                          ↓
-                    Message Queue
-                          ↓
-               Code Execution Workers (Docker)
+
+### Data Flow: Real-time Leaderboard
+
+```mermaid
+flowchart LR
+    subgraph Submit["Submission Processing"]
+        S1[Worker updates<br/>submission status]
+        S2[Backend calculates<br/>new scores]
+        S3[Update leaderboard<br/>entry in DB]
+    end
+
+    subgraph Publish["Redis Pub/Sub"]
+        P1[Publish to<br/>contest:{id}:leaderboard]
+    end
+
+    subgraph Broadcast["Real-time Server"]
+        R1[Subscribe to<br/>Redis channel]
+        R2[Broadcast via SSE<br/>to connected clients]
+    end
+
+    S1 --> S2 --> S3 --> P1 --> R1 --> R2
 ```
 
 ---

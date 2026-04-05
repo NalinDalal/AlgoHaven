@@ -14,6 +14,7 @@
     "dev": "bun --env-file=../../.env --env-file=../../.env run index.ts"
   },
   "dependencies": {
+    "@algohaven/redis": "workspace:*",
     "@prisma/client": "^7.4.2",
     "nodemailer": "^8.0.1"
   }

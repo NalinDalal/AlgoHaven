@@ -3,6 +3,7 @@ import { SubmissionStatus, JudgePhase, Role } from "@/packages/db";
 
 import { requireAuth, requireAdmin } from "./auth";
 import { success, failure } from "@/packages/utils/response";
+import { publishLeaderboardUpdate } from "@algohaven/redis";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -718,4 +719,105 @@ export async function updateContest(req: Request): Promise<Response> {
   });
 
   return success("Contest updated", { contest: updated });
+}
+
+export async function handleLeaderboardUpdate(
+  submissionId: string,
+): Promise<void> {
+  const submission = await prisma.submission.findUnique({
+    where: { id: submissionId },
+    include: { problem: true },
+  });
+
+  if (!submission || !submission.contestId) return;
+
+  const entry = await prisma.leaderboardEntry.findUnique({
+    where: {
+      contestId_userId: {
+        contestId: submission.contestId,
+        userId: submission.userId,
+      },
+    },
+  });
+
+  const contestProblem = await prisma.contestProblem.findFirst({
+    where: { contestId: submission.contestId, problemId: submission.problemId },
+  });
+
+  if (!contestProblem) return;
+
+  if (submission.status === SubmissionStatus.ACCEPTED) {
+    const isFirstAccept = !entry?.lastSolvedAt;
+
+    const newSolved = isFirstAccept
+      ? (entry?.solved ?? 0) + 1
+      : (entry?.solved ?? 0);
+    const newPoints = isFirstAccept
+      ? (entry?.totalPoints ?? 0) + contestProblem.points
+      : (entry?.totalPoints ?? 0);
+
+    const contest = await prisma.contest.findUnique({
+      where: { id: submission.contestId },
+    });
+    const contestStartMins = contest
+      ? Math.floor((Date.now() - contest.startTime.getTime()) / 60000)
+      : 0;
+    const newPenaltyMins = isFirstAccept
+      ? (entry?.penaltyMins ?? 0) + contestStartMins
+      : (entry?.penaltyMins ?? 0);
+
+    await prisma.leaderboardEntry.upsert({
+      where: {
+        contestId_userId: {
+          contestId: submission.contestId,
+          userId: submission.userId,
+        },
+      },
+      create: {
+        contestId: submission.contestId,
+        userId: submission.userId,
+        totalPoints: newPoints,
+        solved: newSolved,
+        penaltyMins: newPenaltyMins,
+        lastSolvedAt: submission.createdAt,
+      },
+      update: {
+        totalPoints: newPoints,
+        solved: newSolved,
+        penaltyMins: newPenaltyMins,
+        lastSolvedAt: submission.createdAt,
+      },
+    });
+
+    const entries = await prisma.leaderboardEntry.findMany({
+      where: { contestId: submission.contestId },
+      select: {
+        userId: true,
+        totalPoints: true,
+        solved: true,
+        penaltyMins: true,
+        lastSolvedAt: true,
+        user: { select: { username: true } },
+      },
+      orderBy: [
+        { totalPoints: "desc" },
+        { penaltyMins: "asc" },
+        { lastSolvedAt: "asc" },
+      ],
+    });
+
+    const ranked = entries.map((e, i) => ({
+      userId: e.userId,
+      username: e.user?.username ?? "Unknown",
+      totalPoints: e.totalPoints,
+      solved: e.solved,
+      penaltyMins: e.penaltyMins,
+      rank: i + 1,
+    }));
+
+    await publishLeaderboardUpdate(submission.contestId, {
+      contestId: submission.contestId,
+      entries: ranked,
+    });
+  }
 }

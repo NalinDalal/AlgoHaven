@@ -1,6 +1,7 @@
 import { prisma } from "@/packages/db";
 import { requireAuth } from "./auth";
 import { success, failure } from "@/packages/utils/response";
+import { handleLeaderboardUpdate } from "./contest";
 
 type SubmissionStatus =
   | "QUEUED"
@@ -206,6 +207,14 @@ export async function handleWorkerUpdateSubmission(
       memoryUsedKb,
     },
   });
+
+  if (status === "ACCEPTED") {
+    try {
+      await handleLeaderboardUpdate(submissionId);
+    } catch (err) {
+      console.error("[Leaderboard] Update failed:", err);
+    }
+  }
 
   return success("Submission updated", { submissionId, status });
 }
