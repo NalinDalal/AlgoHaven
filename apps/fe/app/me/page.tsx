@@ -162,7 +162,8 @@ function BadgeDisplay({ badges }: { badges: MeData["badges"] }) {
 }
 
 function Heatmap({ data }: { data: MeData["heatmap"] }) {
-  const days = [];
+  const days: { date: string; count: number; accepted: number; day: number }[] =
+    [];
   const today = new Date();
   for (let i = 364; i >= 0; i--) {
     const d = new Date(today);

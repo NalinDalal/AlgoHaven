@@ -536,8 +536,8 @@ export async function handleMePost(req: Request): Promise<Response> {
   if (authResult instanceof Response) return authResult;
 
   const { user } = authResult;
-  const body = await req.json();
-  const rating = Number(body?.rating);
+  const body = (await req.json()) as { rating?: number };
+  const rating = Number(body?.rating ?? 0);
 
   if (!Number.isFinite(rating)) {
     return failure("rating must be a number", null, 400);

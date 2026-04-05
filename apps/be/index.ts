@@ -51,7 +51,7 @@ import {
   getContestLeaderboard,
 } from "./routes/contest";
 
-import { matchRoute } from "@algohaven/utils/matchRoute";
+import { matchRoute } from "@algohaven/utils";
 
 // pattern: /api/problems/:id
 // path:    /api/problems/abc123

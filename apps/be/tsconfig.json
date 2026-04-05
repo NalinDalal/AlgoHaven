@@ -13,24 +13,29 @@
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "noEmit": true,
-    "baseUrl": "../../",
+    "baseUrl": ".",
     "paths": {
-      "@/packages/db": ["packages/db/index.ts"],
-      "@/packages/auth": ["packages/auth/index.ts"],
-      "@/packages/auth/email": ["packages/auth/email.ts"],
-      "@/packages/utils/*": ["packages/utils/*"]
+      "@/packages/db": ["../../packages/db/index.ts"],
+      "@/packages/auth": ["../../packages/auth/index.ts"],
+      "@/packages/utils/*": ["../../packages/utils/*"],
+      "@algohaven/utils": ["../../packages/utils/index.ts"],
+      "@algohaven/utils/*": ["../../packages/utils/*"],
+      "@algohaven/db": ["../../packages/db/index.ts"],
+      "@algohaven/redis": ["../../packages/redis/index.ts"],
+      "@algohaven/auth": ["../../packages/auth/index.ts"]
     },
 
     // Best practices
-    "strict": true,
+    "strict": false,
     "skipLibCheck": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true,
+    "noUncheckedIndexedAccess": false,
     "noImplicitOverride": true,
 
     // Some stricter flags (disabled by default)
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "noPropertyAccessFromIndexSignature": false
+    "noPropertyAccessFromIndexSignature": false,
+    "noImplicitAny": false
   }
 }

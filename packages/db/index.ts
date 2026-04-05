@@ -15,7 +15,6 @@ export type {
   Submission,
   PlagiarismReport,
   RejudgeJob,
-  MagicLinkToken,
   Session,
 } from "./generated/prisma/client";
 
