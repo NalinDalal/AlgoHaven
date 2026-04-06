@@ -9,7 +9,8 @@
     "start": "bun run index.ts"
   },
   "dependencies": {
-    "@algohaven/redis": "0.1.0"
+    "@algohaven/logger": "workspace:*",
+    "@algohaven/redis": "workspace:*"
   },
   "devDependencies": {
     "@types/bun": "latest",

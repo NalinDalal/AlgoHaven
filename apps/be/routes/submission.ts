@@ -2,6 +2,7 @@ import { prisma } from "@/packages/db";
 import { requireAuth } from "./auth";
 import { success, failure } from "@/packages/utils/response";
 import { handleLeaderboardUpdate } from "./contest";
+import { be } from "@algohaven/logger";
 
 type SubmissionStatus =
   | "QUEUED"
@@ -38,7 +39,7 @@ async function sendToWorker(
     });
     return res.ok;
   } catch (error) {
-    console.error("[Worker] Failed to enqueue:", error);
+    be.error({ err: error }, "Failed to enqueue worker");
     return false;
   }
 }
@@ -212,7 +213,7 @@ export async function handleWorkerUpdateSubmission(
     try {
       await handleLeaderboardUpdate(submissionId);
     } catch (err) {
-      console.error("[Leaderboard] Update failed:", err);
+      be.error({ err }, "Leaderboard update failed");
     }
   }
 

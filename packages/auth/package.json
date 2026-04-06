@@ -11,6 +11,7 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@algohaven/logger": "workspace:*",
     "nodemailer": "^8.0.1"
   }
 }

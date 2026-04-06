@@ -1,5 +1,6 @@
 import { serve } from "bun";
 import { config } from "dotenv";
+import { be } from "@algohaven/logger";
 
 /*
  Load environment variables from .env.
@@ -172,7 +173,7 @@ async function router(req: Request): Promise<Response> {
           headers,
         });
       } catch (err) {
-        console.error("ROUTE ERROR:", err);
+        be.error(err, "Route error");
 
         return new Response(
           JSON.stringify({
@@ -212,7 +213,7 @@ const server = serve({
   fetch: router,
 });
 
-console.log(`Backend running on http://localhost:${PORT}`);
+be.info({ port: PORT }, "Backend running");
 
 // -----------------------------------------------------------------------------
 // Graceful shutdown
@@ -224,13 +225,13 @@ async function shutdown(signal: string) {
   if (isShuttingDown) return;
   isShuttingDown = true;
 
-  console.log(`\n[Server] Received ${signal}, shutting down gracefully...`);
+  be.info({ signal }, "Shutting down gracefully");
 
   server.stop();
 
   await prisma.$disconnect();
 
-  console.log("[Server] Shutdown complete");
+  be.info("Shutdown complete");
   process.exit(0);
 }
 

@@ -8,6 +8,7 @@
     "build": "echo 'No build needed'"
   },
   "dependencies": {
+    "@algohaven/logger": "workspace:*",
     "bun": "latest"
   }
 }

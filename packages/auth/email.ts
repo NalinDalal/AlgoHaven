@@ -1,4 +1,6 @@
 import nodemailer from "nodemailer";
+import { auth } from "@algohaven/logger";
+
 export async function sendMagicLinkEmail({
   to,
   url,
@@ -6,13 +8,12 @@ export async function sendMagicLinkEmail({
   to: string;
   url: string;
 }) {
-  // In development, just log the magic link (no real SMTP)
   if (
     process.env.NODE_ENV === "development" ||
     !process.env.SMTP_HOST ||
     process.env.SMTP_HOST === "smtp.example.com"
   ) {
-    console.log(`[DEV] Magic link for ${to}: ${url}`);
+    auth.debug({ to, url }, "DEV: Magic link generated");
     return;
   }
 
@@ -33,5 +34,5 @@ export async function sendMagicLinkEmail({
     html: `<p>Click <a href="${url}">here</a> to sign in. Link expires in 15 minutes.</p>`,
   });
 
-  console.log("Email sent:", info.messageId);
+  auth.info({ messageId: info.messageId }, "Email sent");
 }

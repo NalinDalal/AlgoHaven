@@ -1,0 +1,15 @@
+{
+  "name": "@algohaven/db",
+  "version": "0.0.1",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "private": true,
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.4.2",
+    "pg": "^8.20.0",
+    "prisma": "^7.4.2"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.20.0"
+  }
+}

@@ -1,5 +1,6 @@
 import { serve } from "bun";
 import { runCode } from "./docker";
+import { worker } from "@algohaven/logger";
 import {
   enqueueSubmission,
   getQueueLength,
@@ -61,9 +62,13 @@ function startQueueProcessor(): void {
 }
 
 async function processJob(job: Job): Promise<void> {
-  console.log(`[Worker] Processing submission ${job.submissionId}`);
-  console.log(
-    `[Worker] Language: ${job.language}, Test cases: ${job.testCases.length}`,
+  worker.info(
+    {
+      submissionId: job.submissionId,
+      language: job.language,
+      testCases: job.testCases.length,
+    },
+    "Processing submission",
   );
 
   let allAccepted = true;
@@ -77,33 +82,46 @@ async function processJob(job: Job): Promise<void> {
     const expected = testCase.expectedOutput.trim();
 
     if (result.status === "TLE") {
-      console.log(`[Worker] Test case TLE`);
+      worker.warn({ submissionId: job.submissionId }, "Test case TLE");
       allAccepted = false;
     } else if (result.status === "RUNTIME_ERROR") {
-      console.log(`[Worker] Test case RUNTIME_ERROR: ${result.stderr}`);
+      worker.warn(
+        { submissionId: job.submissionId, stderr: result.stderr },
+        "Test case RUNTIME_ERROR",
+      );
       allAccepted = false;
     } else if (actual === expected) {
-      console.log(`[Worker] Test case ACCEPTED`);
+      worker.debug({ submissionId: job.submissionId }, "Test case ACCEPTED");
     } else {
-      console.log(`[Worker] Test case WRONG_ANSWER`);
-      console.log(`[Worker]   Expected: "${expected}"`);
-      console.log(`[Worker]   Got: "${actual}"`);
+      worker.warn(
+        { submissionId: job.submissionId, expected, actual },
+        "Test case WRONG_ANSWER",
+      );
       allAccepted = false;
     }
   }
 
   const finalStatus = allAccepted ? "ACCEPTED" : "WRONG_ANSWER";
-  console.log(
-    `[Worker] Submission ${job.submissionId} final: ${finalStatus} (${totalTime}ms)`,
+  worker.info(
+    {
+      submissionId: job.submissionId,
+      status: finalStatus,
+      totalTimeMs: totalTime,
+    },
+    "Submission final result",
   );
 
   try {
     await updateSubmission(job.submissionId, finalStatus, totalTime);
-    console.log(
-      `[Worker] Updated submission ${job.submissionId} to ${finalStatus}`,
+    worker.info(
+      { submissionId: job.submissionId, status: finalStatus },
+      "Submission updated",
     );
   } catch (err) {
-    console.error(`[Worker] Error updating submission:`, err);
+    worker.error(
+      { err, submissionId: job.submissionId },
+      "Error updating submission",
+    );
   }
 }
 
@@ -126,10 +144,10 @@ const server = serve({
 
 startQueueProcessor();
 
-console.log(`[Worker] Code execution service running on port ${server.port}`);
-console.log(`[Worker] Endpoints:`);
-console.log(`  POST /api/worker/enqueue - Add submission to queue`);
-console.log(`  GET  /api/worker/health  - Health check`);
+worker.info({ port: server.port }, "Code execution service running");
+worker.info(
+  "Endpoints: POST /api/worker/enqueue - Add submission to queue, GET /api/worker/health - Health check",
+);
 
 // -----------------------------------------------------------------------------
 // Graceful shutdown
@@ -141,12 +159,13 @@ async function shutdown(signal: string) {
   if (isShuttingDown) return;
   isShuttingDown = true;
 
-  console.log(`\n[Worker] Received ${signal}, shutting down gracefully...`);
+  worker.info({ signal }, "Shutting down gracefully");
 
   const currentJob = getCurrentJob();
   if (currentJob) {
-    console.log(
-      `[Worker] Waiting for current job (${currentJob.submissionId}) to finish...`,
+    worker.info(
+      { submissionId: currentJob.submissionId },
+      "Waiting for current job to finish",
     );
 
     await new Promise<void>((resolve) => {
@@ -158,11 +177,11 @@ async function shutdown(signal: string) {
       }, 100);
     });
 
-    console.log("[Worker] Current job finished");
+    worker.info("Current job finished");
   }
 
   server.stop();
-  console.log("[Worker] Shutdown complete");
+  worker.info("Shutdown complete");
   process.exit(0);
 }
 

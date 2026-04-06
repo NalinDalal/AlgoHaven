@@ -10,6 +10,8 @@ export interface Job {
   testCases: TestCase[];
 }
 
+import { worker } from "@algohaven/logger";
+
 const jobQueue: Job[] = [];
 let isProcessing = false;
 let currentJob: Job | null = null;
@@ -80,9 +82,13 @@ export async function processNext(
 
   currentJob = job;
 
-  console.log(`[Worker] Processing submission ${job.submissionId}`);
-  console.log(
-    `[Worker] Language: ${job.language}, Test cases: ${job.testCases.length}`,
+  worker.info(
+    {
+      submissionId: job.submissionId,
+      language: job.language,
+      testCases: job.testCases.length,
+    },
+    "Processing submission",
   );
 
   let allAccepted = true;
@@ -96,33 +102,46 @@ export async function processNext(
     const expected = testCase.expectedOutput.trim();
 
     if (result.status === "TLE") {
-      console.log(`[Worker] Test case TLE`);
+      worker.warn({ submissionId: job.submissionId }, "Test case TLE");
       allAccepted = false;
     } else if (result.status === "RUNTIME_ERROR") {
-      console.log(`[Worker] Test case RUNTIME_ERROR: ${result.stderr}`);
+      worker.warn(
+        { submissionId: job.submissionId, stderr: result.stderr },
+        "Test case RUNTIME_ERROR",
+      );
       allAccepted = false;
     } else if (actual === expected) {
-      console.log(`[Worker] Test case ACCEPTED`);
+      worker.debug({ submissionId: job.submissionId }, "Test case ACCEPTED");
     } else {
-      console.log(`[Worker] Test case WRONG_ANSWER`);
-      console.log(`[Worker]   Expected: "${expected}"`);
-      console.log(`[Worker]   Got: "${actual}"`);
+      worker.warn(
+        { submissionId: job.submissionId, expected, actual },
+        "Test case WRONG_ANSWER",
+      );
       allAccepted = false;
     }
   }
 
   const finalStatus = allAccepted ? "ACCEPTED" : "WRONG_ANSWER";
-  console.log(
-    `[Worker] Submission ${job.submissionId} final: ${finalStatus} (${totalTime}ms)`,
+  worker.info(
+    {
+      submissionId: job.submissionId,
+      status: finalStatus,
+      totalTimeMs: totalTime,
+    },
+    "Submission final result",
   );
 
   try {
     await updateSubmission(job.submissionId, finalStatus, totalTime);
-    console.log(
-      `[Worker] Updated submission ${job.submissionId} to ${finalStatus}`,
+    worker.info(
+      { submissionId: job.submissionId, status: finalStatus },
+      "Submission updated",
     );
   } catch (err) {
-    console.error(`[Worker] Error updating submission:`, err);
+    worker.error(
+      { err, submissionId: job.submissionId },
+      "Error updating submission",
+    );
   }
 
   isProcessing = false;
