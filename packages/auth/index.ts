@@ -1,30 +1,14 @@
-import {
-  createHash,
-  randomBytes,
-  createCipheriv,
-  createDecipheriv,
-  randomUUID,
-} from "crypto";
+import bcrypt from "bcryptjs";
+import { createHash, randomBytes } from "crypto";
 
-const ALGORITHM = "aes-256-gcm";
-const ENC_KEY = process.env.AUTH_SECRET || randomUUID();
-const IV_LENGTH = 16;
-const TAG_LENGTH = 16;
+const SALT_ROUNDS = 12;
 
 export function hashPassword(password: string): string {
-  const salt = randomBytes(16).toString("hex");
-  const hash = createHash("sha256")
-    .update(salt + password)
-    .digest("hex");
-  return `${salt}:${hash}`;
+  return bcrypt.hashSync(password, SALT_ROUNDS);
 }
 
 export function verifyPassword(password: string, stored: string): boolean {
-  const [salt, hash] = stored.split(":");
-  const computed = createHash("sha256")
-    .update(salt + password)
-    .digest("hex");
-  return computed === hash;
+  return bcrypt.compareSync(password, stored);
 }
 
 export function generateMagicLinkToken(): { raw: string; hash: string } {
