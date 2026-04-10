@@ -1,150 +1,82 @@
+import { Queue, Worker, Job } from "bullmq";
+import { redis as ioredis } from "@algohaven/redis";
+import { worker } from "@algohaven/logger";
+
 export interface TestCase {
   input: string;
   expectedOutput: string;
 }
 
-export interface Job {
+export interface JobData {
   submissionId: string;
   code: string;
   language: string;
   testCases: TestCase[];
 }
 
-import { worker } from "@algohaven/logger";
-
-const jobQueue: Job[] = [];
-let isProcessing = false;
-let currentJob: Job | null = null;
-
-export function enqueueSubmission(job: Job): void {
-  jobQueue.push(job);
+export interface CompletedJob {
+  id: string;
+  submissionId: string;
+  status: string;
+  executionTimeMs: number;
 }
 
-export function getQueueLength(): number {
-  return jobQueue.length + (currentJob ? 1 : 0);
-}
+const connection = {
+  host: process.env.REDIS_HOST || "localhost",
+  port: parseInt(process.env.REDIS_PORT || "6379"),
+};
 
-export function isQueueProcessing(): boolean {
-  return isProcessing;
-}
-
-export function getCurrentJob(): Job | null {
-  return currentJob;
-}
-
-export function getNextJob(): Job | undefined {
-  currentJob = jobQueue.shift() ?? null;
-  return currentJob ?? undefined;
-}
-
-export function clearCurrentJob(): void {
-  currentJob = null;
-}
-
-export function setProcessing(value: boolean): void {
-  isProcessing = value;
-}
-
-export function markProcessing(): void {
-  isProcessing = true;
-}
-
-export function markIdle(): void {
-  isProcessing = false;
-  currentJob = null;
-}
-
-export async function processNext(
-  runCode: (
-    code: string,
-    input: string,
-    language: string,
-  ) => Promise<{
-    status: string;
-    stdout: string;
-    stderr: string;
-    executionTimeMs: number;
-  }>,
-  updateSubmission: (
-    submissionId: string,
-    status: string,
-    executionTimeMs: number,
-  ) => Promise<void>,
-): Promise<void> {
-  if (jobQueue.length === 0 || isProcessing) return;
-
-  isProcessing = true;
-  const job = jobQueue.shift();
-  if (!job) {
-    isProcessing = false;
-    return;
-  }
-
-  currentJob = job;
-
-  worker.info(
-    {
-      submissionId: job.submissionId,
-      language: job.language,
-      testCases: job.testCases.length,
+export const submissionQueue = new Queue<JobData>("submissions", {
+  connection,
+  defaultJobOptions: {
+    attempts: 3,
+    backoff: {
+      type: "exponential",
+      delay: 1000,
     },
-    "Processing submission",
-  );
+    removeOnComplete: true,
+    removeOnFail: false,
+  },
+});
 
-  let allAccepted = true;
-  let totalTime = 0;
-
-  for (const testCase of job.testCases) {
-    const result = await runCode(job.code, testCase.input, job.language);
-    totalTime += result.executionTimeMs;
-
-    const actual = result.stdout.trim();
-    const expected = testCase.expectedOutput.trim();
-
-    if (result.status === "TLE") {
-      worker.warn({ submissionId: job.submissionId }, "Test case TLE");
-      allAccepted = false;
-    } else if (result.status === "RUNTIME_ERROR") {
-      worker.warn(
-        { submissionId: job.submissionId, stderr: result.stderr },
-        "Test case RUNTIME_ERROR",
-      );
-      allAccepted = false;
-    } else if (actual === expected) {
-      worker.debug({ submissionId: job.submissionId }, "Test case ACCEPTED");
-    } else {
-      worker.warn(
-        { submissionId: job.submissionId, expected, actual },
-        "Test case WRONG_ANSWER",
-      );
-      allAccepted = false;
-    }
-  }
-
-  const finalStatus = allAccepted ? "ACCEPTED" : "WRONG_ANSWER";
+export async function enqueueSubmission(jobData: JobData): Promise<string> {
+  const job = await submissionQueue.add("submission", jobData, {
+    jobId: jobData.submissionId,
+  });
   worker.info(
-    {
-      submissionId: job.submissionId,
-      status: finalStatus,
-      totalTimeMs: totalTime,
-    },
-    "Submission final result",
+    { submissionId: jobData.submissionId, jobId: job.id },
+    "Job enqueued",
   );
+  return job.id!;
+}
 
-  try {
-    await updateSubmission(job.submissionId, finalStatus, totalTime);
-    worker.info(
-      { submissionId: job.submissionId, status: finalStatus },
-      "Submission updated",
-    );
-  } catch (err) {
-    worker.error(
-      { err, submissionId: job.submissionId },
-      "Error updating submission",
-    );
-  }
+export async function getQueueLength(): Promise<number> {
+  return submissionQueue.getWaitingCount();
+}
 
-  isProcessing = false;
-  currentJob = null;
-  setTimeout(() => processNext(runCode, updateSubmission), 100);
+export async function getActiveJob(): Promise<
+  Job<JobData, CompletedJob> | undefined
+> {
+  const active = await submissionQueue.getActive();
+  return active[0];
+}
+
+export async function getCompletedJobs(): Promise<CompletedJob[]> {
+  const jobs = await submissionQueue.getCompleted();
+  return Promise.all(
+    jobs.map(async (job) => ({
+      id: job.id!,
+      submissionId: job.data.submissionId,
+      status: (job.returnvalue as CompletedJob)?.status || "UNKNOWN",
+      executionTimeMs: (job.returnvalue as CompletedJob)?.executionTimeMs || 0,
+    })),
+  );
+}
+
+export async function clearFailedJobs(): Promise<void> {
+  await submissionQueue.clean(1000, 100, "failed");
+}
+
+export async function drainQueue(): Promise<void> {
+  await submissionQueue.drain();
 }

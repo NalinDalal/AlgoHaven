@@ -9,6 +9,8 @@
   },
   "dependencies": {
     "@algohaven/logger": "workspace:*",
+    "@algohaven/redis": "workspace:*",
+    "bullmq": "^5.28.2",
     "bun": "latest"
   }
 }
