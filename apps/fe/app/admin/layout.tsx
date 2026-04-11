@@ -125,6 +125,17 @@ export default function AdminLayout({
               Contests
             </Link>
             <Link
+              href="/admin/users"
+              style={{
+                fontFamily: "var(--font-mono), monospace",
+                fontSize: 13,
+                color: "var(--muted)",
+                textDecoration: "none",
+              }}
+            >
+              Users
+            </Link>
+            <Link
               href="/admin/problems/new"
               style={{
                 fontFamily: "var(--font-mono), monospace",

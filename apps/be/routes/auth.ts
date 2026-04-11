@@ -211,3 +211,65 @@ export async function requireAdmin(
   if (user.role !== "ADMIN") return failure("Forbidden", null, 403);
   return { user };
 }
+
+// PUT /api/users/:id/role
+// Body: { role: "USER" | "ADMIN" }
+// Admin only
+export async function handleUpdateUserRole(req: Request): Promise<Response> {
+  const authResult = await requireAdmin(req);
+  if (authResult instanceof Response) return authResult;
+
+  const { id } = (req as any).params;
+  const { role } = (await req.json()) as { role?: string };
+
+  if (!id) return failure("User ID required", null, 400);
+  if (!role || (role !== "USER" && role !== "ADMIN")) {
+    return failure("Valid role required (USER or ADMIN)", null, 400);
+  }
+
+  const user = await prisma.user.findUnique({ where: { id } });
+  if (!user) return failure("User not found", null, 404);
+
+  const updated = await prisma.user.update({
+    where: { id },
+    data: { role: role as "USER" | "ADMIN" },
+  });
+
+  return success("User role updated", {
+    user: { id: updated.id, email: updated.email, role: updated.role },
+  });
+}
+
+// GET /api/users
+// Admin only - list all users
+export async function handleListUsers(req: Request): Promise<Response> {
+  const authResult = await requireAdmin(req);
+  if (authResult instanceof Response) return authResult;
+
+  const url = new URL(req.url);
+  const page = parseInt(url.searchParams.get("page") || "1");
+  const limit = parseInt(url.searchParams.get("limit") || "20");
+
+  const skip = (page - 1) * limit;
+
+  const [users, total] = await Promise.all([
+    prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        role: true,
+        createdAt: true,
+      },
+      skip,
+      take: limit,
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.user.count(),
+  ]);
+
+  return success("Users retrieved", {
+    users,
+    pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+  });
+}

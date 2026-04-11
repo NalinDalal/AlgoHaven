@@ -19,6 +19,8 @@ import {
   handleSignout,
   handleMe as handleAuthMe,
   handleDevLogin,
+  handleUpdateUserRole,
+  handleListUsers,
 } from "./routes/auth";
 
 import { handleMe } from "./routes/me";
@@ -75,6 +77,10 @@ const routes: Record<string, Record<string, Handler>> = {
   "/api/auth/me": { GET: handleAuthMe },
   "/api/me": { GET: handleMe },
   "/api/auth/dev-login": { POST: handleDevLogin },
+
+  // ---------------- USERS (ADMIN) ----------------
+  "/api/users": { GET: handleListUsers },
+  "/api/users/:id/role": { PUT: handleUpdateUserRole },
 
   // ---------------- PROBLEMS ----------------
   // Problem CRUD operations
