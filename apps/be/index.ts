@@ -134,10 +134,16 @@ const routes: Record<string, Record<string, Handler>> = {
 // -----------------------------------------------------------------------------
 
 const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "http://localhost:3000",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Cookie",
-  "Access-Control-Allow-Credentials": "true",
+  "Access-Control-Allow-Origin":
+    process.env.CORS_ALLOWED_ORIGINS || "http://localhost:3000",
+  "Access-Control-Allow-Methods":
+    process.env.CORS_ALLOWED_METHODS || "GET, POST, PUT, DELETE, OPTIONS",
+  "Access-Control-Allow-Headers":
+    process.env.CORS_ALLOWED_HEADERS || "Content-Type, Cookie",
+  "Access-Control-Allow-Credentials":
+    process.env.CORS_ALLOW_CREDENTIALS?.toLowerCase() === "true"
+      ? "true"
+      : "false",
 };
 
 // -----------------------------------------------------------------------------
