@@ -61,6 +61,7 @@ import {
 
 import { handleCalculateRatings } from "./routes/ratings";
 import { handleConfirmPlagiarism } from "./routes/plagiarism";
+import { handleGetProfile } from "./routes/profile";
 import { matchRoute } from "@algohaven/utils";
 
 // pattern: /api/problems/:id
@@ -84,6 +85,7 @@ const routes: Record<string, Record<string, Handler>> = {
   "/api/auth/me": { GET: handleAuthMe },
   "/api/me": { GET: handleMe },
   "/api/auth/dev-login": { POST: handleDevLogin },
+  "/api/profile/:username": { GET: handleGetProfile },
 
   // ---------------- USERS (ADMIN) ----------------
   "/api/users": { GET: handleListUsers },
