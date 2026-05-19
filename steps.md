@@ -96,15 +96,6 @@ failure("Error message", null, 400)
 
 ---
 
-## Pending Features
-
-### Todo
-
-- [ ] Rating system (Elo calculation after contests)
-- [ ] User management (make users admin from admin panel)
-
----
-
 ## Code Execution Service
 
 ### Worker Service (apps/worker/)
