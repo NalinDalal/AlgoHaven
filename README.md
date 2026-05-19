@@ -224,18 +224,14 @@ curl -X POST http://localhost:3002/api/worker/enqueue \
 - [x] Contest creation form
 - [x] Beautified API responses
 - [x] Monaco editor for code submission
-
-### In Progress 🚧
-
-- [ ] User management (make users admin)
-- [ ] Problem/contest edit functionality
-- [ ] Add more languages (C++, Java, Go)
+- [x] User management (make users admin)
+- [x] Problem/contest edit functionality
+- [x] Add more languages (C++, Java, Go)
 
 ### Todo 📋
 
-- [ ] User dashboard & analytics
-- [ ] Rating system post-contest
-- [ ] Plagiarism detection
+- [x] Rating system post-contest (automated 3-day delay via BullMQ)
+- [x] Plagiarism detection (hash-based, runs after contest ends)
 - [ ] Virtual contests
 
 ---

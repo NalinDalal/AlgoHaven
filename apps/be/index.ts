@@ -37,6 +37,7 @@ import {
   handleSubmitSolution,
   handleSubmissionStatus,
   handleWorkerUpdateSubmission,
+  handleWorkerUpdatePlagiarism,
   handleRunSolution,
 } from "./routes/submission";
 
@@ -55,9 +56,11 @@ import {
   getContestRatings,
   listContestAnnouncements,
   postContestAnnouncement,
+  getContestSubmissions,
 } from "./routes/contest";
 
 import { handleCalculateRatings } from "./routes/ratings";
+import { handleConfirmPlagiarism } from "./routes/plagiarism";
 import { matchRoute } from "@algohaven/utils";
 
 // pattern: /api/problems/:id
@@ -137,6 +140,9 @@ const routes: Record<string, Record<string, Handler>> = {
     POST: postContestAnnouncement,
   },
   "/api/contest/:id/calculate-ratings": { POST: handleCalculateRatings },
+  "/api/contest/:id/submissions": { GET: getContestSubmissions },
+  "/api/worker/update-plagiarism": { POST: handleWorkerUpdatePlagiarism },
+  "/api/plagiarism/:id/confirm": { POST: handleConfirmPlagiarism },
 };
 
 // -----------------------------------------------------------------------------

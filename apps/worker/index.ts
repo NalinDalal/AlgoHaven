@@ -1,6 +1,7 @@
 import { serve } from "bun";
 import { Worker, type Job } from "bullmq";
 import { runCode } from "./docker";
+import { checkContestPlagiarism } from "./plagiarism";
 import { worker } from "@algohaven/logger";
 import {
   enqueueSubmission,
@@ -181,7 +182,12 @@ const ratingWorker = new Worker<RatingJobData>(
     const { contestId } = job.data;
     worker.info({ contestId }, "Processing rating calculation");
     await callCalculateRatings(contestId);
-    worker.info({ contestId }, "Rating calculation complete");
+    worker.info({ contestId }, "Rating calculation complete, checking plagiarism");
+    try {
+      await checkContestPlagiarism(contestId);
+    } catch (err) {
+      worker.error({ contestId, err }, "Plagiarism check failed");
+    }
   },
   { connection },
 );

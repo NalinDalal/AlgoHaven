@@ -184,7 +184,11 @@ export async function getUserFromRequest(req: Request) {
   const session = await prisma.session.findUnique({
     where: { tokenHash: hashToken(token) },
     include: {
-      user: { select: { id: true, email: true, username: true, role: true } },
+      user: {
+        select: {
+          id: true, email: true, username: true, role: true, banned: true, warnings: true,
+        },
+      },
     },
   });
 
@@ -200,6 +204,7 @@ export async function requireAuth(
 ): Promise<{ user: any } | Response> {
   const user = await getUserFromRequest(req);
   if (!user) return failure("Unauthorized", null, 401);
+  if (user.banned) return failure("Your account has been banned", null, 403);
   return { user };
 }
 
@@ -208,6 +213,7 @@ export async function requireAdmin(
 ): Promise<{ user: any } | Response> {
   const user = await getUserFromRequest(req);
   if (!user) return failure("Unauthorized", null, 401);
+  if (user.banned) return failure("Your account has been banned", null, 403);
   if (user.role !== "ADMIN") return failure("Forbidden", null, 403);
   return { user };
 }

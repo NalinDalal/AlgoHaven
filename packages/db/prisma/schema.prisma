@@ -78,6 +78,10 @@ model User {
   role        Role    @default(USER)
   username    String? @unique
 
+  warnings     Int     @default(0) // plagiarism warning count
+  banned       Boolean @default(false)
+  bannedAt     DateTime?
+
   submissions        Submission[]
   leaderboardEntries LeaderboardEntry[]
   sessions           Session[]

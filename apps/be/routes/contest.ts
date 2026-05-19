@@ -573,7 +573,22 @@ export async function postContestAnnouncement(req: Request): Promise<Response> {
     return success("Announcement created", { announcement }, 201);
 }
 
-// ─── 7. Create Contest ────────────────────────────────────────────────────────
+// ─── 7. Plagiarism ─────────────────────────────────────────────────────────────
+
+// GET /api/contest/:id/submissions  [worker only, via x-worker-secret]
+export async function getContestSubmissions(req: Request): Promise<Response> {
+    const contestId = (req as any).params?.id as string | undefined;
+    if (!contestId) return failure("Missing contest id", null, 400);
+
+    const submissions = await prisma.submission.findMany({
+        where: { contestId, status: SubmissionStatus.ACCEPTED },
+        select: { id: true, code: true, userId: true },
+    });
+
+    return success("Submissions retrieved", { submissions });
+}
+
+// ─── 8. Create Contest ────────────────────────────────────────────────────────
 
 // POST /api/contest/create  [admin only]
 // Body: { title, slug, startTime, endTime, visibility?, isRated?, freezeTime?,

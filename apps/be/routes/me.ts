@@ -455,6 +455,8 @@ export async function handleMe(req: Request): Promise<Response> {
     email: dbUser.email,
     username: dbUser.username,
     role: dbUser.role,
+    banned: dbUser.banned,
+    warnings: dbUser.warnings,
     createdAt: dbUser.createdAt,
 
     /* rating */

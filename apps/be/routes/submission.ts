@@ -173,3 +173,34 @@ export async function handleWorkerUpdateSubmission(
 
   return success("Submission updated", { submissionId, status });
 }
+
+// POST /api/worker/update-plagiarism - Worker reports plagiarism matches
+export async function handleWorkerUpdatePlagiarism(
+  req: Request,
+): Promise<Response> {
+  const workerSecret = req.headers.get("x-worker-secret");
+  if (workerSecret !== process.env.WORKER_SECRET) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
+  const body = (await req.json()) as {
+    contestId?: string;
+    reports?: { submissionId: string; matchedWithId: string }[];
+  };
+  const { contestId, reports } = body;
+
+  if (!contestId || !reports || reports.length === 0) {
+    return failure("contestId and reports required", null, 400);
+  }
+
+  await prisma.plagiarismReport.createMany({
+    data: reports.map((r) => ({
+      submissionId: r.submissionId,
+      matchedWithId: r.matchedWithId,
+      similarityScore: 100,
+      status: "PENDING",
+    })),
+  });
+
+  return success("Plagiarism reports created", { count: reports.length });
+}
