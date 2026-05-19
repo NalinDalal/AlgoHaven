@@ -29,6 +29,8 @@ interface MeData {
   email: string;
   username: string | null;
   role: string;
+  banned: boolean;
+  warnings: number;
   createdAt: string;
   currentRating: number | null;
   rankTier: string;
@@ -240,8 +242,11 @@ export default function MePage() {
     fetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/me`, {
       credentials: "include",
     })
-      .then((r) => {
-        if (!r.ok) throw new Error("not_authed");
+      .then(async (r) => {
+        if (!r.ok) {
+          const body = await r.json().catch(() => ({}));
+          throw new Error(body?.message || "not_authed");
+        }
         return r.json();
       })
       .then((data) => {
@@ -270,6 +275,7 @@ export default function MePage() {
   }
 
   if (error || !me) {
+    const isBanned = error?.toLowerCase().includes("banned");
     return (
       <>
         <Nav />
@@ -277,8 +283,8 @@ export default function MePage() {
           className="min-h-screen bg-[#0a0a0a] flex items-center justify-center"
           style={{ paddingTop: "60px" }}
         >
-          <div className="text-red-400 text-sm font-mono">
-            Not logged in or session expired.
+          <div className={`text-sm font-mono ${isBanned ? "text-red-400" : "text-zinc-500"}`}>
+            {isBanned ? error : "Not logged in or session expired."}
           </div>
         </div>
       </>
@@ -290,11 +296,18 @@ export default function MePage() {
   return (
     <>
       <Nav />
+      {me.banned && (
+        <div className="bg-red-950 border-b border-red-900 px-4 py-3 text-center">
+          <span className="font-mono text-sm text-red-400">
+            Your account has been banned due to repeated plagiarism violations.
+          </span>
+        </div>
+      )}
       <div
         className="min-h-screen bg-[#0a0a0a]"
         style={{
           fontFamily: "'JetBrains Mono', monospace",
-          paddingTop: "60px",
+          paddingTop: me.banned ? "100px" : "60px",
         }}
       >
         <div className="max-w-5xl mx-auto px-4 py-8 flex flex-col gap-8">

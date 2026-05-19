@@ -41,10 +41,18 @@ export default function EditorPanel({
   const [code, setCode] = useState("");
   const [activeSample, setActiveSample] = useState(0);
   const [saved, setSaved] = useState(true);
+  const [banned, setBanned] = useState(false);
   const { submitting, result, judgeMsg, submit } = useSubmission(
     problemId,
     submitEndpoint,
   );
+
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/auth/me`, { credentials: "include" })
+      .then((r) => r.json())
+      .then((d) => { if (d.data?.banned) setBanned(true); })
+      .catch(() => {});
+  }, []);
 
   // Persist code per problem
   useEffect(() => {
@@ -69,12 +77,12 @@ export default function EditorPanel({
     const handler = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.key === "Enter") {
         e.preventDefault();
-        submit(code, lang);
+        if (!banned) submit(code, lang);
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [code, lang, submit]);
+  }, [code, lang, submit, banned]);
 
   const handleLangChange = (l: Lang) => {
     const savedCode = localStorage.getItem(`code_${problemId}_${l}`);
@@ -139,40 +147,46 @@ export default function EditorPanel({
           )}
 
           {/* Submit button */}
-          <button
-            onClick={() => submit(code, lang)}
-            disabled={submitting}
-            className={`font-mono text-[12px] font-bold px-4 py-2 rounded transition-all cursor-pointer flex items-center gap-2
-              ${
-                submitting
-                  ? "bg-transparent border border-[#252525] text-zinc-600 cursor-not-allowed"
-                  : "bg-[#e8ff47] text-black hover:bg-[#c8df2a] border-0"
-              }`}
-          >
-            {submitting ? (
-              <>
-                <span className="w-3 h-3 border-2 border-zinc-500 border-t-black rounded-full animate-spin" />
-                Judging...
-              </>
-            ) : (
-              <>
-                Submit
-                <svg
-                  className="w-3.5 h-3.5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 7l5 5m0 0l-5 5m5-5H6"
-                  />
-                </svg>
-              </>
-            )}
-          </button>
+          {banned ? (
+            <span className="font-mono text-[11px] text-red-400 bg-red-950 border border-red-900 px-3 py-1.5 rounded">
+              Banned — cannot submit
+            </span>
+          ) : (
+            <button
+              onClick={() => submit(code, lang)}
+              disabled={submitting}
+              className={`font-mono text-[12px] font-bold px-4 py-2 rounded transition-all cursor-pointer flex items-center gap-2
+                ${
+                  submitting
+                    ? "bg-transparent border border-[#252525] text-zinc-600 cursor-not-allowed"
+                    : "bg-[#e8ff47] text-black hover:bg-[#c8df2a] border-0"
+                }`}
+            >
+              {submitting ? (
+                <>
+                  <span className="w-3 h-3 border-2 border-zinc-500 border-t-black rounded-full animate-spin" />
+                  Judging...
+                </>
+              ) : (
+                <>
+                  Submit
+                  <svg
+                    className="w-3.5 h-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 7l5 5m0 0l-5 5m5-5H6"
+                    />
+                  </svg>
+                </>
+              )}
+            </button>
+          )}
         </div>
       </div>
 
