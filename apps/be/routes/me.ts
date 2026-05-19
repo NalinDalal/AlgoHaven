@@ -1,4 +1,4 @@
-import { prisma } from "@/packages/db";
+import { prisma, SubmissionStatus } from "@/packages/db";
 import { requireAuth } from "./auth";
 import { success, failure } from "@/packages/utils/response";
 
@@ -270,7 +270,7 @@ export async function handleMe(req: Request): Promise<Response> {
     }),
 
     prisma.submission.findMany({
-      where: { userId: user.id, status: "ACCEPTED" },
+      where: { userId: user.id, status: SubmissionStatus.ACCEPTED },
       distinct: ["problemId"],
       select: { problem: { select: { difficulty: true, tags: true } } },
     }),
@@ -307,7 +307,7 @@ export async function handleMe(req: Request): Promise<Response> {
   const verdictMap: Record<string, number> = {};
   for (const v of verdictCounts) verdictMap[v.status] = v._count.status;
 
-  const acceptedCount = verdictMap["ACCEPTED"] ?? 0;
+  const acceptedCount = verdictMap[SubmissionStatus.ACCEPTED] ?? 0;
   const totalSubmissions = dbUser._count.submissions ?? 0;
   const acceptanceRate =
     totalSubmissions > 0
@@ -353,7 +353,7 @@ export async function handleMe(req: Request): Promise<Response> {
     const date = sub.createdAt.toISOString().split("T")[0];
     if (!heatmap[date]) heatmap[date] = { count: 0, accepted: 0 };
     heatmap[date].count++;
-    if (sub.status === "ACCEPTED") heatmap[date].accepted++;
+    if (sub.status === SubmissionStatus.ACCEPTED) heatmap[date].accepted++;
   }
 
   /* ────────────────────────────────────────────────────────────── */
@@ -371,7 +371,7 @@ export async function handleMe(req: Request): Promise<Response> {
   for (const v of recentActivity) last30Map[v.status] = v._count.status;
   const last30Days = {
     submissions: Object.values(last30Map).reduce((a, b) => a + b, 0),
-    accepted: last30Map["ACCEPTED"] ?? 0,
+    accepted: last30Map[SubmissionStatus.ACCEPTED] ?? 0,
   };
 
   /* ────────────────────────────────────────────────────────────── */
