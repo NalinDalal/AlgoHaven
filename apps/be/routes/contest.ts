@@ -1,6 +1,6 @@
 import { prisma, SubmissionStatus, JudgePhase, Role } from "@/packages/db";
 
-import { requireAuth, requireAdmin } from "./auth";
+import { requireAuth, requireAdmin, getUserFromRequest } from "./auth";
 import { success, failure } from "@/packages/utils/response";
 import { publishLeaderboardUpdate } from "@algohaven/redis";
 import { sendToWorker } from "./worker";
@@ -36,9 +36,18 @@ export async function listContest(req: Request): Promise<Response> {
         timeFilter = { startTime: { lte: now }, endTime: { gte: now } };
     else if (status === "past") timeFilter = { endTime: { lt: now } };
 
+    const user = await getUserFromRequest(req);
+    const isAdmin = user?.role === Role.ADMIN;
+
+    const visibilityFilter = isAdmin
+        ? {}
+        : { visibility: { not: "PRIVATE" as const } };
+
+    const where = { ...timeFilter, ...visibilityFilter };
+
     const [contests, total] = await Promise.all([
         prisma.contest.findMany({
-            where: timeFilter,
+            where,
             select: {
                 id: true,
                 title: true,
@@ -55,7 +64,7 @@ export async function listContest(req: Request): Promise<Response> {
             skip,
             take: limit,
         }),
-        prisma.contest.count({ where: timeFilter }),
+        prisma.contest.count({ where }),
     ]);
 
     return success("Contests retrieved", {
