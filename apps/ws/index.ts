@@ -90,7 +90,7 @@ async function validateSession(cookie: string): Promise<string | null> {
       headers: { Cookie: cookie },
     });
     if (res.ok) {
-      const data = await res.json();
+      const data = await res.json() as { data?: { user?: { id: string } } };
       return data.data?.user?.id ?? null;
     }
   } catch (e) {
