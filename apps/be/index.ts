@@ -52,6 +52,9 @@ import {
   deleteContest,
   updateContest,
   getContestLeaderboard,
+  getContestRatings,
+  listContestAnnouncements,
+  postContestAnnouncement,
 } from "./routes/contest";
 
 import { matchRoute } from "@algohaven/utils";
@@ -127,6 +130,11 @@ const routes: Record<string, Record<string, Handler>> = {
     POST: submitContestProblemSolution,
   },
   "/api/contest/:id/leaderboard": { GET: getContestLeaderboard },
+  "/api/contest/:id/ratings": { GET: getContestRatings },
+  "/api/contest/:id/announcements": {
+    GET: listContestAnnouncements,
+    POST: postContestAnnouncement,
+  },
 };
 
 // -----------------------------------------------------------------------------
