@@ -1,48 +1,9 @@
-import { prisma } from "@/packages/db";
+import { prisma, SubmissionStatus } from "@/packages/db";
 import { requireAuth } from "./auth";
 import { success, failure } from "@/packages/utils/response";
 import { handleLeaderboardUpdate } from "./contest";
 import { be } from "@algohaven/logger";
-
-type SubmissionStatus =
-  | "QUEUED"
-  | "RUNNING"
-  | "ACCEPTED"
-  | "WRONG_ANSWER"
-  | "TLE"
-  | "MLE"
-  | "RUNTIME_ERROR"
-  | "COMPILE_ERROR";
-
-const WORKER_URL = process.env.WORKER_URL || "http://localhost:3002";
-
-async function sendToWorker(
-  submissionId: string,
-  code: string,
-  language: string,
-  testCases: { input: string; expectedOutput: string }[],
-) {
-  try {
-    const res = await fetch(`${WORKER_URL}/api/worker/enqueue`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-worker-secret":
-          process.env.WORKER_SECRET || "dev-secret-change-in-prod",
-      },
-      body: JSON.stringify({
-        submissionId,
-        code,
-        language,
-        testCases,
-      }),
-    });
-    return res.ok;
-  } catch (error) {
-    be.error({ err: error }, "Failed to enqueue worker");
-    return false;
-  }
-}
+import { sendToWorker } from "./worker";
 
 // POST /api/problems/:id/run - Run code against sample test cases only (no submission)
 export async function handleRunSolution(req: Request): Promise<Response> {
@@ -131,11 +92,10 @@ export async function handleSubmitSolution(req: Request): Promise<Response> {
       problemId,
       code,
       language,
-      status: "QUEUED",
+      status: SubmissionStatus.QUEUED,
     },
   });
 
-  // Send all test cases to worker for full judging
   const testCases = problem.testCases.map((tc) => ({
     input: tc.input,
     expectedOutput: tc.expectedOutput,
@@ -145,7 +105,7 @@ export async function handleSubmitSolution(req: Request): Promise<Response> {
 
   return success(
     "Submission created",
-    { submission_id: submission.id, status: "QUEUED" },
+    { submission_id: submission.id, status: SubmissionStatus.QUEUED },
     201,
   );
 }
@@ -203,7 +163,7 @@ export async function handleWorkerUpdateSubmission(
     },
   });
 
-  if (status === "ACCEPTED") {
+  if (status === SubmissionStatus.ACCEPTED) {
     try {
       await handleLeaderboardUpdate(submissionId);
     } catch (err) {
