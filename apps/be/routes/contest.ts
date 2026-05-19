@@ -633,6 +633,26 @@ export async function createContest(req: Request): Promise<Response> {
         },
     });
 
+    if (contest.isRated) {
+        const WORKER_URL = process.env.WORKER_URL || "http://localhost:3002";
+        const WORKER_SECRET = process.env.WORKER_SECRET || "dev-secret-change-in-prod";
+        try {
+            await fetch(`${WORKER_URL}/api/worker/schedule-rating`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "x-worker-secret": WORKER_SECRET,
+                },
+                body: JSON.stringify({
+                    contestId: contest.id,
+                    endTime: contest.endTime.toISOString(),
+                }),
+            });
+        } catch (err) {
+            // non-blocking — rating can be scheduled manually later
+        }
+    }
+
     return success("Contest created", { contest }, 201);
 }
 

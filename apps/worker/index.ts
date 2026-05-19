@@ -7,8 +7,10 @@ import {
   getQueueLength,
   getActiveJob,
   submissionQueue,
+  scheduleRatingCalculation,
   type JobData,
   type CompletedJob,
+  type RatingJobData,
 } from "./queue";
 import { handleEnqueue, handleHealth } from "./api";
 
@@ -42,6 +44,22 @@ async function updateSubmission(
   }
 }
 
+async function callCalculateRatings(contestId: string): Promise<void> {
+  const res = await fetch(
+    `${BACKEND_URL}/api/contest/${contestId}/calculate-ratings`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-worker-secret": WORKER_SECRET,
+      },
+    },
+  );
+  if (!res.ok) {
+    throw new Error(`Rating calculation failed: ${res.status}`);
+  }
+}
+
 const server = serve({
   port: 3002,
   fetch(req: Request) {
@@ -50,6 +68,17 @@ const server = serve({
     if (req.method === "POST" && url.pathname === "/api/worker/enqueue") {
       return handleEnqueue(req, WORKER_SECRET, async (jobData) => {
         const jobId = await enqueueSubmission(jobData as JobData);
+        return jobId;
+      });
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/worker/schedule-rating") {
+      return handleEnqueue(req, WORKER_SECRET, async (body) => {
+        const { contestId, endTime } = body as any;
+        if (!contestId || !endTime) {
+          throw new Error("contestId and endTime are required");
+        }
+        const jobId = await scheduleRatingCalculation(contestId, new Date(endTime));
         return jobId;
       });
     }
@@ -143,6 +172,31 @@ myWorker.on("failed", (job: Job<JobData, CompletedJob> | undefined, err: Error) 
 worker.info("BullMQ worker started");
 
 // -----------------------------------------------------------------------------
+// Rating Worker
+// -----------------------------------------------------------------------------
+
+const ratingWorker = new Worker<RatingJobData>(
+  "ratings",
+  async (job: Job<RatingJobData>) => {
+    const { contestId } = job.data;
+    worker.info({ contestId }, "Processing rating calculation");
+    await callCalculateRatings(contestId);
+    worker.info({ contestId }, "Rating calculation complete");
+  },
+  { connection },
+);
+
+ratingWorker.on("completed", (job) => {
+  worker.info({ jobId: job.id, contestId: job.data.contestId }, "Rating job completed");
+});
+
+ratingWorker.on("failed", (job, err) => {
+  worker.error({ jobId: job?.id, err: err.message }, "Rating job failed");
+});
+
+worker.info("BullMQ rating worker started");
+
+// -----------------------------------------------------------------------------
 // Graceful shutdown
 // -----------------------------------------------------------------------------
 
@@ -150,6 +204,7 @@ async function shutdown(signal: string) {
   worker.info({ signal }, "Shutting down gracefully");
 
   await myWorker.close();
+  await ratingWorker.close();
 
   server.stop();
   worker.info("Shutdown complete");

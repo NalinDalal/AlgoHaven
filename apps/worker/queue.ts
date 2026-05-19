@@ -80,3 +80,33 @@ export async function clearFailedJobs(): Promise<void> {
 export async function drainQueue(): Promise<void> {
   await submissionQueue.drain();
 }
+
+// ─── Rating Queue ───────────────────────────────────────────────────────────────
+
+export interface RatingJobData {
+  contestId: string;
+}
+
+export const ratingQueue = new Queue<RatingJobData>("ratings", {
+  connection,
+  defaultJobOptions: {
+    attempts: 3,
+    backoff: { type: "exponential", delay: 5000 },
+    removeOnComplete: true,
+    removeOnFail: false,
+  },
+});
+
+export async function scheduleRatingCalculation(
+  contestId: string,
+  contestEndTime: Date,
+): Promise<string> {
+  const now = Date.now();
+  const end = contestEndTime.getTime();
+  const threeDays = 3 * 24 * 60 * 60 * 1000;
+  const delay = Math.max(0, end + threeDays - now);
+
+  const job = await ratingQueue.add("calculate-ratings", { contestId }, { delay });
+  worker.info({ contestId, delayMs: delay }, "Rating calculation scheduled");
+  return job.id!;
+}

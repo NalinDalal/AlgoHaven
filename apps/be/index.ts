@@ -57,6 +57,7 @@ import {
   postContestAnnouncement,
 } from "./routes/contest";
 
+import { handleCalculateRatings } from "./routes/ratings";
 import { matchRoute } from "@algohaven/utils";
 
 // pattern: /api/problems/:id
@@ -135,6 +136,7 @@ const routes: Record<string, Record<string, Handler>> = {
     GET: listContestAnnouncements,
     POST: postContestAnnouncement,
   },
+  "/api/contest/:id/calculate-ratings": { POST: handleCalculateRatings },
 };
 
 // -----------------------------------------------------------------------------
