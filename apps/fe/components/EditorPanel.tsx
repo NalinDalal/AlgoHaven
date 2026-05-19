@@ -50,7 +50,7 @@ export default function EditorPanel({
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/auth/me`, { credentials: "include" })
       .then((r) => r.json())
-      .then((d) => { if (d.data?.banned) setBanned(true); })
+      .then((d) => { if (d.data?.user?.banned) setBanned(true); })
       .catch(() => {});
   }, []);
 
