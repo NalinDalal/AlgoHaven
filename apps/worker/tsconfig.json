@@ -11,6 +11,10 @@
     "noEmit": true,
     "baseUrl": "../../",
     "paths": {
+      "@algohaven/utils": ["packages/utils/index.ts"],
+      "@algohaven/utils/*": ["packages/utils/*"],
+      "@algohaven/logger": ["packages/logger/index.ts"],
+      "@algohaven/redis": ["packages/redis/index.ts"],
       "@/packages/utils/*": ["packages/utils/*"]
     },
     "strict": true,

@@ -10,7 +10,10 @@
   "dependencies": {
     "@algohaven/logger": "workspace:*",
     "@algohaven/redis": "workspace:*",
-    "bullmq": "^5.28.2",
-    "bun": "latest"
+    "bullmq": "^5.28.2"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5"
   }
 }

@@ -1,4 +1,5 @@
 import { serve } from "bun";
+import { Worker, type Job } from "bullmq";
 import { runCode } from "./docker";
 import { worker } from "@algohaven/logger";
 import {
@@ -43,7 +44,7 @@ async function updateSubmission(
 
 const server = serve({
   port: 3002,
-  fetch(req) {
+  fetch(req: Request) {
     const url = new URL(req.url);
 
     if (req.method === "POST" && url.pathname === "/api/worker/enqueue") {
@@ -72,7 +73,7 @@ worker.info(
 
 const myWorker = new Worker<JobData, CompletedJob>(
   "submissions",
-  async (job) => {
+  async (job: Job<JobData, CompletedJob>) => {
     const { submissionId, code, language, testCases } = job.data;
 
     worker.info(
@@ -126,17 +127,17 @@ const myWorker = new Worker<JobData, CompletedJob>(
 
     await updateSubmission(submissionId, finalStatus, totalTime);
 
-    return { status: finalStatus, executionTimeMs: totalTime };
+    return { id: job.id!, submissionId, status: finalStatus, executionTimeMs: totalTime };
   },
   { connection },
 );
 
-myWorker.on("completed", (job) => {
+myWorker.on("completed", (job: Job<JobData, CompletedJob>) => {
   worker.info({ jobId: job.id }, "Job completed");
 });
 
-myWorker.on("failed", (job, err) => {
-  worker.error({ jobId: job.id, err: err.message }, "Job failed");
+myWorker.on("failed", (job: Job<JobData, CompletedJob> | undefined, err: Error) => {
+  worker.error({ jobId: job?.id, err: err.message }, "Job failed");
 });
 
 worker.info("BullMQ worker started");
