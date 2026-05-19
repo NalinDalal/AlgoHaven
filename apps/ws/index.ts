@@ -242,3 +242,22 @@ startCleanupJob();
 
 ws.info({ port: PORT }, "SSE Server running");
 ws.info("Endpoints: SSE /sse/contest/:id - Server-Sent Events");
+
+async function shutdown(signal: string) {
+  ws.info({ signal }, "Shutting down gracefully");
+
+  for (const [clientId, client] of sseClients) {
+    try {
+      client.controller.close();
+    } catch {}
+    sseClients.delete(clientId);
+    removeClientFromContest(clientId, client.contestId);
+  }
+
+  server.stop();
+  ws.info("Shutdown complete");
+  process.exit(0);
+}
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));

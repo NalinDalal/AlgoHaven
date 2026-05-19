@@ -78,8 +78,8 @@ export async function handleRunSolution(req: Request): Promise<Response> {
   // Create a temporary run ID (not stored in DB)
   const runId = `run-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
-  // Send only sample test cases to worker
-  const testCases = problem.testCases.map((tc) => ({
+  // Send only first 3 test cases to worker (quick check)
+  const testCases = problem.testCases.slice(0, 3).map((tc) => ({
     input: tc.input,
     expectedOutput: tc.expectedOutput,
   }));
@@ -124,12 +124,6 @@ export async function handleSubmitSolution(req: Request): Promise<Response> {
     return failure("Problem not found", null, 404);
   }
 
-  if (problem.testCases.length > 200) {
-    //return top 3 test cases
-    const testCases = problem.testCases.slice(0, 3);
-    return success("submission created", { testCases }, 201);
-  }
-
   // Create submission
   const submission = await prisma.submission.create({
     data: {
@@ -141,7 +135,7 @@ export async function handleSubmitSolution(req: Request): Promise<Response> {
     },
   });
 
-  // Send to worker queue
+  // Send all test cases to worker for full judging
   const testCases = problem.testCases.map((tc) => ({
     input: tc.input,
     expectedOutput: tc.expectedOutput,

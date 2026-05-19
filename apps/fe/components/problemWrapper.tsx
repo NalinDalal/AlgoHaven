@@ -44,52 +44,6 @@ export interface SubmissionResult {
 
 export type Lang = "cpp" | "python" | "java" | "javascript";
 
-export const STARTER_CODE: Record<Lang, string> = {
-  cpp: `#include <bits/stdc++.h>
-using namespace std;
-
-int main() {
-    ios_base::sync_with_stdio(false);
-    cin.tie(NULL);
-
-    // read from cin, write to cout
-
-    return 0;
-}`,
-  python: `import sys
-input = sys.stdin.readline
-
-def solve():
-    # read from stdin, print to stdout
-    pass
-
-solve()`,
-  java: `import java.util.*;
-import java.io.*;
-
-public class Solution {
-    public static void main(String[] args) throws IOException {
-        BufferedReader br = new BufferedReader(
-            new InputStreamReader(System.in));
-        PrintWriter out = new PrintWriter(
-            new BufferedWriter(new OutputStreamWriter(System.out)));
-
-        // read from br, write via out.println()
-
-        out.flush();
-    }
-}`,
-  javascript: `const lines = require('fs')
-  .readFileSync('/dev/stdin', 'utf8')
-  .trim().split('\\n');
-
-let ptr = 0;
-const rd = () => lines[ptr++];
-
-// read via rd(), write via console.log()
-`,
-};
-
 const DIFF_STYLES: Record<string, { chip: string; label: string }> = {
   EASY:   { chip: "bg-green-950  border border-green-900  text-green-400",  label: "Easy"   },
   MEDIUM: { chip: "bg-yellow-950 border border-yellow-900 text-yellow-400", label: "Medium" },

@@ -6,7 +6,6 @@ import SampleStrip from "./SampleStrip";
 import OutputPanel from "./OutputPanel";
 import JudgeStatusBadge from "./JudgeStatusBadge";
 import { useSubmission } from "../hooks/useSubmission";
-import { STARTER_CODE } from "./problemWrapper";
 import type { Lang, SampleTestCase, SubmissionResult } from "./problemWrapper";
 
 const LANG_LABELS: Record<Lang, string> = {
@@ -39,7 +38,7 @@ export default function EditorPanel({
   onVerdict,
 }: Props) {
   const [lang, setLang] = useState<Lang>("cpp");
-  const [code, setCode] = useState(STARTER_CODE.cpp);
+  const [code, setCode] = useState("");
   const [activeSample, setActiveSample] = useState(0);
   const [saved, setSaved] = useState(true);
   const { submitting, result, judgeMsg, submit } = useSubmission(
@@ -51,7 +50,6 @@ export default function EditorPanel({
   useEffect(() => {
     const savedCode = localStorage.getItem(`code_${problemId}_${lang}`);
     if (savedCode) setCode(savedCode);
-    else setCode(STARTER_CODE[lang]);
   }, [problemId, lang]);
 
   useEffect(() => {
@@ -81,7 +79,7 @@ export default function EditorPanel({
   const handleLangChange = (l: Lang) => {
     const savedCode = localStorage.getItem(`code_${problemId}_${l}`);
     setLang(l);
-    setCode(savedCode ?? STARTER_CODE[l]);
+    setCode(savedCode ?? "");
   };
 
   const formatTime = (ms: number | null) => {
@@ -108,7 +106,7 @@ export default function EditorPanel({
         </select>
 
         <button
-          onClick={() => setCode(STARTER_CODE[lang])}
+          onClick={() => setCode("")}
           className="font-mono text-[10px] text-zinc-500 bg-transparent border border-[#252525] px-3 py-1.5 rounded cursor-pointer hover:text-zinc-300 hover:border-[#353535] transition-colors"
         >
           Reset
