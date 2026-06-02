@@ -1,6 +1,12 @@
-const WORKER_URL = process.env.WORKER_URL || "http://localhost:3002";
-const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3001";
-const WORKER_SECRET = process.env.WORKER_SECRET || "dev-secret-change-in-prod";
+const WORKER_URL = process.env.WORKER_URL;
+const BACKEND_URL = process.env.BACKEND_URL;
+const WORKER_SECRET = process.env.WORKER_SECRET;
+
+function requireEnv(): void {
+  if (!WORKER_URL || !BACKEND_URL || !WORKER_SECRET) {
+    throw new Error("WORKER_URL, BACKEND_URL, and WORKER_SECRET env vars required");
+  }
+}
 
 function normalizeCode(code: string): string {
   return code
@@ -26,9 +32,10 @@ interface PlagiarismSubmission {
 export async function checkContestPlagiarism(
   contestId: string,
 ): Promise<void> {
+  requireEnv();
   const res = await fetch(
     `${BACKEND_URL}/api/contest/${contestId}/submissions`,
-    { headers: { "x-worker-secret": WORKER_SECRET } },
+    { headers: { "x-worker-secret": WORKER_SECRET! } },
   );
   if (!res.ok) throw new Error(`Failed to fetch submissions: ${res.status}`);
   const body = await res.json() as { data?: { submissions?: PlagiarismSubmission[] } };
@@ -72,7 +79,7 @@ export async function checkContestPlagiarism(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-worker-secret": WORKER_SECRET,
+      "x-worker-secret": WORKER_SECRET!,
     },
     body: JSON.stringify({ contestId, reports }),
   });

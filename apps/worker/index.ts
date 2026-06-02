@@ -15,8 +15,10 @@ import {
 } from "./queue";
 import { handleEnqueue, handleHealth } from "./api";
 
-const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3001";
-const WORKER_SECRET = process.env.WORKER_SECRET || "dev-secret-change-in-prod";
+const BACKEND_URL = process.env.BACKEND_URL!;
+const WORKER_SECRET = process.env.WORKER_SECRET!;
+if (!BACKEND_URL) throw new Error("BACKEND_URL env var required");
+if (!WORKER_SECRET) throw new Error("WORKER_SECRET env var required");
 
 const connection = {
   host: process.env.REDIS_HOST || "localhost",
