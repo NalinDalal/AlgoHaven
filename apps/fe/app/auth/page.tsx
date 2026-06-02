@@ -1,7 +1,7 @@
 "use client";
-
-import React, { useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { apiFetch } from "@/lib/apiFetch";
 import Link from "next/link";
 
 type Mode = "login" | "register";
@@ -31,7 +31,7 @@ export default function AuthPage() {
     }
 
     try {
-      const res = await fetch(endpoint, {
+      const res = await apiFetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

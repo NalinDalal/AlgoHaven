@@ -169,7 +169,7 @@ export default function EditProblemPage() {
         `${process.env.NEXT_PUBLIC_BE_URL}/api/problems/${id}`,
         {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "X-Requested-By": "AlgoHaven" },
           credentials: "include", // Include authentication cookies
           body: JSON.stringify({
             // Spread form data

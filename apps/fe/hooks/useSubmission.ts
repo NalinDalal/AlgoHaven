@@ -42,7 +42,8 @@ export function useSubmission(problemId: string, endpoint?: string) {
         endpoint ?? `${process.env.NEXT_PUBLIC_BE_URL}/api/problems/${problemId}/submission`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "X-Requested-By": "AlgoHaven" },
+          credentials: "include",
           body: JSON.stringify({ code, language }),
         }
       );

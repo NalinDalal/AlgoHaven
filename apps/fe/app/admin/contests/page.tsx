@@ -48,6 +48,7 @@ export default function AdminContestsPage() {
         `${process.env.NEXT_PUBLIC_BE_URL}/api/contest/${id}`,
         {
           method: "DELETE",
+          headers: { "X-Requested-By": "AlgoHaven" },
           credentials: "include",
         },
       );

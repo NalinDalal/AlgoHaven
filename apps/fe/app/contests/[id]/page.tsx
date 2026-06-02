@@ -96,7 +96,7 @@ export default function ContestDetailPage({
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BE_URL}/api/contest/${id}/register`,
-        { method: "POST", credentials: "include" },
+        { method: "POST", credentials: "include", headers: { "X-Requested-By": "AlgoHaven" } },
       );
       if (res.ok) {
         setRegistered(true);

@@ -30,7 +30,8 @@ export default function NewContestPage() {
         `${process.env.NEXT_PUBLIC_BE_URL}/api/contest/create`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "X-Requested-By": "AlgoHaven" },
+          credentials: "include",
           body: JSON.stringify({
             ...form,
             startTime: new Date(form.startTime).toISOString(),

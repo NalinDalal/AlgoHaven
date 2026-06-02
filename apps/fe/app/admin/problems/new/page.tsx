@@ -81,7 +81,8 @@ export default function NewProblemPage() {
         `${process.env.NEXT_PUBLIC_BE_URL}/api/problem/create`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "X-Requested-By": "AlgoHaven" },
+          credentials: "include",
           body: JSON.stringify({
             // Spread form data
             ...form,

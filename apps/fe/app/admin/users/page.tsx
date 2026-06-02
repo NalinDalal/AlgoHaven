@@ -48,7 +48,7 @@ export default function AdminUsersPage() {
         `${process.env.NEXT_PUBLIC_BE_URL}/api/users/${userId}/role`,
         {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "X-Requested-By": "AlgoHaven" },
           credentials: "include",
           body: JSON.stringify({ role: newRole }),
         },

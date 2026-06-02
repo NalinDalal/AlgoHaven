@@ -83,6 +83,7 @@ export default function AdminProblemsPage() {
         `${process.env.NEXT_PUBLIC_BE_URL}/api/problems/${id}`,
         {
           method: "DELETE",
+          headers: { "X-Requested-By": "AlgoHaven" },
           credentials: "include",
         },
       );

@@ -83,7 +83,7 @@ export default function EditContestPage() {
                 `${process.env.NEXT_PUBLIC_BE_URL}/api/contest/${id}`,
                 {
                     method: "PUT",
-                    headers: { "Content-Type": "application/json" },
+                    headers: { "Content-Type": "application/json", "X-Requested-By": "AlgoHaven" },
                     credentials: "include",
                     body: JSON.stringify({
                         ...form,
