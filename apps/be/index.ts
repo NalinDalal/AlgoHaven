@@ -151,17 +151,26 @@ const routes: Record<string, Record<string, Handler>> = {
 // CORS configuration
 // -----------------------------------------------------------------------------
 
+const CORS_ORIGIN =
+  process.env.CORS_ALLOWED_ORIGINS || "http://localhost:3000";
+
 const CORS_HEADERS = {
-  "Access-Control-Allow-Origin":
-    process.env.CORS_ALLOWED_ORIGINS || "http://localhost:3000",
+  "Access-Control-Allow-Origin": CORS_ORIGIN,
   "Access-Control-Allow-Methods":
     process.env.CORS_ALLOWED_METHODS || "GET, POST, PUT, DELETE, OPTIONS",
   "Access-Control-Allow-Headers":
-    process.env.CORS_ALLOWED_HEADERS || "Content-Type, Cookie",
+    process.env.CORS_ALLOWED_HEADERS || "Content-Type, Cookie, X-Requested-By",
   "Access-Control-Allow-Credentials":
     process.env.CORS_ALLOW_CREDENTIALS?.toLowerCase() === "true"
       ? "true"
       : "false",
+};
+
+const SECURITY_HEADERS: Record<string, string> = {
+  "X-Frame-Options": "DENY",
+  "X-Content-Type-Options": "nosniff",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "X-XSS-Protection": "0",
 };
 
 // -----------------------------------------------------------------------------
@@ -174,7 +183,20 @@ async function router(req: Request): Promise<Response> {
 
   // Handle preflight requests
   if (method === "OPTIONS") {
-    return new Response(null, { status: 204, headers: CORS_HEADERS });
+    return new Response(null, { status: 204, headers: { ...CORS_HEADERS, ...SECURITY_HEADERS } });
+  }
+
+  // CSRF protection: non-GET/HEAD requests with cookie auth must have X-Requested-By
+  if (!["GET", "HEAD", "OPTIONS"].includes(method)) {
+    const hasCookie = req.headers.get("cookie") !== null;
+    const hasAuthHeader = req.headers.get("authorization") !== null;
+    const requestedBy = req.headers.get("x-requested-by");
+    if (hasCookie && !hasAuthHeader && !requestedBy) {
+      return new Response(JSON.stringify({ error: "CSRF validation failed" }), {
+        status: 403,
+        headers: { "Content-Type": "application/json", ...CORS_HEADERS, ...SECURITY_HEADERS },
+      });
+    }
   }
 
   // Iterate through route table
@@ -186,9 +208,12 @@ async function router(req: Request): Promise<Response> {
       (req as any).params = params;
       try {
         const response = await routeObj[method](req);
-        // Merge CORS headers into response
+        // Merge CORS + security headers into response
         const headers = new Headers(response.headers);
         for (const [k, v] of Object.entries(CORS_HEADERS)) {
+          headers.set(k, v);
+        }
+        for (const [k, v] of Object.entries(SECURITY_HEADERS)) {
           headers.set(k, v);
         }
         /*
@@ -208,7 +233,6 @@ async function router(req: Request): Promise<Response> {
         return new Response(
           JSON.stringify({
             error: "Internal Server Error",
-            details: String(err),
           }),
           {
             status: 500,
@@ -228,6 +252,7 @@ async function router(req: Request): Promise<Response> {
     headers: {
       "Content-Type": "application/json",
       ...CORS_HEADERS,
+      ...SECURITY_HEADERS,
     },
   });
 }

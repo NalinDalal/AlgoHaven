@@ -9,10 +9,48 @@ import { success, failure } from "@/packages/utils/response";
 import { getCookie } from "@/packages/utils/cookies";
 
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const SECURE_COOKIE =
+  process.env.NODE_ENV === "production" ? "Secure; " : "";
+
+// ─── Rate limiting ────────────────────────────────────────────────────────────
+
+const RATE_WINDOW_MS = 60_000;
+const RATE_MAX_LOGIN = 10;
+const RATE_MAX_REGISTER = 3;
+const ipBuckets = new Map<string, { count: number; resetAt: number }>();
+
+function checkRateLimit(ip: string, max: number): boolean {
+  const now = Date.now();
+  const bucket = ipBuckets.get(ip);
+  if (!bucket || now > bucket.resetAt) {
+    ipBuckets.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
+    return true;
+  }
+  bucket.count++;
+  return bucket.count <= max;
+}
+
+function getClientIp(req: Request): string {
+  return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+    || req.headers.get("cf-connecting-ip")
+    || "unknown";
+}
+
+// Periodically evict stale buckets
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, bucket] of ipBuckets) {
+    if (now > bucket.resetAt) ipBuckets.delete(ip);
+  }
+}, 60_000).unref();
 
 // POST /api/auth/register
 // Body: { email, password, username? }
 export async function handleRegister(req: Request): Promise<Response> {
+  if (!checkRateLimit(getClientIp(req), RATE_MAX_REGISTER)) {
+    return failure("Too many registration attempts. Try again later.", null, 429);
+  }
+
   const { email, password, username } = (await req.json()) as {
     email?: string;
     password?: string;
@@ -60,6 +98,11 @@ export async function handleRegister(req: Request): Promise<Response> {
 // POST /api/auth/login
 // Body: { email, password }
 export async function handleLogin(req: Request): Promise<Response> {
+  const ip = getClientIp(req);
+  if (!checkRateLimit(ip, RATE_MAX_LOGIN)) {
+    return failure("Too many login attempts. Try again later.", null, 429);
+  }
+
   const { email, password } = (await req.json()) as {
     email?: string;
     password?: string;
@@ -97,7 +140,7 @@ export async function handleLogin(req: Request): Promise<Response> {
       status: 200,
       headers: {
         "Content-Type": "application/json",
-        "Set-Cookie": `session=${raw}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${SESSION_TTL_MS / 1000};`,
+        "Set-Cookie": `session=${raw}; HttpOnly; ${SECURE_COOKIE}SameSite=Lax; Path=/; Max-Age=${SESSION_TTL_MS / 1000};`,
       },
     },
   );
@@ -114,7 +157,7 @@ export async function handleSignout(req: Request): Promise<Response> {
   }
   return new Response(null, {
     status: 204,
-    headers: { "Set-Cookie": "session=; HttpOnly; Path=/; Max-Age=0" },
+    headers: { "Set-Cookie": `session=; HttpOnly; ${SECURE_COOKIE}Path=/; Max-Age=0` },
   });
 }
 
@@ -151,7 +194,7 @@ export async function handleDevLogin(req: Request): Promise<Response> {
       status: 200,
       headers: {
         "Content-Type": "application/json",
-        "Set-Cookie": `session=${raw}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${SESSION_TTL_MS / 1000}`,
+        "Set-Cookie": `session=${raw}; HttpOnly; ${SECURE_COOKIE}SameSite=Lax; Path=/; Max-Age=${SESSION_TTL_MS / 1000}`,
       },
     },
   );

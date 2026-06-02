@@ -649,14 +649,15 @@ export async function createContest(req: Request): Promise<Response> {
     });
 
     if (contest.isRated) {
-        const WORKER_URL = process.env.WORKER_URL || "http://localhost:3002";
-        const WORKER_SECRET = process.env.WORKER_SECRET || "dev-secret-change-in-prod";
         try {
-            await fetch(`${WORKER_URL}/api/worker/schedule-rating`, {
+            const ws = process.env.WORKER_SECRET;
+            const wu = process.env.WORKER_URL;
+            if (!ws || !wu) throw new Error("WORKER_SECRET and WORKER_URL required");
+            await fetch(`${wu}/api/worker/schedule-rating`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "x-worker-secret": WORKER_SECRET,
+                    "x-worker-secret": ws,
                 },
                 body: JSON.stringify({
                     contestId: contest.id,
