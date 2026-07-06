@@ -1,11 +1,12 @@
 {
   "name": "@algohaven/utils",
-  "version": "0.0.1",
-  "main": "./index.ts",
-  "types": "./index.ts",
-  "exports": {
-    ".": "./index.ts",
-    "./env": "./env.ts",
-    "./package.json": "./package.json"
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
   }
 }
