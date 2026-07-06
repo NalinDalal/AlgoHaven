@@ -21,6 +21,8 @@ interface ScheduleRatingBody {
   endTime?: string;
 }
 
+// The worker must be started with the backend URL and shared worker secret
+// from the root .env so it can authenticate its callbacks.
 validateEnv(
   {
     BACKEND_URL: { required: true },

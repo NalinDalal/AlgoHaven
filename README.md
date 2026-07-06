@@ -27,6 +27,11 @@ sed -i '' "s/^POSTGRES_USER=.*/POSTGRES_USER=$(openssl rand -hex 8)/" .env
 sed -i '' "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=$(openssl rand -hex 16)/" .env
 ```
 
+The worker also requires these shared values in `.env`:
+
+- `BACKEND_URL=http://localhost:3001`
+- `WORKER_SECRET=<same secret used by the backend>`
+
 ### 3. Run Migrations
 
 ```sh
