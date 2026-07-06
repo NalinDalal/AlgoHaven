@@ -180,9 +180,9 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Headers":
     process.env.CORS_ALLOWED_HEADERS || "Content-Type, Cookie, X-Requested-By",
   "Access-Control-Allow-Credentials":
-    process.env.CORS_ALLOW_CREDENTIALS?.toLowerCase() === "true"
-      ? "true"
-      : "false",
+    process.env.CORS_ALLOW_CREDENTIALS?.toLowerCase() === "false"
+      ? "false"
+      : "true",
 };
 
 const SECURITY_HEADERS: Record<string, string> = {

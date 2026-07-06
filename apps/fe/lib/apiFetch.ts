@@ -3,5 +3,9 @@ export function apiFetch(input: RequestInfo | URL, init?: RequestInit): Promise<
   if (!headers.has("X-Requested-By")) {
     headers.set("X-Requested-By", "AlgoHaven");
   }
-  return fetch(input, { ...init, headers });
+  return fetch(input, {
+    credentials: "include",
+    ...init,
+    headers,
+  });
 }

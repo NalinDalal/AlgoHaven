@@ -41,6 +41,7 @@ export function useContestLeaderboard({
   >("connecting");
 
   const eventSourceRef = useRef<EventSource | null>(null);
+  const currentUserIdRef = useRef<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
@@ -68,7 +69,9 @@ export function useContestLeaderboard({
     }
 
     setConnectionStatus("connecting");
-    const eventSource = new EventSource(`${WS_URL}/sse/contest/${contestId}`);
+    const eventSource = new EventSource(`${WS_URL}/sse/contest/${contestId}`, {
+      withCredentials: true,
+    });
 
     eventSource.onopen = () => {
       setConnectionStatus("connected");
@@ -79,16 +82,22 @@ export function useContestLeaderboard({
       try {
         const data = JSON.parse(event.data);
         setEntries(data);
-        const me = data.find(
-          (e: LeaderboardEntry) => e.userId === "current-user",
-        );
+        const me = currentUserIdRef.current
+          ? data.find((e: LeaderboardEntry) => e.userId === currentUserIdRef.current)
+          : null;
         if (me) setUserRank(me.rank);
       } catch {
         // Malformed SSE data — ignore, next update will overwrite
       }
     });
 
-    eventSource.addEventListener("CONNECTED", () => {
+    eventSource.addEventListener("CONNECTED", (event) => {
+      try {
+        const data = JSON.parse(event.data) as { userId?: string | null };
+        currentUserIdRef.current = data.userId ?? null;
+      } catch {
+        currentUserIdRef.current = null;
+      }
       setConnectionStatus("connected");
       fetchLeaderboard();
     });
