@@ -24,8 +24,8 @@ interface UseContestLeaderboardResult {
   refresh: () => void;
 }
 
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "http://localhost:3003";
-const BE_URL = process.env.NEXT_PUBLIC_BE_URL || "http://localhost:3001";
+const WS_URL = process.env.NEXT_PUBLIC_WS_URL!;
+const BE_URL = process.env.NEXT_PUBLIC_BE_URL!;
 
 export function useContestLeaderboard({
   contestId,
