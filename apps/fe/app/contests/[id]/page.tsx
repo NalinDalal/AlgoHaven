@@ -190,12 +190,30 @@ export default function ContestDetailPage({
                   <span className="text-amber-500">Rated</span>
                 )}
                 {contest.isPractice && (
-                  <span className="text-zinc-500">Practice</span>
+                  <span className="px-2 py-1 rounded bg-purple-900 text-purple-400">
+                    Virtual
+                  </span>
                 )}
               </div>
             </div>
 
-            {contest.status !== "past" && (
+            {/* Registration / Virtual contest button */}
+            {contest.isPractice && contest.status === "past" && registered ? (
+              <Link
+                href={`/contests/${id}/virtual`}
+                className="px-6 py-2.5 rounded font-mono text-sm font-bold bg-purple-600 text-white hover:bg-purple-500 transition-colors"
+              >
+                Start Virtual
+              </Link>
+            ) : contest.isPractice && contest.status === "past" && !registered ? (
+              <button
+                onClick={handleRegister}
+                disabled={registering}
+                className="px-6 py-2.5 rounded font-mono text-sm font-bold bg-[#e8ff47] text-black hover:bg-[#c8df2a] transition-colors"
+              >
+                {registering ? "Registering..." : "Register for Virtual"}
+              </button>
+            ) : contest.status !== "past" ? (
               <button
                 onClick={handleRegister}
                 disabled={registering || registered}
@@ -211,7 +229,7 @@ export default function ContestDetailPage({
                     ? "Registering..."
                     : "Register"}
               </button>
-            )}
+            ) : null}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Nav from "@/components/Nav";
 import ProblemPanel from "@/components/ProblemPanel";
@@ -45,6 +45,8 @@ export default function ContestProblemPage() {
     id: string;
     problemId: string;
   }>();
+  const searchParams = useSearchParams();
+  const isVirtual = searchParams.get("virtual") === "1";
   const router = useRouter();
   const [problem, setProblem] = useState<ProblemData | null>(null);
   const [contestInfo, setContestInfo] = useState<{
@@ -148,7 +150,7 @@ export default function ContestProblemPage() {
           }}
         >
           <Link
-            href={`/contests/${contestId}`}
+            href={isVirtual ? `/contests/${contestId}/virtual` : `/contests/${contestId}`}
             style={{
               color: "#666",
               textDecoration: "none",
@@ -159,7 +161,7 @@ export default function ContestProblemPage() {
             }
             onMouseLeave={(e) => (e.currentTarget.style.color = "#666")}
           >
-            ← Contest
+            {isVirtual ? "← Virtual" : "← Contest"}
           </Link>
           <span style={{ color: "#2e2e2e" }}>/</span>
           <span style={{ color: "#f0f0f0", maxWidth: 300 }} className="truncate">

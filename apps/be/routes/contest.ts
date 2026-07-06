@@ -149,8 +149,9 @@ export async function getContestDetails(req: Request): Promise<Response> {
     }
 
     // Hide problem list until contest starts for non-admins
+    // Virtual/practice contests always show problems
     const contestStarted = new Date() >= contest.startTime;
-    const problems = isAdmin || contestStarted ? contest.problems : [];
+    const problems = isAdmin || contestStarted || contest.isPractice ? contest.problems : [];
 
     return success("Contest details retrieved", {
         contest: {
@@ -188,7 +189,8 @@ export async function registerForContest(req: Request): Promise<Response> {
     if (!contest) return failure("Contest not found", null, 404);
     if (!contest.registrationOpen)
         return failure("Registration is closed", null, 400);
-    if (new Date() > contest.endTime)
+    // Virtual contests allow registration even after the contest has ended
+    if (!contest.isPractice && new Date() > contest.endTime)
         return failure("Contest has already ended", null, 400);
 
     const existing = await prisma.leaderboardEntry.findUnique({

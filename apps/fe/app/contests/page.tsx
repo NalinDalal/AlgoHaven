@@ -286,21 +286,40 @@ function ContestRow({ contest }: { contest: Contest }) {
           width: 110,
         }}
       >
-        <span
-          style={{
-            fontFamily: "var(--font-mono), monospace",
-            fontSize: 11,
-            fontWeight: 700,
-            color: ss.color,
-            background: ss.bg,
-            border: `1px solid ${ss.border}`,
-            padding: "3px 10px",
-            borderRadius: 2,
-            whiteSpace: "nowrap",
-          }}
-        >
-          {ss.label}
-        </span>
+        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          <span
+            style={{
+              fontFamily: "var(--font-mono), monospace",
+              fontSize: 11,
+              fontWeight: 700,
+              color: ss.color,
+              background: ss.bg,
+              border: `1px solid ${ss.border}`,
+              padding: "3px 10px",
+              borderRadius: 2,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {ss.label}
+          </span>
+          {contest.isPractice && (
+            <span
+              style={{
+                fontFamily: "var(--font-mono), monospace",
+                fontSize: 10,
+                fontWeight: 700,
+                color: "#a78bfa",
+                background: "#1a0d2e",
+                border: "1px solid #3a1a6e",
+                padding: "2px 8px",
+                borderRadius: 2,
+                whiteSpace: "nowrap",
+              }}
+            >
+              Virtual
+            </span>
+          )}
+        </div>
       </td>
 
       {/* Duration */}
