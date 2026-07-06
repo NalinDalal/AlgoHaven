@@ -12,13 +12,26 @@ Contest platform similar to Codeforces
 docker compose up
 ```
 
-### 2. Run Migrations
+### 2. Configure Environment
+
+```sh
+cp .env.example .env
+```
+
+Generate a worker secret and add it to `.env`:
+
+```sh
+# macOS/Linux
+sed -i '' "s/^WORKER_SECRET=.*/WORKER_SECRET=$(openssl rand -hex 32)/" .env
+```
+
+### 3. Run Migrations
 
 ```sh
 bunx prisma migrate dev --schema=packages/db/prisma/schema.prisma
 ```
 
-### 3. Start Development
+### 4. Start Development
 
 ```sh
 bun run dev
@@ -27,7 +40,7 @@ bun run dev
 - Backend: http://localhost:3001
 - Frontend: http://localhost:3000
 
-### 4. Dev Login (Testing)
+### 5. Dev Login (Testing)
 
 For quick testing without email:
 
