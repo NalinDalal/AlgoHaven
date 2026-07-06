@@ -6,7 +6,7 @@ export const LANGUAGE_CONFIG: Record<
     javascript: { image: "node:20-slim", timeout: 5 },
     cpp: { image: "gcc:13.2.0", timeout: 10 },
     java: { image: "eclipse-temurin:21-jdk", timeout: 15 },
-    go: { image: "golang:1.21", timeout: 10 },
+    go: { image: "golang:1.23", timeout: 10 },
 };
 
 export const DOCKER_OPTIONS = [

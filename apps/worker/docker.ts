@@ -1,5 +1,5 @@
 import { toBase64 } from "@algohaven/utils";
-import { LANGUAGE_CONFIG, DOCKER_OPTIONS_NO_READONLY } from "./config";
+import { LANGUAGE_CONFIG, DOCKER_OPTIONS } from "./config";
 import { worker } from "@algohaven/logger";
 
 export interface ExecutionResult {
@@ -26,7 +26,7 @@ function buildDockerCommand(
     return [
       "docker",
       "run",
-      ...DOCKER_OPTIONS_NO_READONLY,
+      ...DOCKER_OPTIONS,
       "-i",
       config.image,
       "bash",
@@ -40,7 +40,7 @@ function buildDockerCommand(
     return [
       "docker",
       "run",
-      ...DOCKER_OPTIONS_NO_READONLY,
+      ...DOCKER_OPTIONS,
       "-i",
       config.image,
       "bash",
@@ -55,7 +55,8 @@ function buildDockerCommand(
     return [
       "docker",
       "run",
-      ...DOCKER_OPTIONS_NO_READONLY,
+      ...DOCKER_OPTIONS,
+      "--tmpfs=/tmp:size=128m",
       "-i",
       config.image,
       "bash",
@@ -69,7 +70,8 @@ function buildDockerCommand(
     return [
       "docker",
       "run",
-      ...DOCKER_OPTIONS_NO_READONLY,
+      ...DOCKER_OPTIONS,
+      "--tmpfs=/tmp:size=128m",
       "-i",
       config.image,
       "bash",
@@ -83,14 +85,14 @@ function buildDockerCommand(
     return [
       "docker",
       "run",
-      "--rm",
-      "--network=none",
+      ...DOCKER_OPTIONS,
+      "--tmpfs=/tmp:size=256m",
       "-e",
       "GOCACHE=/tmp/go-cache",
       "-e",
       "GOPATH=/tmp/go",
       "-i",
-      "golang:1.21",
+      config.image,
       "bash",
       "-c",
       `mkdir -p /tmp/go-cache /tmp/go && printf '%s' '${codeB64}' | base64 -d > ${codeFilePath} && printf '%s' '${inputB64}' | base64 -d | go run ${codeFilePath}`,
