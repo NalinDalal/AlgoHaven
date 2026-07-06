@@ -1,14 +1,43 @@
 import { prisma, SubmissionStatus, JudgePhase, Role } from "@/packages/db";
 
-import { requireAuth, requireAdmin, getUserFromRequest } from "./auth";
+import { requireAuth, requireAdmin, getUserFromRequest, type AuthUser } from "./auth";
 import { success, failure } from "@/packages/utils/response";
 import { publishLeaderboardUpdate } from "@algohaven/redis";
 import { sendToWorker } from "./worker";
 import { be } from "@algohaven/logger";
+import {
+  getParams,
+  getIdParams,
+  getContestProblemParams,
+  type IdParams,
+  type ContestProblemParams,
+} from "@/packages/utils/routeTypes";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 type ContestStatus = "upcoming" | "live" | "past";
+
+interface ContestBody {
+  title?: string;
+  slug?: string;
+  startTime?: string;
+  endTime?: string;
+  visibility?: string;
+  isRated?: boolean;
+  freezeTime?: string | null;
+  isPractice?: boolean;
+  registrationOpen?: boolean;
+  problems?: { problemId: string; points?: number }[];
+}
+
+interface SubmissionBody {
+  code?: string;
+  language?: string;
+}
+
+interface AnnouncementBody {
+  message?: string;
+}
 
 function getContestStatus(startTime: Date, endTime: Date): ContestStatus {
     const now = new Date();
@@ -81,8 +110,7 @@ export async function listContest(req: Request): Promise<Response> {
 
 // GET /api/contest/:id
 export async function getContestDetails(req: Request): Promise<Response> {
-    const params = (req as any).params as { id: string };
-    const contestId = params?.id;
+    const { id: contestId } = getIdParams(req);
     if (!contestId) return failure("Missing contest id", null, 400);
 
     const authResult = await requireAuth(req);
@@ -141,7 +169,7 @@ export async function registerForContest(req: Request): Promise<Response> {
     if (authResult instanceof Response) return authResult;
     const { user } = authResult;
 
-    const contestId = (req as any).params?.id as string | undefined;
+    const { id: contestId } = getIdParams(req);
     if (!contestId) return failure("Missing contest id", null, 400);
 
     const contest = await prisma.contest.findUnique({ where: { id: contestId } });
@@ -170,7 +198,7 @@ export async function unregisterFromContest(req: Request): Promise<Response> {
     if (authResult instanceof Response) return authResult;
     const { user } = authResult;
 
-    const contestId = (req as any).params?.id as string | undefined;
+    const { id: contestId } = getIdParams(req);
     if (!contestId) return failure("Missing contest id", null, 400);
 
     const contest = await prisma.contest.findUnique({ where: { id: contestId } });
@@ -204,7 +232,7 @@ export async function listContestProblems(req: Request): Promise<Response> {
     if (authResult instanceof Response) return authResult;
     const { user } = authResult;
 
-    const contestId = (req as any).params?.id as string | undefined;
+    const { id: contestId } = getIdParams(req);
     if (!contestId) return failure("Missing contest id", null, 400);
 
     const contest = await prisma.contest.findUnique({ where: { id: contestId } });
@@ -244,7 +272,7 @@ export async function listContestProblemById(req: Request): Promise<Response> {
     if (authResult instanceof Response) return authResult;
     const { user } = authResult;
 
-    const { id: contestId, problemId } = (req as any).params as {
+    const { id: contestId, problemId } = getContestProblemParams(req) as {
         id: string;
         problemId: string;
     };
@@ -321,7 +349,7 @@ export async function submitContestProblemSolution(
     if (authResult instanceof Response) return authResult;
     const { user } = authResult;
 
-    const { id: contestId, problemId } = (req as any).params as {
+    const { id: contestId, problemId } = getContestProblemParams(req) as {
         id: string;
         problemId: string;
     };
@@ -351,7 +379,7 @@ export async function submitContestProblemSolution(
     if (!contestProblem)
         return failure("Problem not found in this contest", null, 404);
 
-    let body: any;
+    let body: SubmissionBody;
     try {
         body = await req.json();
     } catch {
@@ -416,7 +444,7 @@ export async function submitContestProblemSolution(
 // having already stamped rows — instead we serve all rows and set isFrozen in
 // the response so the client knows the snapshot may be stale.
 export async function getContestLeaderboard(req: Request): Promise<Response> {
-    const contestId = (req as any).params?.id as string | undefined;
+    const { id: contestId } = getIdParams(req);
     if (!contestId) return failure("Missing contest id", null, 400);
 
     const url = new URL(req.url);
@@ -487,7 +515,7 @@ export async function getContestLeaderboard(req: Request): Promise<Response> {
 // GET /api/contest/:id/ratings
 // Only available after the contest has ended AND it is a rated contest.
 export async function getContestRatings(req: Request): Promise<Response> {
-    const contestId = (req as any).params?.id as string | undefined;
+    const { id: contestId } = getIdParams(req);
     if (!contestId) return failure("Missing contest id", null, 400);
 
     const contest = await prisma.contest.findUnique({ where: { id: contestId } });
@@ -524,7 +552,7 @@ export async function getContestRatings(req: Request): Promise<Response> {
 export async function listContestAnnouncements(
     req: Request,
 ): Promise<Response> {
-    const contestId = (req as any).params?.id as string | undefined;
+    const { id: contestId } = getIdParams(req);
     if (!contestId) return failure("Missing contest id", null, 400);
 
     const contest = await prisma.contest.findUnique({ where: { id: contestId } });
@@ -551,13 +579,13 @@ export async function postContestAnnouncement(req: Request): Promise<Response> {
     const authResult = await requireAdmin(req);
     if (authResult instanceof Response) return authResult;
 
-    const contestId = (req as any).params?.id as string | undefined;
+    const { id: contestId } = getIdParams(req);
     if (!contestId) return failure("Missing contest id", null, 400);
 
     const contest = await prisma.contest.findUnique({ where: { id: contestId } });
     if (!contest) return failure("Contest not found", null, 404);
 
-    let body: any;
+    let body: AnnouncementBody;
     try {
         body = await req.json();
     } catch {
@@ -566,7 +594,7 @@ export async function postContestAnnouncement(req: Request): Promise<Response> {
     if (!body?.message) return failure("message is required", null, 422);
 
     const announcement = await prisma.contestAnnouncement.create({
-        data: { contestId, message: body.message as string },
+        data: { contestId, message: body.message },
         select: { id: true, message: true, createdAt: true },
     });
 
@@ -580,7 +608,7 @@ export async function postContestAnnouncement(req: Request): Promise<Response> {
 
 // GET /api/contest/:id/submissions  [worker only, via x-worker-secret]
 export async function getContestSubmissions(req: Request): Promise<Response> {
-    const contestId = (req as any).params?.id as string | undefined;
+    const { id: contestId } = getIdParams(req);
     if (!contestId) return failure("Missing contest id", null, 400);
 
     const submissions = await prisma.submission.findMany({
@@ -600,7 +628,7 @@ export async function createContest(req: Request): Promise<Response> {
     const authResult = await requireAdmin(req);
     if (authResult instanceof Response) return authResult;
 
-    let body: any;
+    let body: ContestBody;
     try {
         body = await req.json();
     } catch {
@@ -641,7 +669,7 @@ export async function createContest(req: Request): Promise<Response> {
             registrationOpen: registrationOpen !== false,
             problems: Array.isArray(problems)
                 ? {
-                    create: problems.map((p: any, i: number) => ({
+                    create: problems.map((p: { problemId: string; points?: number }, i: number) => ({
                         problemId: p.problemId,
                         index: i,
                         points: p.points ?? 100,
@@ -681,7 +709,7 @@ export async function deleteContest(req: Request): Promise<Response> {
     const authResult = await requireAdmin(req);
     if (authResult instanceof Response) return authResult;
 
-    const param = (req as any).params?.id;
+    const { id: param } = getIdParams(req);
     if (!param) return failure("Invalid contest id", null, 400);
 
     const isUuid =
@@ -710,7 +738,7 @@ export async function updateContest(req: Request): Promise<Response> {
     const authResult = await requireAdmin(req);
     if (authResult instanceof Response) return authResult;
 
-    const param = (req as any).params?.id;
+    const { id: param } = getIdParams(req);
     if (!param) return failure("Invalid contest id", null, 400);
 
     const isUuid =
@@ -726,17 +754,7 @@ export async function updateContest(req: Request): Promise<Response> {
         return failure("Contest not found", null, 404);
     }
 
-    const body = (await req.json().catch(() => ({}))) as {
-        title?: string;
-        slug?: string;
-        startTime?: string;
-        endTime?: string;
-        visibility?: string;
-        isRated?: boolean;
-        freezeTime?: string | null;
-        isPractice?: boolean;
-        registrationOpen?: boolean;
-    };
+    const body = (await req.json().catch(() => ({}))) as ContestBody;
     const {
         title,
         slug,

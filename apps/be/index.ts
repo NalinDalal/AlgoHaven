@@ -216,7 +216,7 @@ async function router(req: Request): Promise<Response> {
     const routeObj = routes[pattern];
     if (params && routeObj && routeObj[method]) {
       // attach route params to request
-      (req as any).params = params;
+      (req as { params?: Record<string, string> }).params = params;
       try {
         const response = await routeObj[method](req);
         // Merge CORS + security headers into response

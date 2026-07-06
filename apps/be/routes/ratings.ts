@@ -2,6 +2,7 @@ import { prisma, SubmissionStatus, Role } from "@/packages/db";
 import { requireAdmin } from "./auth";
 import { success, failure } from "@/packages/utils/response";
 import { be } from "@algohaven/logger";
+import { getIdParams } from "@/packages/utils/routeTypes";
 
 const DEFAULT_RATING = 1500;
 const MAX_DELTA = 120;
@@ -34,7 +35,7 @@ export async function handleCalculateRatings(req: Request): Promise<Response> {
   const authResult = await requireAdmin(req);
   if (authResult instanceof Response) return authResult;
 
-  const contestId = (req as any).params?.id as string | undefined;
+  const { id: contestId } = getIdParams(req);
   if (!contestId) return failure("Missing contest id", null, 400);
 
   const contest = await prisma.contest.findUnique({ where: { id: contestId } });

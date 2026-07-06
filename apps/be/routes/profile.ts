@@ -1,9 +1,10 @@
 import { prisma, SubmissionStatus } from "@/packages/db";
 import { success, failure } from "@/packages/utils/response";
 import { getRankTier, BADGES, type BadgeStats } from "@/packages/utils/badges";
+import { getUsernameParams } from "@/packages/utils/routeTypes";
 
 export async function handleGetProfile(req: Request): Promise<Response> {
-  const { username } = (req as any).params;
+  const { username } = getUsernameParams(req);
   if (!username) return failure("Username required", null, 400);
 
   const user = await prisma.user.findUnique({ where: { username } });

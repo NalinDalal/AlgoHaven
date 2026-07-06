@@ -1,4 +1,4 @@
-import { prisma } from "@/packages/db";
+import { prisma, type Role } from "@/packages/db";
 import {
   generateSessionToken,
   hashToken,
@@ -8,6 +8,20 @@ import {
 import { success, failure } from "@/packages/utils/response";
 import { getCookie } from "@/packages/utils/cookies";
 import { auth } from "@algohaven/logger";
+import { getParams, getIdParams, type IdParams } from "@/packages/utils/routeTypes";
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  username: string | null;
+  role: Role;
+  banned: boolean;
+  warnings: number;
+}
+
+export interface AuthResult {
+  user: AuthUser;
+}
 
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 const SECURE_COOKIE =
@@ -257,7 +271,7 @@ export async function getUserFromRequest(req: Request) {
 
 export async function requireAuth(
   req: Request,
-): Promise<{ user: any } | Response> {
+): Promise<AuthResult | Response> {
   const user = await getUserFromRequest(req);
   if (!user) return failure("Unauthorized", null, 401);
   if (user.banned) return failure("Your account has been banned", null, 403);
@@ -266,7 +280,7 @@ export async function requireAuth(
 
 export async function requireAdmin(
   req: Request,
-): Promise<{ user: any } | Response> {
+): Promise<AuthResult | Response> {
   const user = await getUserFromRequest(req);
   if (!user) return failure("Unauthorized", null, 401);
   if (user.banned) return failure("Your account has been banned", null, 403);
@@ -281,7 +295,7 @@ export async function handleUpdateUserRole(req: Request): Promise<Response> {
   const authResult = await requireAdmin(req);
   if (authResult instanceof Response) return authResult;
 
-  const { id } = (req as any).params;
+  const { id } = getIdParams(req);
   const { role } = (await req.json()) as { role?: string };
 
   if (!id) return failure("User ID required", null, 400);

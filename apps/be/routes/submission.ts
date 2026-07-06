@@ -5,6 +5,11 @@ import { handleLeaderboardUpdate } from "./contest";
 import { be } from "@algohaven/logger";
 import { sendToWorker } from "./worker";
 
+interface SubmitBody {
+  code?: string;
+  language?: string;
+}
+
 // POST /api/problems/:id/run - Run code against sample test cases only (no submission)
 export async function handleRunSolution(req: Request): Promise<Response> {
   const authResult = await requireAuth(req);
@@ -15,7 +20,7 @@ export async function handleRunSolution(req: Request): Promise<Response> {
   const problemId = idMatch ? idMatch[1] : null;
   if (!problemId) return failure("Invalid problem id", null, 400);
 
-  const body = (await req.json()) as any;
+  const body = (await req.json()) as SubmitBody;
   const { code, language } = body ?? {};
 
   if (!code || !language) {
@@ -70,7 +75,7 @@ export async function handleSubmitSolution(req: Request): Promise<Response> {
   const problemId = idMatch ? idMatch[1] : null;
   if (!problemId) return failure("Invalid problem id", null, 400);
 
-  const body = (await req.json()) as any;
+  const body = (await req.json()) as SubmitBody;
   const { code, language } = body ?? {};
 
   if (!code || !language) {
@@ -135,6 +140,14 @@ export async function handleSubmissionStatus(req: Request): Promise<Response> {
 }
 
 // POST /api/worker/update-submission - Worker calls this to update status
+interface WorkerUpdateBody {
+  submissionId?: string;
+  status?: string;
+  points?: number;
+  executionTimeMs?: number;
+  memoryUsedKb?: number;
+}
+
 export async function handleWorkerUpdateSubmission(
   req: Request,
 ): Promise<Response> {
@@ -143,13 +156,7 @@ export async function handleWorkerUpdateSubmission(
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const body = (await req.json()) as {
-    submissionId?: string;
-    status?: string;
-    points?: number;
-    executionTimeMs?: number;
-    memoryUsedKb?: number;
-  };
+  const body = (await req.json()) as WorkerUpdateBody;
   const { submissionId, status, points, executionTimeMs, memoryUsedKb } = body;
 
   if (!submissionId || !status) {
@@ -159,7 +166,7 @@ export async function handleWorkerUpdateSubmission(
   await prisma.submission.update({
     where: { id: submissionId },
     data: {
-      status: status as any,
+      status: status as SubmissionStatus,
       points: points ?? 0,
       executionTimeMs,
       memoryUsedKb,
@@ -180,6 +187,16 @@ export async function handleWorkerUpdateSubmission(
 }
 
 // POST /api/worker/update-plagiarism - Worker reports plagiarism matches
+interface PlagiarismReport {
+  submissionId: string;
+  matchedWithId: string;
+}
+
+interface PlagiarismBody {
+  contestId?: string;
+  reports?: PlagiarismReport[];
+}
+
 export async function handleWorkerUpdatePlagiarism(
   req: Request,
 ): Promise<Response> {
@@ -188,10 +205,7 @@ export async function handleWorkerUpdatePlagiarism(
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const body = (await req.json()) as {
-    contestId?: string;
-    reports?: { submissionId: string; matchedWithId: string }[];
-  };
+  const body = (await req.json()) as PlagiarismBody;
   const { contestId, reports } = body;
 
   if (!contestId || !reports || reports.length === 0) {

@@ -16,6 +16,11 @@ import {
 } from "./queue";
 import { handleEnqueue, handleHealth } from "./api";
 
+interface ScheduleRatingBody {
+  contestId?: string;
+  endTime?: string;
+}
+
 validateEnv(
   {
     BACKEND_URL: { required: true },
@@ -86,7 +91,7 @@ const server = serve({
 
     if (req.method === "POST" && url.pathname === "/api/worker/schedule-rating") {
       return handleEnqueue(req, WORKER_SECRET, async (body) => {
-        const { contestId, endTime } = body as any;
+        const { contestId, endTime } = body as ScheduleRatingBody;
         if (!contestId || !endTime) {
           throw new Error("contestId and endTime are required");
         }

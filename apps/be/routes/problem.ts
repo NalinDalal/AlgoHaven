@@ -13,6 +13,7 @@ import { prisma } from "@/packages/db";
 import { requireAdmin } from "./auth";
 import { success, failure } from "@/packages/utils/response";
 import { be } from "@algohaven/logger";
+import { getIdParams } from "@/packages/utils/routeTypes";
 
 /**
  * Request body type for creating a new problem
@@ -120,7 +121,7 @@ export async function handleProblemsList(req: Request): Promise<Response> {
  */
 export async function handleProblemDetail(req: Request): Promise<Response> {
   // Extract problem ID/slug from route parameters
-  const param = (req as any).params?.id;
+  const { id: param } = getIdParams(req);
   if (!param) return failure("Invalid problem id", null, 400);
 
   // Validate if param is a UUID (vs a slug string)
@@ -296,7 +297,7 @@ export async function handleProblemUpdate(req: Request): Promise<Response> {
   if (authResult instanceof Response) return authResult;
 
   // Extract problem ID/slug from route parameters
-  const param = (req as any).params?.id;
+  const { id: param } = getIdParams(req);
   if (!param) return failure("Invalid problem id", null, 400);
 
   // Validate if param is a UUID
@@ -409,7 +410,7 @@ export async function handleProblemDelete(req: Request): Promise<Response> {
   if (authResult instanceof Response) return authResult;
 
   // Extract problem ID/slug from route parameters
-  const param = (req as any).params?.id;
+  const { id: param } = getIdParams(req);
   if (!param) return failure("Invalid problem id", null, 400);
 
   // Validate if param is a UUID

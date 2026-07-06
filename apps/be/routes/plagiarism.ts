@@ -2,6 +2,7 @@ import { prisma } from "@/packages/db";
 import { requireAdmin } from "./auth";
 import { success, failure } from "@/packages/utils/response";
 import { be } from "@algohaven/logger";
+import { getIdParams } from "@/packages/utils/routeTypes";
 
 // POST /api/plagiarism/:id/confirm - Admin confirms plagiarism
 export async function handleConfirmPlagiarism(req: Request): Promise<Response> {
@@ -9,7 +10,7 @@ export async function handleConfirmPlagiarism(req: Request): Promise<Response> {
   if (authResult instanceof Response) return authResult;
   const admin = authResult.user;
 
-  const reportId = (req as any).params?.id as string | undefined;
+  const { id: reportId } = getIdParams(req);
   if (!reportId) return failure("Missing report id", null, 400);
 
   const report = await prisma.plagiarismReport.findUnique({
