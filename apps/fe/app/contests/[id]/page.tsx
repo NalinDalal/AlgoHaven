@@ -18,6 +18,7 @@ interface ContestDetails {
   isRated: boolean;
   isPractice: boolean;
   registrationOpen: boolean;
+  registered: boolean;
   problems: {
     id: string;
     index: string;
@@ -72,6 +73,7 @@ export default function ContestDetailPage({
 
         const contestData = await contestRes.json();
         setContest(contestData.data?.contest);
+        setRegistered(contestData.data?.contest?.registered ?? false);
 
         if (meRes.ok) {
           const meData = await meRes.json();

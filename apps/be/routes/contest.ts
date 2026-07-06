@@ -114,8 +114,9 @@ export async function getContestDetails(req: Request): Promise<Response> {
     if (!contestId) return failure("Missing contest id", null, 400);
 
     const authResult = await requireAuth(req);
-    const isAdmin =
-        !(authResult instanceof Response) && authResult.user.role === Role.ADMIN;
+    const isAuthenticated = !(authResult instanceof Response);
+    const isAdmin = isAuthenticated && authResult.user.role === Role.ADMIN;
+    const userId = isAuthenticated ? authResult.user.id : null;
 
     const contest = await prisma.contest.findUnique({
         where: { id: contestId },
@@ -137,6 +138,16 @@ export async function getContestDetails(req: Request): Promise<Response> {
     if (contest.visibility === "PRIVATE" && !isAdmin)
         return failure("Contest not found", null, 404);
 
+    // Check if the current user is registered for this contest
+    let registered = false;
+    if (userId) {
+        const entry = await prisma.leaderboardEntry.findUnique({
+            where: { contestId_userId: { contestId, userId } },
+            select: { userId: true },
+        });
+        registered = !!entry;
+    }
+
     // Hide problem list until contest starts for non-admins
     const contestStarted = new Date() >= contest.startTime;
     const problems = isAdmin || contestStarted ? contest.problems : [];
@@ -153,6 +164,7 @@ export async function getContestDetails(req: Request): Promise<Response> {
             isRated: contest.isRated,
             isPractice: contest.isPractice,
             registrationOpen: contest.registrationOpen,
+            registered,
             status: getContestStatus(contest.startTime, contest.endTime),
             participantCount: contest._count.leaderboard,
             problems,
