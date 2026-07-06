@@ -21,6 +21,8 @@ validateEnv(
 );
 
 // Prisma client
+// Keep the workspace package name here so Bun resolves the installed package,
+// not a tsconfig-only alias.
 import { prisma } from "@algohaven/db";
 
 // Route handlers

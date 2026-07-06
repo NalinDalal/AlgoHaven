@@ -4,21 +4,25 @@
   "type": "module",
   "private": true,
   "devDependencies": {
-    "@types/bun": "latest"
+    "@repo/eslint-config": "*",
+    "@types/bun": "latest",
+    "eslint": "^9.39.1",
+    "globals": "^16.5.0"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "scripts": {
     "build": "bunx tsc --noEmit -p tsconfig.json",
+    "lint": "eslint . --max-warnings 0",
     "dev": "bun --env-file=../../.env --env-file=../../.env run index.ts"
   },
   "dependencies": {
-    "@algohaven/logger": "workspace:*",
     "@algohaven/auth": "workspace:*",
     "@algohaven/db": "workspace:*",
-    "@algohaven/utils": "workspace:*",
+    "@algohaven/logger": "workspace:*",
     "@algohaven/redis": "workspace:*",
+    "@algohaven/utils": "workspace:*",
     "@prisma/client": "^7.4.2",
     "nodemailer": "^8.0.1"
   }

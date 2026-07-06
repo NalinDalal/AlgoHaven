@@ -5,6 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "bun run index.ts",
+    "lint": "eslint . --max-warnings 0",
     "build": "echo 'No build needed'",
     "start": "bun run index.ts"
   },
@@ -14,8 +15,11 @@
     "@algohaven/redis": "workspace:*"
   },
   "devDependencies": {
+    "@repo/eslint-config": "*",
     "@types/bun": "latest",
     "@types/node": "^20",
+    "eslint": "^9.39.1",
+    "globals": "^16.5.0",
     "typescript": "^5"
   }
 }

@@ -270,15 +270,13 @@ export async function handleMe(req: Request): Promise<Response> {
   /* ────────────────────────────────────────────────────────────── */
 
   const ratedContests = contestStats.filter((c) => c.contest?.isRated);
-  const bestRank =
-    ratedContests.length > 0
-      ? Math.min(...ratedContests.map((c) => c.rank ?? 0).filter((rank) => rank > 0))
-      : null;
+  const ratedRanks = ratedContests
+    .map((c) => c.rank)
+    .filter((rank): rank is number => rank !== null);
+  const bestRank = ratedRanks.length > 0 ? Math.min(...ratedRanks) : null;
   const avgRank =
-    ratedContests.length > 0
-      ? Math.round(
-          ratedContests.reduce((a, c) => a + (c.rank ?? 0), 0) / ratedContests.length,
-        )
+    ratedRanks.length > 0
+      ? Math.round(ratedRanks.reduce((a, rank) => a + rank, 0) / ratedRanks.length)
       : null;
   const totalWins = ratedContests.filter((c) => c.rank === 1).length;
 
