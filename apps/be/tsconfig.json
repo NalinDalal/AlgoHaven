@@ -13,18 +13,6 @@
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "noEmit": true,
-    "ignoreDeprecations": "5.0",
-    "baseUrl": ".",
-    "paths": {
-      "@/packages/db": ["../../packages/db/index.ts"],
-      "@/packages/auth": ["../../packages/auth/index.ts"],
-      "@/packages/utils/*": ["../../packages/utils/*"],
-      "@algohaven/utils": ["../../packages/utils/index.ts"],
-      "@algohaven/utils/*": ["../../packages/utils/*"],
-      "@algohaven/db": ["../../packages/db/index.ts"],
-      "@algohaven/redis": ["../../packages/redis/index.ts"],
-      "@algohaven/auth": ["../../packages/auth/index.ts"]
-    },
 
     // Best practices
     "strict": true,
