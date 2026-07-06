@@ -2,7 +2,7 @@ import { PrismaClient } from "./generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import pg from "pg";
 
-export { JudgePhase, Role, SubmissionStatus } from "./generated/prisma/client";
+export { JudgePhase, Role, SubmissionStatus, ContestVisibility } from "./generated/prisma/client";
 export type {
   User,
   Contest,

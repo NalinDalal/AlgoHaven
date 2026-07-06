@@ -1,4 +1,4 @@
-import { prisma, SubmissionStatus, JudgePhase, Role } from "@algohaven/db";
+import { prisma, SubmissionStatus, JudgePhase, Role, ContestVisibility } from "@algohaven/db";
 
 import { requireAuth, requireAdmin, getUserFromRequest, type AuthUser } from "./auth";
 import { success, failure, getParams, getIdParams, getContestProblemParams, type IdParams, type ContestProblemParams } from "@algohaven/utils";
@@ -15,7 +15,7 @@ interface ContestBody {
   slug?: string;
   startTime?: string;
   endTime?: string;
-  visibility?: string;
+    visibility?: ContestVisibility;
   isRated?: boolean;
   freezeTime?: string | null;
   isPractice?: boolean;
@@ -388,7 +388,7 @@ export async function submitContestProblemSolution(
 
     let body: SubmissionBody;
     try {
-        body = await req.json();
+        body = (await req.json()) as SubmissionBody;
     } catch {
         return failure("Invalid JSON", null, 400);
     }
@@ -594,7 +594,7 @@ export async function postContestAnnouncement(req: Request): Promise<Response> {
 
     let body: AnnouncementBody;
     try {
-        body = await req.json();
+        body = (await req.json()) as AnnouncementBody;
     } catch {
         return failure("Invalid JSON", null, 400);
     }
@@ -641,7 +641,7 @@ export async function createContest(req: Request): Promise<Response> {
 
     let body: ContestBody;
     try {
-        body = await req.json();
+        body = (await req.json()) as ContestBody;
     } catch {
         return failure("Invalid JSON", null, 400);
     }
@@ -673,7 +673,7 @@ export async function createContest(req: Request): Promise<Response> {
             slug,
             startTime: new Date(startTime),
             endTime: new Date(endTime),
-            visibility: visibility ?? "PUBLIC",
+            visibility: visibility ?? ContestVisibility.PUBLIC,
             isRated: !!isRated,
             freezeTime: freezeTime ? new Date(freezeTime) : null,
             isPractice: !!isPractice,

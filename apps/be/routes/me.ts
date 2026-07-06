@@ -77,6 +77,8 @@ export async function handleMe(req: Request): Promise<Response> {
         email: true,
         username: true,
         role: true,
+        banned: true,
+        warnings: true,
         createdAt: true,
         _count: { select: { submissions: true, leaderboardEntries: true } },
       },
@@ -270,12 +272,12 @@ export async function handleMe(req: Request): Promise<Response> {
   const ratedContests = contestStats.filter((c) => c.contest?.isRated);
   const bestRank =
     ratedContests.length > 0
-      ? Math.min(...ratedContests.map((c) => c.rank))
+      ? Math.min(...ratedContests.map((c) => c.rank ?? 0).filter((rank) => rank > 0))
       : null;
   const avgRank =
     ratedContests.length > 0
       ? Math.round(
-          ratedContests.reduce((a, c) => a + c.rank, 0) / ratedContests.length,
+          ratedContests.reduce((a, c) => a + (c.rank ?? 0), 0) / ratedContests.length,
         )
       : null;
   const totalWins = ratedContests.filter((c) => c.rank === 1).length;
