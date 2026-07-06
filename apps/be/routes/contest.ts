@@ -621,6 +621,11 @@ export async function postContestAnnouncement(req: Request): Promise<Response> {
 
 // GET /api/contest/:id/submissions  [worker only, via x-worker-secret]
 export async function getContestSubmissions(req: Request): Promise<Response> {
+    const workerSecret = req.headers.get("x-worker-secret");
+    if (workerSecret !== process.env.WORKER_SECRET) {
+        return new Response("Unauthorized", { status: 401 });
+    }
+
     const { id: contestId } = getIdParams(req);
     if (!contestId) return failure("Missing contest id", null, 400);
 
