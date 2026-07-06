@@ -74,38 +74,42 @@ type UpdateProblemBody = {
  * @returns JSON response with problems array and pagination metadata
  */
 export async function handleProblemsList(req: Request): Promise<Response> {
-  // Parse pagination params from query string
-  // Default: start=0, end=20 (first 20 problems)
   const url = new URL(req.url);
-  const start = parseInt(url.searchParams.get("start") || "0");
-  const end = parseInt(url.searchParams.get("end") || "20");
-  const take = end - start;
-  const skip = start;
+  const page = Math.max(1, parseInt(url.searchParams.get("page") ?? "1", 10));
+  const limit = Math.min(
+    100,
+    Math.max(1, parseInt(url.searchParams.get("limit") ?? "20", 10)),
+  );
+  const skip = (page - 1) * limit;
 
-  // Fetch problems ordered by creation date (newest first)
-  // Only select fields that are safe to expose to public users
-  const problems = await prisma.problem.findMany({
-    skip,
-    take,
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      title: true,
-      difficulty: true,
-      slug: true,
-      tags: true,
-      isPublic: true,
-      createdAt: true,
-      _count: {
-        select: {
-          testCases: true,
-          submissions: true,
+  const [problems, total] = await Promise.all([
+    prisma.problem.findMany({
+      skip,
+      take: limit,
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        title: true,
+        difficulty: true,
+        slug: true,
+        tags: true,
+        isPublic: true,
+        createdAt: true,
+        _count: {
+          select: {
+            testCases: true,
+            submissions: true,
+          },
         },
       },
-    },
-  });
+    }),
+    prisma.problem.count(),
+  ]);
 
-  return success("Problems retrieved", { problems });
+  return success("Problems retrieved", {
+    problems,
+    meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+  });
 }
 
 /**

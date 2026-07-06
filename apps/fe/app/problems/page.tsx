@@ -44,19 +44,30 @@ export default function ProblemsPage() {
   const [filter, setFilter] = useState<Filter>("All");
   const [search, setSearch] = useState("");
   const [error, setError] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const limit = 20;
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/problems?start=0&end=20`)
+    setLoading(true);
+    fetch(
+      `${process.env.NEXT_PUBLIC_BE_URL}/api/problems?page=${page}&limit=${limit}`,
+    )
       .then((res) => res.json())
       .then((data) => {
         setProblems(data.data?.problems || []);
+        if (data.data?.meta) {
+          setTotalPages(data.data.meta.totalPages);
+          setTotal(data.data.meta.total);
+        }
         setLoading(false);
       })
       .catch(() => {
         setError(true);
         setLoading(false);
       });
-  }, []);
+  }, [page]);
 
   const filtered = problems.filter((p) => {
     const matchesDiff = filter === "All" || p.difficulty === filter;
@@ -243,7 +254,7 @@ export default function ProblemsPage() {
             </table>
           )}
 
-          {/* Footer count */}
+          {/* Footer count + pagination */}
           {!loading && !error && (
             <div
               style={{
@@ -253,11 +264,55 @@ export default function ProblemsPage() {
                 marginTop: "1.5rem",
                 borderTop: "1px solid var(--border)",
                 paddingTop: "1rem",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
               }}
             >
-              Showing{" "}
-              <span style={{ color: "var(--accent)" }}>{filtered.length}</span>{" "}
-              of {problems.length} problems
+              <span>
+                Showing{" "}
+                <span style={{ color: "var(--accent)" }}>
+                  {(page - 1) * limit + 1}–{Math.min(page * limit, total)}
+                </span>{" "}
+                of {total} problems
+              </span>
+              <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                <button
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => p - 1)}
+                  style={{
+                    fontFamily: "var(--font-mono), monospace",
+                    fontSize: 12,
+                    padding: "6px 12px",
+                    borderRadius: 2,
+                    border: "1px solid var(--border)",
+                    background: "transparent",
+                    color: page <= 1 ? "#333" : "var(--muted)",
+                    cursor: page <= 1 ? "not-allowed" : "pointer",
+                  }}
+                >
+                  ← Prev
+                </button>
+                <span style={{ color: "var(--muted)", fontSize: 12 }}>
+                  {page} / {totalPages}
+                </span>
+                <button
+                  disabled={page >= totalPages}
+                  onClick={() => setPage((p) => p + 1)}
+                  style={{
+                    fontFamily: "var(--font-mono), monospace",
+                    fontSize: 12,
+                    padding: "6px 12px",
+                    borderRadius: 2,
+                    border: "1px solid var(--border)",
+                    background: "transparent",
+                    color: page >= totalPages ? "#333" : "var(--muted)",
+                    cursor: page >= totalPages ? "not-allowed" : "pointer",
+                  }}
+                >
+                  Next →
+                </button>
+              </div>
             </div>
           )}
         </div>

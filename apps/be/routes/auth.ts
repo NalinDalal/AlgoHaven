@@ -347,6 +347,6 @@ export async function handleListUsers(req: Request): Promise<Response> {
 
   return success("Users retrieved", {
     users,
-    pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
   });
 }

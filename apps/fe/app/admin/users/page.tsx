@@ -13,7 +13,7 @@ interface User {
 
 interface PaginatedUsers {
   users: User[];
-  pagination: {
+  meta: {
     page: number;
     limit: number;
     total: number;
@@ -250,7 +250,7 @@ export default function AdminUsersPage() {
         </table>
       </div>
 
-      {data && data.pagination.totalPages > 1 && (
+      {data && data.meta.totalPages > 1 && (
         <div
           style={{
             display: "flex",
@@ -283,13 +283,13 @@ export default function AdminUsersPage() {
               padding: "8px",
             }}
           >
-            Page {page} of {data.pagination.totalPages}
+            Page {page} of {data.meta.totalPages}
           </span>
           <button
             onClick={() =>
-              setPage((p) => Math.min(data.pagination.totalPages, p + 1))
+              setPage((p) => Math.min(data.meta.totalPages, p + 1))
             }
-            disabled={page === data.pagination.totalPages}
+            disabled={page === data.meta.totalPages}
             style={{
               padding: "8px 16px",
               fontFamily: "var(--font-mono), monospace",
@@ -297,11 +297,11 @@ export default function AdminUsersPage() {
               background: "var(--surface)",
               border: "1px solid var(--border)",
               color:
-                page === data.pagination.totalPages
+                page === data.meta.totalPages
                   ? "var(--muted)"
                   : "var(--text)",
               cursor:
-                page === data.pagination.totalPages ? "not-allowed" : "pointer",
+                page === data.meta.totalPages ? "not-allowed" : "pointer",
               borderRadius: 2,
             }}
           >

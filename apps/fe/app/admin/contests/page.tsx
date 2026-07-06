@@ -24,20 +24,29 @@ export default function AdminContestsPage() {
   const [contests, setContests] = useState<Contest[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const limit = 20;
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/contest`, {
-      credentials: "include",
-    })
+    fetch(
+      `${process.env.NEXT_PUBLIC_BE_URL}/api/contest?page=${page}&limit=${limit}`,
+      { credentials: "include" },
+    )
       .then((res) => res.json())
       .then((data) => {
         if (data.status === "success") {
           setContests(data.data.contests);
+          if (data.data?.meta) {
+            setTotalPages(data.data.meta.totalPages);
+            setTotal(data.data.meta.total);
+          }
         }
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, []);
+  }, [page]);
 
   const handleDelete = async (id: string, title: string) => {
     if (!confirm(`Delete contest "${title}"? This cannot be undone.`)) return;
@@ -351,6 +360,55 @@ export default function AdminContestsPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: "1rem",
+            marginTop: "1.5rem",
+            fontFamily: "var(--font-mono), monospace",
+            fontSize: 12,
+          }}
+        >
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+            style={{
+              padding: "8px 16px",
+              background: "var(--surface)",
+              border: "1px solid var(--border)",
+              color: page === 1 ? "var(--muted)" : "var(--text)",
+              cursor: page === 1 ? "not-allowed" : "pointer",
+              borderRadius: 2,
+              fontFamily: "var(--font-mono), monospace",
+              fontSize: 12,
+            }}
+          >
+            ← Prev
+          </button>
+          <span style={{ color: "var(--muted)", padding: "8px" }}>
+            {page} / {totalPages}
+          </span>
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+            style={{
+              padding: "8px 16px",
+              background: "var(--surface)",
+              border: "1px solid var(--border)",
+              color: page === totalPages ? "var(--muted)" : "var(--text)",
+              cursor: page === totalPages ? "not-allowed" : "pointer",
+              borderRadius: 2,
+              fontFamily: "var(--font-mono), monospace",
+              fontSize: 12,
+            }}
+          >
+            Next →
+          </button>
         </div>
       )}
     </div>
