@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/apiFetch";
 import Link from "next/link";
+import { Button, Input, ErrorBanner } from "@repo/ui";
 
 type Mode = "login" | "register";
 
@@ -96,19 +97,9 @@ export default function AuthPage() {
         </p>
 
         {message && (
-          <div
-            style={{
-              background: "#2d0d0d",
-              border: "1px solid #5c1a1a",
-              color: "var(--red)",
-              padding: "0.75rem",
-              borderRadius: 4,
-              marginBottom: "1rem",
-              fontSize: 13,
-            }}
-          >
+          <ErrorBanner style={{ marginBottom: "1rem" }}>
             {message}
-          </div>
+          </ErrorBanner>
         )}
 
         <form onSubmit={handleSubmit}>
@@ -124,12 +115,11 @@ export default function AuthPage() {
               >
                 Username
               </label>
-              <input
+              <Input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="your_username"
-                style={inputStyle}
               />
             </div>
           )}
@@ -145,13 +135,12 @@ export default function AuthPage() {
             >
               Email
             </label>
-            <input
+            <Input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
               required
-              style={inputStyle}
             />
           </div>
 
@@ -166,39 +155,27 @@ export default function AuthPage() {
             >
               Password
             </label>
-            <input
+            <Input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               required
               minLength={6}
-              style={inputStyle}
             />
           </div>
 
-          <button
+          <Button
             type="submit"
-            disabled={loading}
-            style={{
-              width: "100%",
-              background: "var(--accent)",
-              border: "none",
-              borderRadius: 2,
-              padding: "12px",
-              fontSize: 13,
-              fontWeight: 700,
-              color: "#000",
-              cursor: loading ? "not-allowed" : "pointer",
-              opacity: loading ? 0.7 : 1,
-            }}
+            fullWidth
+            loading={loading}
           >
             {loading
               ? "Please wait..."
               : mode === "login"
                 ? "Sign In"
                 : "Create Account"}
-          </button>
+          </Button>
         </form>
 
         <p
@@ -212,42 +189,30 @@ export default function AuthPage() {
           {mode === "login" ? (
             <>
               Don't have an account?{" "}
-              <button
+              <Button
+                variant="ghost"
                 type="button"
                 onClick={() => {
                   setMode("register");
                   setMessage("");
                 }}
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: "var(--accent)",
-                  cursor: "pointer",
-                  fontSize: 13,
-                }}
               >
                 Sign up
-              </button>
+              </Button>
             </>
           ) : (
             <>
               Already have an account?{" "}
-              <button
+              <Button
+                variant="ghost"
                 type="button"
                 onClick={() => {
                   setMode("login");
                   setMessage("");
                 }}
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: "var(--accent)",
-                  cursor: "pointer",
-                  fontSize: 13,
-                }}
               >
                 Sign in
-              </button>
+              </Button>
             </>
           )}
         </p>
@@ -255,14 +220,3 @@ export default function AuthPage() {
     </div>
   );
 }
-
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  background: "var(--bg)",
-  border: "1px solid var(--border-lit)",
-  borderRadius: 2,
-  padding: "10px 12px",
-  fontSize: 13,
-  color: "var(--text)",
-  outline: "none",
-};

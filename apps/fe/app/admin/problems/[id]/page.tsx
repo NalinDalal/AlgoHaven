@@ -1,26 +1,9 @@
 "use client";
 
-/**
- * Problem Editor Page
- *
- * This page allows admin users to edit existing problems.
- * It fetches the current problem data and provides a form to modify:
- * - Basic information (title, slug, difficulty, tags)
- * - Problem statement and editorial (markdown)
- * - Time and memory limits
- * - Visibility settings
- * - Test cases
- *
- * Route: /admin/problems/[id]
- */
-
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { Button, Input, Select, Textarea, ErrorBanner, Card, SectionHeading } from "@repo/ui";
 
-/**
- * Interface representing a test case for a problem
- * Test cases define inputs and expected outputs for judging solutions
- */
 interface TestCase {
   id: string;
   input: string;
@@ -28,10 +11,6 @@ interface TestCase {
   isSample: boolean;
 }
 
-/**
- * Interface representing the full problem data structure
- * Includes all editable fields from the backend
- */
 interface Problem {
   id: string;
   title: string;
@@ -48,31 +27,15 @@ interface Problem {
   testCases: TestCase[];
 }
 
-/**
- * Main Edit Problem Page Component
- *
- * Handles loading problem data on mount and saving changes.
- * Uses React state to manage form inputs and test cases.
- *
- * @returns JSX element representing the edit problem form
- */
 export default function EditProblemPage() {
-  // Next.js navigation and routing hooks
   const router = useRouter();
   const params = useParams();
-
-  // Extract the problem ID from URL parameters
   const id = params.id as string;
 
-  // UI state management
-  const [loading, setLoading] = useState(true); // Initial data loading state
-  const [saving, setSaving] = useState(false); // Form submission state
-  const [error, setError] = useState<string | null>(null); // Error message state
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  /**
-   * Form state for problem fields
-   * mirrors the Problem interface but with tags as comma-separated string
-   */
   const [form, setForm] = useState({
     title: "",
     slug: "",
@@ -87,29 +50,17 @@ export default function EditProblemPage() {
     checkerCode: "",
   });
 
-  /**
-   * Test cases state
-   * Array of test case objects for the problem
-   * Initialized with one empty sample test case
-   */
   const [testCases, setTestCases] = useState<TestCase[]>([
     { id: "1", input: "", expectedOutput: "", isSample: true },
   ]);
 
-  /**
-   * Effect hook to fetch problem data on component mount
-   * Loads all problem fields including admin-only data
-   */
   useEffect(() => {
-    // Fetch problem details from the API
-    // Includes all fields since we're in admin section
     fetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/problems/${id}`, {
-      credentials: "include", // Include cookies for authentication
+      credentials: "include",
     })
       .then((res) => res.json())
       .then((data) => {
         if (data.status === "success") {
-          // Populate form with fetched problem data
           const problem: Problem = data.data;
           setForm({
             title: problem.title,
@@ -125,7 +76,6 @@ export default function EditProblemPage() {
             checkerCode: problem.checkerCode || "",
           });
 
-          // Populate test cases if available
           if (problem.testCases && problem.testCases.length > 0) {
             setTestCases(
               problem.testCases.map((tc) => ({
@@ -137,49 +87,36 @@ export default function EditProblemPage() {
             );
           }
         } else {
-          // Handle API error response
           setError(data.message || "Failed to load problem");
         }
       })
       .catch((err) => {
-        // Handle network/connection errors
         setError("Failed to load problem");
         console.error(err);
       })
       .finally(() => {
-        // Stop loading spinner regardless of success/failure
         setLoading(false);
       });
-  }, [id]); // Re-run only if problem ID changes
+  }, [id]);
 
-  /**
-   * Handles form submission
-   * Sends PUT request to update the problem with new data
-   *
-   * @param e - React form event
-   */
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); // Prevent default form submission behavior
-    setSaving(true); // Show saving indicator
-    setError(null); // Clear any previous errors
+    e.preventDefault();
+    setSaving(true);
+    setError(null);
 
     try {
-      // Send PUT request to update problem
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BE_URL}/api/problems/${id}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json", "X-Requested-By": "AlgoHaven" },
-          credentials: "include", // Include authentication cookies
+          credentials: "include",
           body: JSON.stringify({
-            // Spread form data
             ...form,
-            // Convert comma-separated tags to array
             tags: form.tags
               .split(",")
               .map((t) => t.trim())
               .filter(Boolean),
-            // Format test cases for API
             testCases: testCases.map((tc) => ({
               id: tc.id,
               input: tc.input,
@@ -193,25 +130,17 @@ export default function EditProblemPage() {
       const data = await response.json();
 
       if (data.status === "success") {
-        // Redirect to problems list on success
         router.push("/admin/problems");
       } else {
-        // Display API error message
         setError(data.message || "Failed to update problem");
       }
     } catch (err) {
-      // Handle network errors
       setError("Network error");
     } finally {
-      // Stop saving indicator
       setSaving(false);
     }
   };
 
-  /**
-   * Adds a new empty test case to the form
-   * Generates unique ID based on current timestamp
-   */
   const addTestCase = () => {
     setTestCases([
       ...testCases,
@@ -224,25 +153,12 @@ export default function EditProblemPage() {
     ]);
   };
 
-  /**
-   * Removes a test case from the form
-   * Prevents removing the last remaining test case
-   *
-   * @param id - The ID of the test case to remove
-   */
   const removeTestCase = (id: string) => {
     if (testCases.length > 1) {
       setTestCases(testCases.filter((tc) => tc.id !== id));
     }
   };
 
-  /**
-   * Updates a specific field of a test case
-   *
-   * @param id - The ID of the test case to update
-   * @param field - The field name to update
-   * @param value - The new value for the field
-   */
   const updateTestCase = (
     id: string,
     field: keyof TestCase,
@@ -253,10 +169,6 @@ export default function EditProblemPage() {
     );
   };
 
-  /**
-   * Loading state rendering
-   * Shows while fetching problem data
-   */
   if (loading) {
     return (
       <div
@@ -274,7 +186,6 @@ export default function EditProblemPage() {
 
   return (
     <div style={{ maxWidth: 900, margin: "0 auto", padding: "2rem" }}>
-      {/* Header with back button */}
       <div
         style={{
           display: "flex",
@@ -311,48 +222,17 @@ export default function EditProblemPage() {
         </h1>
       </div>
 
-      {/* Error display */}
       {error && (
-        <div
-          style={{
-            background: "#2d0d0d",
-            border: "1px solid #5c1a1a",
-            color: "var(--red)",
-            padding: "1rem",
-            borderRadius: 4,
-            marginBottom: "1.5rem",
-            fontFamily: "var(--font-mono), monospace",
-            fontSize: 13,
-          }}
-        >
+        <ErrorBanner style={{ marginBottom: "1.5rem" }}>
           {error}
-        </div>
+        </ErrorBanner>
       )}
 
-      {/* Main form */}
       <form onSubmit={handleSubmit}>
-        {/* Basic Information Section */}
-        <div
-          style={{
-            background: "var(--surface)",
-            border: "1px solid var(--border)",
-            borderRadius: 4,
-            padding: "1.5rem",
-            marginBottom: "1.5rem",
-          }}
-        >
-          <h3
-            style={{
-              fontFamily: "var(--font-mono), monospace",
-              fontSize: 12,
-              color: "var(--accent)",
-              letterSpacing: ".1em",
-              textTransform: "uppercase",
-              marginBottom: "1.5rem",
-            }}
-          >
+        <Card>
+          <SectionHeading>
             Basic Information
-          </h3>
+          </SectionHeading>
 
           <div style={{ display: "grid", gap: "1rem" }}>
             <FormField
@@ -372,7 +252,6 @@ export default function EditProblemPage() {
               hint="URL-friendly identifier"
             />
 
-            {/* Difficulty and Tags in same row */}
             <div
               style={{
                 display: "grid",
@@ -380,7 +259,6 @@ export default function EditProblemPage() {
                 gap: "1rem",
               }}
             >
-              {/* Difficulty dropdown */}
               <div>
                 <label
                   style={{
@@ -393,30 +271,18 @@ export default function EditProblemPage() {
                 >
                   Difficulty
                 </label>
-                <select
+                <Select
                   value={form.difficulty}
-                  onChange={(e) =>
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                     setForm({ ...form, difficulty: e.target.value })
                   }
-                  style={{
-                    width: "100%",
-                    background: "var(--bg)",
-                    border: "1px solid var(--border-lit)",
-                    borderRadius: 2,
-                    padding: "10px 12px",
-                    fontFamily: "var(--font-mono), monospace",
-                    fontSize: 13,
-                    color: "var(--text)",
-                    outline: "none",
-                  }}
                 >
                   <option value="EASY">Easy</option>
                   <option value="MEDIUM">Medium</option>
                   <option value="HARD">Hard</option>
-                </select>
+                </Select>
               </div>
 
-              {/* Tags input */}
               <div>
                 <label
                   style={{
@@ -429,113 +295,54 @@ export default function EditProblemPage() {
                 >
                   Tags (comma separated)
                 </label>
-                <input
+                <Input
                   type="text"
                   value={form.tags}
-                  onChange={(e) => setForm({ ...form, tags: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, tags: e.target.value })}
                   placeholder="e.g. arrays, hashmap, dp"
-                  style={inputStyle}
                 />
               </div>
             </div>
           </div>
-        </div>
+        </Card>
 
-        {/* Problem Statement Section */}
-        <div
-          style={{
-            background: "var(--surface)",
-            border: "1px solid var(--border)",
-            borderRadius: 4,
-            padding: "1.5rem",
-            marginBottom: "1.5rem",
-          }}
-        >
-          <h3
-            style={{
-              fontFamily: "var(--font-mono), monospace",
-              fontSize: 12,
-              color: "var(--accent)",
-              letterSpacing: ".1em",
-              textTransform: "uppercase",
-              marginBottom: "1.5rem",
-            }}
-          >
+        <Card>
+          <SectionHeading>
             Problem Statement (Markdown)
-          </h3>
+          </SectionHeading>
 
-          <textarea
+          <Textarea
             value={form.statement}
-            onChange={(e) => setForm({ ...form, statement: e.target.value })}
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setForm({ ...form, statement: e.target.value })}
             placeholder="Write your problem statement in markdown..."
             required
-            style={{
-              ...inputStyle,
+            textareaStyle={{
               minHeight: 250,
-              resize: "vertical",
               fontFamily: "var(--font-mono), monospace",
             }}
           />
-        </div>
+        </Card>
 
-        {/* Editorial Section (Optional) */}
-        <div
-          style={{
-            background: "var(--surface)",
-            border: "1px solid var(--border)",
-            borderRadius: 4,
-            padding: "1.5rem",
-            marginBottom: "1.5rem",
-          }}
-        >
-          <h3
-            style={{
-              fontFamily: "var(--font-mono), monospace",
-              fontSize: 12,
-              color: "var(--accent)",
-              letterSpacing: ".1em",
-              textTransform: "uppercase",
-              marginBottom: "1.5rem",
-            }}
-          >
+        <Card>
+          <SectionHeading>
             Editorial (Optional)
-          </h3>
+          </SectionHeading>
 
-          <textarea
+          <Textarea
             value={form.editorial}
-            onChange={(e) => setForm({ ...form, editorial: e.target.value })}
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setForm({ ...form, editorial: e.target.value })}
             placeholder="Write your editorial in markdown..."
-            style={{
-              ...inputStyle,
+            textareaStyle={{
               minHeight: 150,
-              resize: "vertical",
               fontFamily: "var(--font-mono), monospace",
             }}
           />
-        </div>
+        </Card>
 
-        {/* Limits & Visibility Section */}
-        <div
-          style={{
-            background: "var(--surface)",
-            border: "1px solid var(--border)",
-            borderRadius: 4,
-            padding: "1.5rem",
-            marginBottom: "1.5rem",
-          }}
-        >
-          <h3
-            style={{
-              fontFamily: "var(--font-mono), monospace",
-              fontSize: 12,
-              color: "var(--accent)",
-              letterSpacing: ".1em",
-              textTransform: "uppercase",
-              marginBottom: "1.5rem",
-            }}
-          >
+        <Card>
+          <SectionHeading>
             Limits & Visibility
-          </h3>
+          </SectionHeading>
 
           <div
             style={{
@@ -562,7 +369,6 @@ export default function EditProblemPage() {
               }
             />
 
-            {/* Visibility checkbox */}
             <div>
               <label
                 style={{
@@ -602,19 +408,9 @@ export default function EditProblemPage() {
               </label>
             </div>
           </div>
-        </div>
+        </Card>
 
-        {/* Test Cases Section */}
-        <div
-          style={{
-            background: "var(--surface)",
-            border: "1px solid var(--border)",
-            borderRadius: 4,
-            padding: "1.5rem",
-            marginBottom: "1.5rem",
-          }}
-        >
-          {/* Section header with add button */}
+        <Card>
           <div
             style={{
               display: "flex",
@@ -623,36 +419,14 @@ export default function EditProblemPage() {
               marginBottom: "1.5rem",
             }}
           >
-            <h3
-              style={{
-                fontFamily: "var(--font-mono), monospace",
-                fontSize: 12,
-                color: "var(--accent)",
-                letterSpacing: ".1em",
-                textTransform: "uppercase",
-              }}
-            >
+            <SectionHeading style={{ marginBottom: 0 }}>
               Test Cases
-            </h3>
-            <button
-              type="button"
-              onClick={addTestCase}
-              style={{
-                background: "transparent",
-                border: "1px solid var(--border-lit)",
-                borderRadius: 2,
-                padding: "6px 12px",
-                fontFamily: "var(--font-mono), monospace",
-                fontSize: 12,
-                color: "var(--text)",
-                cursor: "pointer",
-              }}
-            >
+            </SectionHeading>
+            <Button variant="secondary" type="button" onClick={addTestCase} style={{ padding: "6px 12px", fontSize: 12, fontWeight: 400 }}>
               + Add Test Case
-            </button>
+            </Button>
           </div>
 
-          {/* Test case cards */}
           <div style={{ display: "grid", gap: "1.5rem" }}>
             {testCases.map((tc, idx) => (
               <div
@@ -664,7 +438,6 @@ export default function EditProblemPage() {
                   padding: "1rem",
                 }}
               >
-                {/* Test case header with controls */}
                 <div
                   style={{
                     display: "flex",
@@ -689,7 +462,6 @@ export default function EditProblemPage() {
                       gap: "1rem",
                     }}
                   >
-                    {/* Sample checkbox */}
                     <label
                       style={{
                         display: "flex",
@@ -716,27 +488,14 @@ export default function EditProblemPage() {
                         Sample
                       </span>
                     </label>
-                    {/* Remove button - hidden if only one test case */}
                     {testCases.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeTestCase(tc.id)}
-                        style={{
-                          background: "transparent",
-                          border: "none",
-                          color: "var(--red)",
-                          fontFamily: "var(--font-mono), monospace",
-                          fontSize: 12,
-                          cursor: "pointer",
-                        }}
-                      >
+                      <Button variant="ghost" type="button" onClick={() => removeTestCase(tc.id)} style={{ color: "var(--red)", fontSize: 12, fontWeight: 400 }}>
                         Remove
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </div>
 
-                {/* Input and Expected Output fields */}
                 <div
                   style={{
                     display: "grid",
@@ -744,7 +503,6 @@ export default function EditProblemPage() {
                     gap: "1rem",
                   }}
                 >
-                  {/* Input field */}
                   <div>
                     <label
                       style={{
@@ -757,17 +515,16 @@ export default function EditProblemPage() {
                     >
                       Input
                     </label>
-                    <textarea
+                    <Textarea
                       value={tc.input}
-                      onChange={(e) =>
+                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                         updateTestCase(tc.id, "input", e.target.value)
                       }
                       placeholder="Input data..."
-                      style={{ ...inputStyle, minHeight: 80 }}
+                      textareaStyle={{ minHeight: 80 }}
                       required
                     />
                   </div>
-                  {/* Expected Output field */}
                   <div>
                     <label
                       style={{
@@ -780,13 +537,13 @@ export default function EditProblemPage() {
                     >
                       Expected Output
                     </label>
-                    <textarea
+                    <Textarea
                       value={tc.expectedOutput}
-                      onChange={(e) =>
+                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                         updateTestCase(tc.id, "expectedOutput", e.target.value)
                       }
                       placeholder="Expected output..."
-                      style={{ ...inputStyle, minHeight: 80 }}
+                      textareaStyle={{ minHeight: 80 }}
                       required
                     />
                   </div>
@@ -794,63 +551,23 @@ export default function EditProblemPage() {
               </div>
             ))}
           </div>
-        </div>
+        </Card>
 
-        {/* Form action buttons */}
         <div
           style={{ display: "flex", gap: "1rem", justifyContent: "flex-end" }}
         >
-          {/* Cancel button - returns to problems list */}
-          <button
-            type="button"
-            onClick={() => router.push("/admin/problems")}
-            style={{
-              background: "transparent",
-              border: "1px solid var(--border)",
-              borderRadius: 2,
-              padding: "12px 24px",
-              fontFamily: "var(--font-mono), monospace",
-              fontSize: 13,
-              color: "var(--muted)",
-              cursor: "pointer",
-            }}
-          >
+          <Button variant="secondary" type="button" onClick={() => router.push("/admin/problems")}>
             Cancel
-          </button>
-          {/* Submit button */}
-          <button
-            type="submit"
-            disabled={saving}
-            style={{
-              background: "var(--accent)",
-              border: "none",
-              borderRadius: 2,
-              padding: "12px 32px",
-              fontFamily: "var(--font-mono), monospace",
-              fontSize: 13,
-              fontWeight: 700,
-              color: "#000",
-              cursor: saving ? "not-allowed" : "pointer",
-              opacity: saving ? 0.7 : 1,
-            }}
-          >
+          </Button>
+          <Button type="submit" loading={saving}>
             {saving ? "Saving..." : "Save Changes"}
-          </button>
+          </Button>
         </div>
       </form>
     </div>
   );
 }
 
-/**
- * Reusable form field component
- *
- * Renders a label, input field, and optional hint text.
- * Used throughout the form for consistent styling.
- *
- * @param props - Component props
- * @returns JSX element for the form field
- */
 function FormField({
   label,
   value,
@@ -879,18 +596,15 @@ function FormField({
           marginBottom: "0.5rem",
         }}
       >
-        {/* Display asterisk for required fields */}
         {label} {required && <span style={{ color: "var(--red)" }}>*</span>}
       </label>
-      <input
+      <Input
         type={type}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
         placeholder={placeholder}
         required={required}
-        style={inputStyle}
       />
-      {/* Display hint text below field if provided */}
       {hint && (
         <span
           style={{
@@ -908,19 +622,9 @@ function FormField({
   );
 }
 
-/**
- * Shared input styling
- * Used by both the FormField component and textarea elements
- */
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  background: "var(--bg)",
-  border: "1px solid var(--border-lit)",
-  borderRadius: 2,
-  padding: "10px 12px",
-  fontFamily: "var(--font-mono), monospace",
-  fontSize: 13,
-  color: "var(--text)",
-  outline: "none",
-  transition: "border-color .15s",
+const checkboxLabel: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "0.5rem",
+  cursor: "pointer",
 };

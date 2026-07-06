@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { Button, Input, Select, ErrorBanner, Card, SectionHeading } from "@repo/ui";
 
 interface Contest {
     id: string;
@@ -135,21 +136,9 @@ export default function EditContestPage() {
                     marginBottom: "2rem",
                 }}
             >
-                <button
-                    onClick={() => router.push("/admin/contests")}
-                    style={{
-                        background: "transparent",
-                        border: "1px solid var(--border)",
-                        borderRadius: 2,
-                        padding: "8px 12px",
-                        fontFamily: "var(--font-mono), monospace",
-                        fontSize: 12,
-                        color: "var(--muted)",
-                        cursor: "pointer",
-                    }}
-                >
+                <Button variant="secondary" onClick={() => router.push("/admin/contests")}>
                     ← Back
-                </button>
+                </Button>
                 <h1
                     style={{
                         fontFamily: "var(--font-syne), sans-serif",
@@ -164,44 +153,14 @@ export default function EditContestPage() {
             </div>
 
             {error && (
-                <div
-                    style={{
-                        background: "#2d0d0d",
-                        border: "1px solid #5c1a1a",
-                        color: "var(--red)",
-                        padding: "1rem",
-                        borderRadius: 4,
-                        marginBottom: "1.5rem",
-                        fontFamily: "var(--font-mono), monospace",
-                        fontSize: 13,
-                    }}
-                >
+                <ErrorBanner style={{ marginBottom: "1.5rem" }}>
                     {error}
-                </div>
+                </ErrorBanner>
             )}
 
             <form onSubmit={handleSubmit}>
-                <div
-                    style={{
-                        background: "var(--surface)",
-                        border: "1px solid var(--border)",
-                        borderRadius: 4,
-                        padding: "1.5rem",
-                        marginBottom: "1.5rem",
-                    }}
-                >
-                    <h3
-                        style={{
-                            fontFamily: "var(--font-mono), monospace",
-                            fontSize: 12,
-                            color: "var(--accent)",
-                            letterSpacing: ".1em",
-                            textTransform: "uppercase",
-                            marginBottom: "1.5rem",
-                        }}
-                    >
-                        Contest Details
-                    </h3>
+                <Card>
+                    <SectionHeading>Contest Details</SectionHeading>
 
                     <div style={{ display: "grid", gap: "1rem" }}>
                         <FormField
@@ -262,17 +221,11 @@ export default function EditContestPage() {
                                 >
                                     Visibility
                                 </label>
-                                <select
-                                    value={form.visibility}
-                                    onChange={(e) =>
-                                        setForm({ ...form, visibility: e.target.value })
-                                    }
-                                    style={selectStyle}
-                                >
+                                <Select value={form.visibility} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setForm({ ...form, visibility: e.target.value })}>
                                     <option value="PUBLIC">Public</option>
                                     <option value="INVITE">Invite Only</option>
                                     <option value="PRIVATE">Private</option>
-                                </select>
+                                </Select>
                             </div>
 
                             <FormField
@@ -322,45 +275,17 @@ export default function EditContestPage() {
                             </div>
                         </div>
                     </div>
-                </div>
+                </Card>
 
                 <div
                     style={{ display: "flex", gap: "1rem", justifyContent: "flex-end" }}
                 >
-                    <button
-                        type="button"
-                        onClick={() => router.push("/admin/contests")}
-                        style={{
-                            background: "transparent",
-                            border: "1px solid var(--border)",
-                            borderRadius: 2,
-                            padding: "12px 24px",
-                            fontFamily: "var(--font-mono), monospace",
-                            fontSize: 13,
-                            color: "var(--muted)",
-                            cursor: "pointer",
-                        }}
-                    >
+                    <Button variant="secondary" type="button" onClick={() => router.push("/admin/contests")}>
                         Cancel
-                    </button>
-                    <button
-                        type="submit"
-                        disabled={saving}
-                        style={{
-                            background: "var(--accent)",
-                            border: "none",
-                            borderRadius: 2,
-                            padding: "12px 32px",
-                            fontFamily: "var(--font-mono), monospace",
-                            fontSize: 13,
-                            fontWeight: 700,
-                            color: "#000",
-                            cursor: saving ? "not-allowed" : "pointer",
-                            opacity: saving ? 0.7 : 1,
-                        }}
-                    >
+                    </Button>
+                    <Button type="submit" loading={saving}>
                         {saving ? "Saving..." : "Save Changes"}
-                    </button>
+                    </Button>
                 </div>
             </form>
         </div>
@@ -395,34 +320,16 @@ function FormField({
             >
                 {label} {required && <span style={{ color: "var(--red)" }}>*</span>}
             </label>
-            <input
+            <Input
                 type={type}
                 value={value}
-                onChange={(e) => onChange(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
                 placeholder={placeholder}
                 required={required}
-                style={inputStyle}
             />
         </div>
     );
 }
-
-const inputStyle: React.CSSProperties = {
-    width: "100%",
-    background: "var(--bg)",
-    border: "1px solid var(--border-lit)",
-    borderRadius: 2,
-    padding: "10px 12px",
-    fontFamily: "var(--font-mono), monospace",
-    fontSize: 13,
-    color: "var(--text)",
-    outline: "none",
-};
-
-const selectStyle: React.CSSProperties = {
-    ...inputStyle,
-    cursor: "pointer",
-};
 
 const checkboxLabel: React.CSSProperties = {
     display: "flex",

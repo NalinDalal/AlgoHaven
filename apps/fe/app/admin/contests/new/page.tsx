@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button, Input, Select, ErrorBanner, Card, SectionHeading } from "@repo/ui";
 
 export default function NewContestPage() {
   const router = useRouter();
@@ -72,44 +73,14 @@ export default function NewContestPage() {
       </h1>
 
       {error && (
-        <div
-          style={{
-            background: "#2d0d0d",
-            border: "1px solid #5c1a1a",
-            color: "var(--red)",
-            padding: "1rem",
-            borderRadius: 4,
-            marginBottom: "1.5rem",
-            fontFamily: "var(--font-mono), monospace",
-            fontSize: 13,
-          }}
-        >
+        <ErrorBanner style={{ marginBottom: "1.5rem" }}>
           {error}
-        </div>
+        </ErrorBanner>
       )}
 
       <form onSubmit={handleSubmit}>
-        <div
-          style={{
-            background: "var(--surface)",
-            border: "1px solid var(--border)",
-            borderRadius: 4,
-            padding: "1.5rem",
-            marginBottom: "1.5rem",
-          }}
-        >
-          <h3
-            style={{
-              fontFamily: "var(--font-mono), monospace",
-              fontSize: 12,
-              color: "var(--accent)",
-              letterSpacing: ".1em",
-              textTransform: "uppercase",
-              marginBottom: "1.5rem",
-            }}
-          >
-            Contest Details
-          </h3>
+        <Card>
+          <SectionHeading>Contest Details</SectionHeading>
 
           <div style={{ display: "grid", gap: "1rem" }}>
             <FormField
@@ -170,17 +141,16 @@ export default function NewContestPage() {
                 >
                   Visibility
                 </label>
-                <select
+                <Select
                   value={form.visibility}
                   onChange={(e) =>
                     setForm({ ...form, visibility: e.target.value })
                   }
-                  style={selectStyle}
                 >
                   <option value="PUBLIC">Public</option>
                   <option value="INVITE">Invite Only</option>
                   <option value="PRIVATE">Private</option>
-                </select>
+                </Select>
               </div>
 
               <div>
@@ -195,13 +165,12 @@ export default function NewContestPage() {
                 >
                   Freeze Time (optional)
                 </label>
-                <input
+                <Input
                   type="datetime-local"
                   value={form.freezeTime}
                   onChange={(e) =>
                     setForm({ ...form, freezeTime: e.target.value })
                   }
-                  style={inputStyle}
                 />
               </div>
 
@@ -245,45 +214,24 @@ export default function NewContestPage() {
               </div>
             </div>
           </div>
-        </div>
+        </Card>
 
         <div
           style={{ display: "flex", gap: "1rem", justifyContent: "flex-end" }}
         >
-          <button
+          <Button
             type="button"
+            variant="secondary"
             onClick={() => router.push("/admin")}
-            style={{
-              background: "transparent",
-              border: "1px solid var(--border)",
-              borderRadius: 2,
-              padding: "12px 24px",
-              fontFamily: "var(--font-mono), monospace",
-              fontSize: 13,
-              color: "var(--muted)",
-              cursor: "pointer",
-            }}
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            disabled={loading}
-            style={{
-              background: "var(--accent)",
-              border: "none",
-              borderRadius: 2,
-              padding: "12px 32px",
-              fontFamily: "var(--font-mono), monospace",
-              fontSize: 13,
-              fontWeight: 700,
-              color: "#000",
-              cursor: loading ? "not-allowed" : "pointer",
-              opacity: loading ? 0.7 : 1,
-            }}
+            loading={loading}
           >
             {loading ? "Creating..." : "Create Contest"}
-          </button>
+          </Button>
         </div>
       </form>
     </div>
@@ -318,34 +266,16 @@ function FormField({
       >
         {label} {required && <span style={{ color: "var(--red)" }}>*</span>}
       </label>
-      <input
+      <Input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         required={required}
-        style={inputStyle}
       />
     </div>
   );
 }
-
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  background: "var(--bg)",
-  border: "1px solid var(--border-lit)",
-  borderRadius: 2,
-  padding: "10px 12px",
-  fontFamily: "var(--font-mono), monospace",
-  fontSize: 13,
-  color: "var(--text)",
-  outline: "none",
-};
-
-const selectStyle: React.CSSProperties = {
-  ...inputStyle,
-  cursor: "pointer",
-};
 
 const checkboxLabel: React.CSSProperties = {
   display: "flex",

@@ -16,6 +16,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button, Input, Select, Textarea, ErrorBanner, Card, SectionHeading } from "@repo/ui";
 
 /**
  * Interface representing a test case
@@ -179,45 +180,15 @@ export default function NewProblemPage() {
       </h1>
 
       {error && (
-        <div
-          style={{
-            background: "#2d0d0d",
-            border: "1px solid #5c1a1a",
-            color: "var(--red)",
-            padding: "1rem",
-            borderRadius: 4,
-            marginBottom: "1.5rem",
-            fontFamily: "var(--font-mono), monospace",
-            fontSize: 13,
-          }}
-        >
+        <ErrorBanner style={{ marginBottom: "1.5rem" }}>
           {error}
-        </div>
+        </ErrorBanner>
       )}
 
       <form onSubmit={handleSubmit}>
         {/* Basic Info */}
-        <div
-          style={{
-            background: "var(--surface)",
-            border: "1px solid var(--border)",
-            borderRadius: 4,
-            padding: "1.5rem",
-            marginBottom: "1.5rem",
-          }}
-        >
-          <h3
-            style={{
-              fontFamily: "var(--font-mono), monospace",
-              fontSize: 12,
-              color: "var(--accent)",
-              letterSpacing: ".1em",
-              textTransform: "uppercase",
-              marginBottom: "1.5rem",
-            }}
-          >
-            Basic Information
-          </h3>
+        <Card>
+          <SectionHeading>Basic Information</SectionHeading>
 
           <div style={{ display: "grid", gap: "1rem" }}>
             <FormField
@@ -256,27 +227,11 @@ export default function NewProblemPage() {
                 >
                   Difficulty
                 </label>
-                <select
-                  value={form.difficulty}
-                  onChange={(e) =>
-                    setForm({ ...form, difficulty: e.target.value })
-                  }
-                  style={{
-                    width: "100%",
-                    background: "var(--bg)",
-                    border: "1px solid var(--border-lit)",
-                    borderRadius: 2,
-                    padding: "10px 12px",
-                    fontFamily: "var(--font-mono), monospace",
-                    fontSize: 13,
-                    color: "var(--text)",
-                    outline: "none",
-                  }}
-                >
+                <Select value={form.difficulty} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setForm({ ...form, difficulty: e.target.value })}>
                   <option value="EASY">Easy</option>
                   <option value="MEDIUM">Medium</option>
                   <option value="HARD">Hard</option>
-                </select>
+                </Select>
               </div>
 
               <div>
@@ -291,77 +246,32 @@ export default function NewProblemPage() {
                 >
                   Tags (comma separated)
                 </label>
-                <input
+                <Input
                   type="text"
                   value={form.tags}
-                  onChange={(e) => setForm({ ...form, tags: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, tags: e.target.value })}
                   placeholder="e.g. arrays, hashmap, dp"
-                  style={inputStyle}
                 />
               </div>
             </div>
           </div>
-        </div>
-
+        </Card>
         {/* Statement */}
-        <div
-          style={{
-            background: "var(--surface)",
-            border: "1px solid var(--border)",
-            borderRadius: 4,
-            padding: "1.5rem",
-            marginBottom: "1.5rem",
-          }}
-        >
-          <h3
-            style={{
-              fontFamily: "var(--font-mono), monospace",
-              fontSize: 12,
-              color: "var(--accent)",
-              letterSpacing: ".1em",
-              textTransform: "uppercase",
-              marginBottom: "1.5rem",
-            }}
-          >
-            Problem Statement (Markdown)
-          </h3>
+        <Card>
+          <SectionHeading>Problem Statement (Markdown)</SectionHeading>
 
-          <textarea
+          <Textarea
             value={form.statement}
-            onChange={(e) => setForm({ ...form, statement: e.target.value })}
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setForm({ ...form, statement: e.target.value })}
             placeholder="Write your problem statement in markdown..."
             required
-            style={{
-              ...inputStyle,
-              minHeight: 250,
-              resize: "vertical",
-              fontFamily: "var(--font-mono), monospace",
-            }}
+            textareaStyle={{ minHeight: 250 }}
           />
-        </div>
+        </Card>
 
         {/* Limits */}
-        <div
-          style={{
-            background: "var(--surface)",
-            border: "1px solid var(--border)",
-            borderRadius: 4,
-            padding: "1.5rem",
-            marginBottom: "1.5rem",
-          }}
-        >
-          <h3
-            style={{
-              fontFamily: "var(--font-mono), monospace",
-              fontSize: 12,
-              color: "var(--accent)",
-              letterSpacing: ".1em",
-              textTransform: "uppercase",
-              marginBottom: "1.5rem",
-            }}
-          >
-            Limits & Visibility
-          </h3>
+        <Card>
+          <SectionHeading>Limits & Visibility</SectionHeading>
 
           <div
             style={{
@@ -427,18 +337,10 @@ export default function NewProblemPage() {
               </label>
             </div>
           </div>
-        </div>
+        </Card>
 
         {/* Test Cases */}
-        <div
-          style={{
-            background: "var(--surface)",
-            border: "1px solid var(--border)",
-            borderRadius: 4,
-            padding: "1.5rem",
-            marginBottom: "1.5rem",
-          }}
-        >
+        <Card>
           <div
             style={{
               display: "flex",
@@ -447,33 +349,10 @@ export default function NewProblemPage() {
               marginBottom: "1.5rem",
             }}
           >
-            <h3
-              style={{
-                fontFamily: "var(--font-mono), monospace",
-                fontSize: 12,
-                color: "var(--accent)",
-                letterSpacing: ".1em",
-                textTransform: "uppercase",
-              }}
-            >
-              Test Cases
-            </h3>
-            <button
-              type="button"
-              onClick={addTestCase}
-              style={{
-                background: "transparent",
-                border: "1px solid var(--border-lit)",
-                borderRadius: 2,
-                padding: "6px 12px",
-                fontFamily: "var(--font-mono), monospace",
-                fontSize: 12,
-                color: "var(--text)",
-                cursor: "pointer",
-              }}
-            >
+            <SectionHeading>Test Cases</SectionHeading>
+            <Button variant="secondary" type="button" onClick={addTestCase} style={{ padding: "6px 12px", fontSize: 12, fontWeight: 400 }}>
               + Add Test Case
-            </button>
+            </Button>
           </div>
 
           <div style={{ display: "grid", gap: "1.5rem" }}>
@@ -538,20 +417,9 @@ export default function NewProblemPage() {
                       </span>
                     </label>
                     {testCases.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeTestCase(tc.id)}
-                        style={{
-                          background: "transparent",
-                          border: "none",
-                          color: "var(--red)",
-                          fontFamily: "var(--font-mono), monospace",
-                          fontSize: 12,
-                          cursor: "pointer",
-                        }}
-                      >
+                      <Button variant="ghost" type="button" onClick={() => removeTestCase(tc.id)} style={{ color: "var(--red)", fontSize: 12, fontWeight: 400 }}>
                         Remove
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -581,7 +449,7 @@ export default function NewProblemPage() {
                         updateTestCase(tc.id, "input", e.target.value)
                       }
                       placeholder="Input data..."
-                      style={{ ...inputStyle, minHeight: 80 }}
+                      style={{ minHeight: 80, width: "100%", background: "var(--bg)", border: "1px solid var(--border-lit)", borderRadius: 2, padding: "10px 12px", fontFamily: "var(--font-mono), monospace", fontSize: 13, color: "var(--text)", outline: "none", resize: "vertical" }}
                       required
                     />
                   </div>
@@ -603,7 +471,7 @@ export default function NewProblemPage() {
                         updateTestCase(tc.id, "expectedOutput", e.target.value)
                       }
                       placeholder="Expected output..."
-                      style={{ ...inputStyle, minHeight: 80 }}
+                      style={{ minHeight: 80, width: "100%", background: "var(--bg)", border: "1px solid var(--border-lit)", borderRadius: 2, padding: "10px 12px", fontFamily: "var(--font-mono), monospace", fontSize: 13, color: "var(--text)", outline: "none", resize: "vertical" }}
                       required
                     />
                   </div>
@@ -611,46 +479,17 @@ export default function NewProblemPage() {
               </div>
             ))}
           </div>
-        </div>
-
+        </Card>
         {/* Submit */}
         <div
           style={{ display: "flex", gap: "1rem", justifyContent: "flex-end" }}
         >
-          <button
-            type="button"
-            onClick={() => router.push("/admin")}
-            style={{
-              background: "transparent",
-              border: "1px solid var(--border)",
-              borderRadius: 2,
-              padding: "12px 24px",
-              fontFamily: "var(--font-mono), monospace",
-              fontSize: 13,
-              color: "var(--muted)",
-              cursor: "pointer",
-            }}
-          >
+          <Button variant="secondary" type="button" onClick={() => router.push("/admin")}>
             Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              background: "var(--accent)",
-              border: "none",
-              borderRadius: 2,
-              padding: "12px 32px",
-              fontFamily: "var(--font-mono), monospace",
-              fontSize: 13,
-              fontWeight: 700,
-              color: "#000",
-              cursor: loading ? "not-allowed" : "pointer",
-              opacity: loading ? 0.7 : 1,
-            }}
-          >
+          </Button>
+          <Button type="submit" loading={loading}>
             {loading ? "Creating..." : "Create Problem"}
-          </button>
+          </Button>
         </div>
       </form>
     </div>
@@ -697,13 +536,12 @@ function FormField({
         {/* Display asterisk for required fields */}
         {label} {required && <span style={{ color: "var(--red)" }}>*</span>}
       </label>
-      <input
+      <Input
         type={type}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
         placeholder={placeholder}
         required={required}
-        style={inputStyle}
       />
       {/* Display hint text below field if provided */}
       {hint && (
@@ -723,19 +561,3 @@ function FormField({
   );
 }
 
-/**
- * Shared input styling
- * Used by both the FormField component and textarea elements
- */
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  background: "var(--bg)",
-  border: "1px solid var(--border-lit)",
-  borderRadius: 2,
-  padding: "10px 12px",
-  fontFamily: "var(--font-mono), monospace",
-  fontSize: 13,
-  color: "var(--text)",
-  outline: "none",
-  transition: "border-color .15s",
-};
