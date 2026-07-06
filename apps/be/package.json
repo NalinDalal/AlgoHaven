@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@algohaven/logger": "workspace:*",
+    "@algohaven/auth": "workspace:*",
     "@algohaven/db": "workspace:*",
     "@algohaven/utils": "workspace:*",
     "@algohaven/redis": "workspace:*",

@@ -1,7 +1,7 @@
 import { prisma, SubmissionStatus } from "@algohaven/db";
 import { requireAuth } from "./auth";
 import { success, failure } from "@algohaven/utils";
-import { getRankTier, BADGES, type BadgeStats } from "@/packages/utils/badges";
+import { getRankTier, BADGES, type BadgeStats } from "@algohaven/utils";
 
 /* ────────────────────────────────────────────────────────────── */
 /* helpers                                                        */
