@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Nav from "@/components/Nav";
 import { useContestLeaderboard } from "@/hooks/useContestLeaderboard";
+import { apiFetch } from "@/lib/apiFetch";
 
 interface ContestDetails {
   id: string;
@@ -55,8 +56,8 @@ export default function ContestDetailPage({
     const fetchData = async () => {
       try {
         const [contestRes, meRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/contest/${id}`),
-          fetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/auth/me`, {
+          apiFetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/contest/${id}`),
+          apiFetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/auth/me`, {
             credentials: "include",
           }),
         ]);
@@ -94,7 +95,7 @@ export default function ContestDetailPage({
 
     setRegistering(true);
     try {
-      const res = await fetch(
+      const res = await apiFetch(
         `${process.env.NEXT_PUBLIC_BE_URL}/api/contest/${id}/register`,
         { method: "POST", credentials: "include", headers: { "X-Requested-By": "AlgoHaven" } },
       );

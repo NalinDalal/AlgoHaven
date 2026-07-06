@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Nav from "@/components/Nav";
+import { apiFetch } from "@/lib/apiFetch";
 
 interface RatingPoint {
   contestId: string;
@@ -239,7 +240,7 @@ export default function MePage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/me`, {
+    apiFetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/me`, {
       credentials: "include",
     })
       .then(async (r) => {

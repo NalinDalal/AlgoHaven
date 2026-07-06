@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { apiFetch } from "@/lib/apiFetch";
 
 interface Contest {
   id: string;
@@ -30,7 +31,7 @@ export default function AdminContestsPage() {
   const limit = 20;
 
   useEffect(() => {
-    fetch(
+    apiFetch(
       `${process.env.NEXT_PUBLIC_BE_URL}/api/contest?page=${page}&limit=${limit}`,
       { credentials: "include" },
     )
@@ -53,7 +54,7 @@ export default function AdminContestsPage() {
 
     setDeleting(id);
     try {
-      const res = await fetch(
+      const res = await apiFetch(
         `${process.env.NEXT_PUBLIC_BE_URL}/api/contest/${id}`,
         {
           method: "DELETE",

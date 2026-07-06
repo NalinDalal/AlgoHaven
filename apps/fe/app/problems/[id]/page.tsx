@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import Nav from "@/components/Nav";
 import ProblemWrapper, { type ProblemData } from "@/components/problemWrapper";
+import { apiFetch } from "@/lib/apiFetch";
 
 export default function ProblemDetailPage() {
   const { id } = useParams() as { id: string };
@@ -21,7 +22,7 @@ export default function ProblemDetailPage() {
     // #2: Race condition — abort request if user navigates away before fetch completes
     const controller = new AbortController();
 
-    fetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/problems/${id}`, {
+    apiFetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/problems/${id}`, {
       signal: controller.signal,
     })
       .then((r) => {

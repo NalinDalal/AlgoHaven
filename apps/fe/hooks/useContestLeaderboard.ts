@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { apiFetch } from "@/lib/apiFetch";
 
 interface LeaderboardEntry {
   userId: string;
@@ -49,7 +50,7 @@ export function useContestLeaderboard({
 
   const fetchLeaderboard = useCallback(async () => {
     try {
-      const res = await fetch(`${BE_URL}/api/contest/${contestId}/leaderboard`);
+      const res = await apiFetch(`${BE_URL}/api/contest/${contestId}/leaderboard`);
       const data = await res.json();
       if (data.status === "success" && data.data) {
         setEntries(data.data.top || []);

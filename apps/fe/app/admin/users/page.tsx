@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { apiFetch } from "@/lib/apiFetch";
 
 interface User {
   id: string;
@@ -28,7 +29,7 @@ export default function AdminUsersPage() {
   const [page, setPage] = useState(1);
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/users?page=${page}&limit=20`, {
+    apiFetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/users?page=${page}&limit=20`, {
       credentials: "include",
     })
       .then((res) => res.json())
@@ -44,7 +45,7 @@ export default function AdminUsersPage() {
   const updateRole = async (userId: string, newRole: "USER" | "ADMIN") => {
     setUpdating(userId);
     try {
-      const res = await fetch(
+      const res = await apiFetch(
         `${process.env.NEXT_PUBLIC_BE_URL}/api/users/${userId}/role`,
         {
           method: "PUT",

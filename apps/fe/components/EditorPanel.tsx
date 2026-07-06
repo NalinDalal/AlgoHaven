@@ -7,6 +7,7 @@ import OutputPanel from "./OutputPanel";
 import JudgeStatusBadge from "./JudgeStatusBadge";
 import { useSubmission } from "../hooks/useSubmission";
 import type { Lang, SampleTestCase, SubmissionResult } from "./problemWrapper";
+import { apiFetch } from "@/lib/apiFetch";
 
 const LANG_LABELS: Record<Lang, string> = {
   cpp: "C++17",
@@ -48,7 +49,7 @@ export default function EditorPanel({
   );
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/auth/me`, { credentials: "include" })
+    apiFetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/auth/me`, { credentials: "include" })
       .then((r) => r.json())
       .then((d) => { if (d.data?.user?.banned) setBanned(true); })
       .catch(() => {});

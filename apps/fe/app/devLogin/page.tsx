@@ -2,13 +2,14 @@
 
 import { useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { apiFetch } from "@/lib/apiFetch";
 
 function DevLoginContent() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "admin@test.com";
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/auth/dev-login`, {
+    apiFetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/auth/dev-login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email }),

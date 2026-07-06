@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Input, Select, ErrorBanner, Card, SectionHeading } from "@repo/ui";
+import { apiFetch } from "@/lib/apiFetch";
 
 export default function NewContestPage() {
   const router = useRouter();
@@ -27,7 +28,7 @@ export default function NewContestPage() {
     setError(null);
 
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `${process.env.NEXT_PUBLIC_BE_URL}/api/contest/create`,
         {
           method: "POST",

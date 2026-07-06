@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Nav from "@/components/Nav";
+import { apiFetch } from "@/lib/apiFetch";
 
 interface RatingPoint {
   contestTitle: string;
@@ -166,7 +167,7 @@ export default function PublicProfilePage() {
 
   useEffect(() => {
     if (!username) return;
-    fetch(
+    apiFetch(
       `${process.env.NEXT_PUBLIC_BE_URL}/api/profile/${encodeURIComponent(username)}`,
     )
       .then(async (r) => {

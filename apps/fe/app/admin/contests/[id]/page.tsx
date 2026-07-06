@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Button, Input, Select, ErrorBanner, Card, SectionHeading } from "@repo/ui";
+import { apiFetch } from "@/lib/apiFetch";
 
 interface Contest {
     id: string;
@@ -39,7 +40,7 @@ export default function EditContestPage() {
     });
 
     useEffect(() => {
-        fetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/contest/${id}`, {
+        apiFetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/contest/${id}`, {
             credentials: "include",
         })
             .then((res) => res.json())
@@ -80,7 +81,7 @@ export default function EditContestPage() {
         setError(null);
 
         try {
-            const response = await fetch(
+            const response = await apiFetch(
                 `${process.env.NEXT_PUBLIC_BE_URL}/api/contest/${id}`,
                 {
                     method: "PUT",

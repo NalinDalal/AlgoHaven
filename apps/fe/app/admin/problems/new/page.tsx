@@ -17,6 +17,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Input, Select, Textarea, ErrorBanner, Card, SectionHeading } from "@repo/ui";
+import { apiFetch } from "@/lib/apiFetch";
 
 /**
  * Interface representing a test case
@@ -78,7 +79,7 @@ export default function NewProblemPage() {
     setError(null); // Clear previous errors
 
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `${process.env.NEXT_PUBLIC_BE_URL}/api/problem/create`,
         {
           method: "POST",

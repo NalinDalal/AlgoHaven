@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Nav from "@/components/Nav";
+import { apiFetch } from "@/lib/apiFetch";
 
 interface Problem {
   id: string;
@@ -51,7 +52,7 @@ export default function ProblemsPage() {
 
   useEffect(() => {
     setLoading(true);
-    fetch(
+    apiFetch(
       `${process.env.NEXT_PUBLIC_BE_URL}/api/problems?page=${page}&limit=${limit}`,
     )
       .then((res) => res.json())

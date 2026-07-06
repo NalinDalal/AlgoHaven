@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { apiFetch } from "@/lib/apiFetch";
 
 const navLinks = [
   { href: "/problems", label: "Problems" },
@@ -23,7 +24,7 @@ export default function Nav() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/auth/me`, {
+    apiFetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/auth/me`, {
       credentials: "include",
     })
       .then((r) => r.json())
@@ -35,7 +36,7 @@ export default function Nav() {
   }, []);
 
   const handleSignOut = async () => {
-    await fetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/auth/signout`, {
+    await apiFetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/auth/signout`, {
       method: "POST",
       credentials: "include",
     });

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { apiFetch } from "@/lib/apiFetch";
 
 interface User {
   id: string;
@@ -21,7 +22,7 @@ export default function AdminLayout({
   const router = useRouter();
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/auth/me`)
+    apiFetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/auth/me`)
       .then((res) => res.json())
       .then((data) => {
         if (data.status === "success" && data.data?.user) {

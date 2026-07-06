@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import Link from "next/link";
 import type { ProblemData, SampleTestCase } from "./problemWrapper";
+import { apiFetch } from "@/lib/apiFetch";
 
 const DIFF: Record<string, { chip: string; label: string }> = {
   EASY: {
@@ -84,7 +85,7 @@ function SubmissionsTab({ problemId }: { problemId: string }) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/me`, {
+    apiFetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/me`, {
       credentials: "include",
     })
       .then((r) => {

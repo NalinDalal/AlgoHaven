@@ -16,6 +16,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { apiFetch } from "@/lib/apiFetch";
 
 /**
  * Interface representing a problem in the list
@@ -53,7 +54,7 @@ export default function AdminProblemsPage() {
    * Loads all problems from the API
    */
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/problems`, {
+    apiFetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/problems`, {
       credentials: "include", // Include cookies for authentication
     })
       .then((res) => res.json())
@@ -79,7 +80,7 @@ export default function AdminProblemsPage() {
 
     setDeleting(id); // Show loading for this row
     try {
-      const res = await fetch(
+      const res = await apiFetch(
         `${process.env.NEXT_PUBLIC_BE_URL}/api/problems/${id}`,
         {
           method: "DELETE",
