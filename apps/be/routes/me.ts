@@ -43,100 +43,6 @@ function calculateStreak(submissionDates: Date[]): {
   return { current, longest };
 }
 
-const BADGES = [
-  {
-    id: "first_submission",
-    name: "First Steps",
-    desc: "Submit your first solution",
-    icon: "🚀",
-    condition: (s: any) => s.totalSubmissions >= 1,
-  },
-  {
-    id: "ten_submissions",
-    name: "Getting Started",
-    desc: "Submit 10 solutions",
-    icon: "📝",
-    condition: (s: any) => s.totalSubmissions >= 10,
-  },
-  {
-    id: "hundred_submissions",
-    name: "Dedicated",
-    desc: "Submit 100 solutions",
-    icon: "💯",
-    condition: (s: any) => s.totalSubmissions >= 100,
-  },
-  {
-    id: "first_accepted",
-    name: "Hello World",
-    desc: "Get your first accepted",
-    icon: "✅",
-    condition: (s: any) => s.acceptedCount >= 1,
-  },
-  {
-    id: "ten_solved",
-    name: "Problem Solver",
-    desc: "Solve 10 problems",
-    icon: "🧩",
-    condition: (s: any) => s.solvedCount >= 10,
-  },
-  {
-    id: "fifty_solved",
-    name: "Prolific",
-    desc: "Solve 50 problems",
-    icon: "🏆",
-    condition: (s: any) => s.solvedCount >= 50,
-  },
-  {
-    id: "easy_master",
-    name: "Warming Up",
-    desc: "Solve 20 easy problems",
-    icon: "🌱",
-    condition: (s: any) => s.difficultyBreakdown?.EASY >= 20,
-  },
-  {
-    id: "medium_master",
-    name: "Intermediate",
-    desc: "Solve 20 medium problems",
-    icon: "📈",
-    condition: (s: any) => s.difficultyBreakdown?.MEDIUM >= 20,
-  },
-  {
-    id: "hard_master",
-    name: "Elite",
-    desc: "Solve 20 hard problems",
-    icon: "🔥",
-    condition: (s: any) => s.difficultyBreakdown?.HARD >= 20,
-  },
-  {
-    id: "streak_7",
-    name: "Consistent",
-    desc: "7 day submission streak",
-    icon: "🔥",
-    condition: (s: any) => s.streak?.current >= 7,
-  },
-  {
-    id: "streak_30",
-    name: "Dedicated",
-    desc: "30 day submission streak",
-    icon: "⚡",
-    condition: (s: any) => s.streak?.current >= 30,
-  },
-  {
-    id: "contestParticipant",
-    name: "Competitor",
-    desc: "Enter a contest",
-    icon: "🏁",
-    condition: (s: any) => s.contestsEntered >= 1,
-  },
-  {
-    id: "rated_climb",
-    name: "Rising Star",
-    desc: "Improve rating in a contest",
-    icon: "📊",
-    condition: (s: any) => s.ratingDelta > 0,
-  },
-];
-
 /* ────────────────────────────────────────────────────────────── */
 /* GET /api/me                                                    */
 /* ────────────────────────────────────────────────────────────── */
@@ -385,7 +291,7 @@ export async function handleMe(req: Request): Promise<Response> {
   /* badges                                                        */
   /* ────────────────────────────────────────────────────────────── */
 
-  const stats = {
+  const stats: BadgeStats = {
     totalSubmissions,
     acceptedCount,
     solvedCount: solvedProblemsData.length,
