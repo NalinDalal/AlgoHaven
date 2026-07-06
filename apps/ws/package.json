@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@algohaven/logger": "workspace:*",
+    "@algohaven/utils": "workspace:*",
     "@algohaven/redis": "workspace:*"
   },
   "devDependencies": {

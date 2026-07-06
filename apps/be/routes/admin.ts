@@ -1,9 +1,8 @@
-import { prisma, SubmissionStatus } from "@/packages/db";
+import { prisma, SubmissionStatus } from "@algohaven/db";
 import { requireAdmin } from "./auth";
-import { success, failure } from "@/packages/utils/response";
+import { success, failure, getIdParams } from "@algohaven/utils";
 import { sendToWorker } from "./worker";
 import { be } from "@algohaven/logger";
-import { getIdParams } from "@/packages/utils/routeTypes";
 
 // GET /api/admin/submissions
 // Admin only - list all submissions with pagination and filters

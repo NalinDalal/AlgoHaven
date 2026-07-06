@@ -1,6 +1,7 @@
 export { toBase64 } from "./base64";
 export { withTimeout } from "./timeout";
 export { success, failure, createResponse } from "./response";
+export { getCookie } from "./cookies";
 export { matchRoute } from "./matchRoute";
 export { getRankTier, BADGES, type Badge, type BadgeStats } from "./badges";
 export { validateEnv } from "./env";

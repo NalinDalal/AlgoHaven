@@ -1,8 +1,7 @@
-import { prisma, SubmissionStatus, Role } from "@/packages/db";
+import { prisma, SubmissionStatus, Role } from "@algohaven/db";
 import { requireAdmin } from "./auth";
-import { success, failure } from "@/packages/utils/response";
+import { success, failure, getIdParams } from "@algohaven/utils";
 import { be } from "@algohaven/logger";
-import { getIdParams } from "@/packages/utils/routeTypes";
 
 const DEFAULT_RATING = 1500;
 const MAX_DELTA = 120;

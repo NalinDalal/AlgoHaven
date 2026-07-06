@@ -1,7 +1,7 @@
 import { serve } from "bun";
 import { config } from "dotenv";
 import { be } from "@algohaven/logger";
-import { validateEnv } from "@algohaven/utils/env";
+import { validateEnv } from "@algohaven/utils";
 
 /*
  Load environment variables from .env.
@@ -21,7 +21,7 @@ validateEnv(
 );
 
 // Prisma client
-import { prisma } from "@/packages/db";
+import { prisma } from "@algohaven/db";
 
 // Route handlers
 import {

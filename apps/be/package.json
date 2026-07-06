@@ -15,6 +15,8 @@
   },
   "dependencies": {
     "@algohaven/logger": "workspace:*",
+    "@algohaven/db": "workspace:*",
+    "@algohaven/utils": "workspace:*",
     "@algohaven/redis": "workspace:*",
     "@prisma/client": "^7.4.2",
     "nodemailer": "^8.0.1"

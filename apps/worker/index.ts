@@ -3,7 +3,7 @@ import { Worker, type Job } from "bullmq";
 import { runCode } from "./docker";
 import { checkContestPlagiarism } from "./plagiarism";
 import { worker } from "@algohaven/logger";
-import { validateEnv } from "@algohaven/utils/env";
+import { validateEnv } from "@algohaven/utils";
 import {
   enqueueSubmission,
   getQueueLength,

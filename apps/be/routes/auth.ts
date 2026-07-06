@@ -1,14 +1,12 @@
-import { prisma, type Role } from "@/packages/db";
+import { prisma, type Role } from "@algohaven/db";
 import {
   generateSessionToken,
   hashToken,
   hashPassword,
   verifyPassword,
-} from "@/packages/auth";
-import { success, failure } from "@/packages/utils/response";
-import { getCookie } from "@/packages/utils/cookies";
+} from "@algohaven/auth";
+import { success, failure, getCookie, getParams, getIdParams, type IdParams } from "@algohaven/utils";
 import { auth } from "@algohaven/logger";
-import { getParams, getIdParams, type IdParams } from "@/packages/utils/routeTypes";
 
 export interface AuthUser {
   id: string;

@@ -1,7 +1,7 @@
 import { serve } from "bun";
 import { config } from "dotenv";
 import { ws } from "@algohaven/logger";
-import { validateEnv } from "@algohaven/utils/env";
+import { validateEnv } from "@algohaven/utils";
 import {
   subscribeToLeaderboard,
   subscribeToAnnouncements,

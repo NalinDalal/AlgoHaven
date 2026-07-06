@@ -1,7 +1,7 @@
-import { prisma, SubmissionStatus } from "@/packages/db";
-import { success, failure } from "@/packages/utils/response";
-import { getRankTier, BADGES, type BadgeStats } from "@/packages/utils/badges";
-import { getUsernameParams } from "@/packages/utils/routeTypes";
+import { prisma, SubmissionStatus } from "@algohaven/db";
+import { success, failure } from "@algohaven/utils";
+import { getRankTier, BADGES, type BadgeStats } from "@algohaven/utils";
+import { getUsernameParams } from "@algohaven/utils";
 
 export async function handleGetProfile(req: Request): Promise<Response> {
   const { username } = getUsernameParams(req);

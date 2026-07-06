@@ -9,11 +9,10 @@
  * - Deleting problems (admin only)
  */
 
-import { prisma } from "@/packages/db";
+import { prisma } from "@algohaven/db";
 import { requireAdmin } from "./auth";
-import { success, failure } from "@/packages/utils/response";
+import { success, failure, getIdParams } from "@algohaven/utils";
 import { be } from "@algohaven/logger";
-import { getIdParams } from "@/packages/utils/routeTypes";
 
 /**
  * Request body type for creating a new problem
