@@ -6,582 +6,329 @@ import Nav from "@/components/Nav";
 import { apiFetch } from "@/lib/apiFetch";
 
 interface Problem {
-  id: string;
-  title: string;
-  difficulty: "Easy" | "Medium" | "Hard";
-  slug: string;
-  tags?: string[];
-  acceptance?: number;
-  solved?: number;
+    id: string;
+    title: string;
+    difficulty: "Easy" | "Medium" | "Hard";
+    slug: string;
+    tags?: string[];
+    acceptance?: number;
+    solved?: number;
 }
 
 const DIFF_STYLES: Record<
-  string,
-  { color: string; bg: string; border: string }
+    string,
+    { color: string; bg: string; border: string }
 > = {
-  Easy: {
-    color: "#4ade80",
-    bg: "#0d2e16",
-    border: "#1a5c2d",
-  },
-  Medium: {
-    color: "#ffd700",
-    bg: "#1a1a0d",
-    border: "#4a4a1a",
-  },
-  Hard: {
-    color: "#ff4d4d",
-    bg: "#2d0d0d",
-    border: "#5c1a1a",
-  },
+    Easy: {
+        color: "#4ade80",
+        bg: "#0d2e16",
+        border: "#1a5c2d",
+    },
+    Medium: {
+        color: "#ffd700",
+        bg: "#1a1a0d",
+        border: "#4a4a1a",
+    },
+    Hard: {
+        color: "#ff4d4d",
+        bg: "#2d0d0d",
+        border: "#5c1a1a",
+    },
 };
 
 const FILTERS = ["All", "Easy", "Medium", "Hard"] as const;
 type Filter = (typeof FILTERS)[number];
 
 export default function ProblemsPage() {
-  const [problems, setProblems] = useState<Problem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<Filter>("All");
-  const [search, setSearch] = useState("");
-  const [error, setError] = useState(false);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
-  const limit = 20;
+    const [problems, setProblems] = useState<Problem[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [filter, setFilter] = useState<Filter>("All");
+    const [search, setSearch] = useState("");
+    const [error, setError] = useState(false);
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [total, setTotal] = useState(0);
+    const limit = 20;
 
-  useEffect(() => {
-    setLoading(true);
-    apiFetch(
-      `${process.env.NEXT_PUBLIC_BE_URL}/api/problems?page=${page}&limit=${limit}`,
-    )
-      .then((res) => res.json())
-      .then((data) => {
-        setProblems(data.data?.problems || []);
-        if (data.data?.meta) {
-          setTotalPages(data.data.meta.totalPages);
-          setTotal(data.data.meta.total);
-        }
-        setLoading(false);
-      })
-      .catch(() => {
-        setError(true);
-        setLoading(false);
-      });
-  }, [page]);
-
-  const filtered = problems.filter((p) => {
-    const matchesDiff = filter === "All" || p.difficulty === filter;
-    const matchesSearch =
-      search === "" ||
-      p.title.toLowerCase().includes(search.toLowerCase()) ||
-      p.id.includes(search);
-    return matchesDiff && matchesSearch;
-  });
-
-  return (
-    <>
-      <Nav />
-      <div
-        style={{
-          minHeight: "100vh",
-          background: "var(--bg)",
-          paddingTop: 80,
-        }}
-      >
-        {/* Page header */}
-        <div
-          style={{
-            borderBottom: "1px solid var(--border)",
-            padding: "2.5rem 2.5rem 0",
-            maxWidth: 1100,
-            margin: "0 auto",
-          }}
-        >
-          <div
-            style={{
-              fontFamily: "var(--font-mono), monospace",
-              fontSize: 12,
-              color: "var(--accent)",
-              letterSpacing: ".12em",
-              textTransform: "uppercase",
-              marginBottom: "0.75rem",
-            }}
-          >
-            // Problem set
-          </div>
-          <h1
-            style={{
-              fontFamily: "var(--font-syne), sans-serif",
-              fontWeight: 800,
-              fontSize: "clamp(2rem, 4vw, 3rem)",
-              letterSpacing: "-.03em",
-              lineHeight: 1,
-              color: "var(--text)",
-              marginBottom: "2rem",
-            }}
-          >
-            All Problems
-          </h1>
-
-          {/* Toolbar */}
-          <div
-            className="flex flex-wrap items-center gap-3"
-            style={{ paddingBottom: "1.5rem" }}
-          >
-            {/* Search */}
-            <div style={{ position: "relative", flex: "1 1 240px" }}>
-              <span
-                style={{
-                  position: "absolute",
-                  left: 12,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  fontFamily: "var(--font-mono), monospace",
-                  fontSize: 13,
-                  color: "var(--muted)",
-                  pointerEvents: "none",
-                }}
-              >
-                /
-              </span>
-              <input
-                type="text"
-                placeholder="Search by title or #id..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                style={{
-                  width: "100%",
-                  background: "var(--surface)",
-                  border: "1px solid var(--border-lit)",
-                  borderRadius: 2,
-                  padding: "9px 12px 9px 28px",
-                  fontFamily: "var(--font-mono), monospace",
-                  fontSize: 13,
-                  color: "var(--text)",
-                  outline: "none",
-                  transition: "border-color .15s",
-                }}
-                onFocus={(e) =>
-                  (e.currentTarget.style.borderColor = "var(--accent)")
+    useEffect(() => {
+        setLoading(true);
+        apiFetch(
+            `${process.env.NEXT_PUBLIC_BE_URL}/api/problems?page=${page}&limit=${limit}`,
+        )
+            .then((res) => res.json())
+            .then((data) => {
+                setProblems(data.data?.problems || []);
+                if (data.data?.meta) {
+                    setTotalPages(data.data.meta.totalPages);
+                    setTotal(data.data.meta.total);
                 }
-                onBlur={(e) =>
-                  (e.currentTarget.style.borderColor = "var(--border-lit)")
-                }
-              />
-            </div>
+                setLoading(false);
+            })
+            .catch(() => {
+                setError(true);
+                setLoading(false);
+            });
+    }, [page]);
 
-            {/* Difficulty filters */}
-            <div className="flex gap-2">
-              {FILTERS.map((f) => {
-                const isActive = filter === f;
-                const ds = f !== "All" ? DIFF_STYLES[f] : null;
-                return (
-                  <button
-                    key={f}
-                    onClick={() => setFilter(f)}
-                    style={{
-                      fontFamily: "var(--font-mono), monospace",
-                      fontSize: 12,
-                      fontWeight: 700,
-                      padding: "7px 16px",
-                      borderRadius: 2,
-                      border: isActive
-                        ? `1px solid ${ds?.border ?? "var(--accent)"}`
-                        : "1px solid var(--border)",
-                      background: isActive
-                        ? (ds?.bg ?? "rgba(232,255,71,.08)")
-                        : "transparent",
-                      color: isActive
-                        ? (ds?.color ?? "var(--accent)")
-                        : "var(--muted)",
-                      cursor: "pointer",
-                      transition: "all .15s",
-                    }}
-                  >
-                    {f}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
+    const filtered = problems.filter((p) => {
+        const matchesDiff = filter === "All" || p.difficulty === filter;
+        const matchesSearch =
+            search === "" ||
+            p.title.toLowerCase().includes(search.toLowerCase()) ||
+            p.id.includes(search);
+        return matchesDiff && matchesSearch;
+    });
 
-        {/* Table */}
-        <div
-          style={{ maxWidth: 1100, margin: "0 auto", padding: "0 2.5rem 4rem" }}
-        >
-          {loading ? (
-            <SkeletonTable />
-          ) : error ? (
-            <ErrorState />
-          ) : filtered.length === 0 ? (
-            <EmptyState />
-          ) : (
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                marginTop: "0.5rem",
-              }}
-            >
-              <thead>
-                <tr>
-                  {["#", "Title", "Difficulty", "Acceptance", ""].map((h) => (
-                    <th
-                      key={h}
-                      style={{
-                        fontFamily: "var(--font-mono), monospace",
-                        fontSize: 11,
-                        color: "var(--muted)",
-                        textAlign: "left",
-                        padding: "10px 16px",
-                        borderBottom: "1px solid var(--border)",
-                        letterSpacing: ".06em",
-                        textTransform: "uppercase",
-                        fontWeight: 500,
-                      }}
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((p, i) => (
-                  <ProblemRow key={p.id} problem={p} index={i + 1} />
-                ))}
-              </tbody>
-            </table>
-          )}
+    return (
+        <>
+            <Nav />
+            <div className="min-h-screen bg-zinc-950 pt-20 text-zinc-100">
+                {/* Page header */}
+                <div className="border-b border-zinc-800 pb-8">
+                    <div className="mx-auto max-w-[1100px] px-10">
+                        <div className="mb-3 font-mono text-xs tracking-[0.12em] text-emerald-400 uppercase">
+              // Problem set
+                        </div>
+                        <h1 className="font-bold text-5xl md:text-6xl tracking-[-0.03em] leading-none">
+                            All Problems
+                        </h1>
 
-          {/* Footer count + pagination */}
-          {!loading && !error && (
-            <div
-              style={{
-                fontFamily: "var(--font-mono), monospace",
-                fontSize: 12,
-                color: "var(--muted)",
-                marginTop: "1.5rem",
-                borderTop: "1px solid var(--border)",
-                paddingTop: "1rem",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <span>
-                Showing{" "}
-                <span style={{ color: "var(--accent)" }}>
-                  {(page - 1) * limit + 1}–{Math.min(page * limit, total)}
-                </span>{" "}
-                of {total} problems
-              </span>
-              <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-                <button
-                  disabled={page <= 1}
-                  onClick={() => setPage((p) => p - 1)}
-                  style={{
-                    fontFamily: "var(--font-mono), monospace",
-                    fontSize: 12,
-                    padding: "6px 12px",
-                    borderRadius: 2,
-                    border: "1px solid var(--border)",
-                    background: "transparent",
-                    color: page <= 1 ? "#333" : "var(--muted)",
-                    cursor: page <= 1 ? "not-allowed" : "pointer",
-                  }}
-                >
-                  ← Prev
-                </button>
-                <span style={{ color: "var(--muted)", fontSize: 12 }}>
-                  {page} / {totalPages}
-                </span>
-                <button
-                  disabled={page >= totalPages}
-                  onClick={() => setPage((p) => p + 1)}
-                  style={{
-                    fontFamily: "var(--font-mono), monospace",
-                    fontSize: 12,
-                    padding: "6px 12px",
-                    borderRadius: 2,
-                    border: "1px solid var(--border)",
-                    background: "transparent",
-                    color: page >= totalPages ? "#333" : "var(--muted)",
-                    cursor: page >= totalPages ? "not-allowed" : "pointer",
-                  }}
-                >
-                  Next →
-                </button>
-              </div>
+                        {/* Toolbar */}
+                        <div className="flex flex-wrap items-center gap-3 pt-8">
+                            {/* Search */}
+                            <div className="relative flex-1 min-w-[240px]">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 font-mono text-sm text-zinc-500 pointer-events-none">
+                                    /
+                                </span>
+                                <input
+                                    type="text"
+                                    placeholder="Search by title or #id..."
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    className="w-full bg-zinc-900 border border-zinc-700 rounded-md pl-9 py-[9px] text-sm font-mono text-zinc-100 focus:border-emerald-400 outline-none transition-colors"
+                                />
+                            </div>
+
+                            {/* Difficulty filters */}
+                            <div className="flex gap-2">
+                                {FILTERS.map((f) => {
+                                    const isActive = filter === f;
+                                    const ds = f !== "All" ? DIFF_STYLES[f] : null;
+
+                                    return (
+                                        <button
+                                            key={f}
+                                            onClick={() => setFilter(f)}
+                                            className={`font-mono text-xs font-bold px-4 py-[7px] rounded-md border transition-all ${isActive
+                                                    ? "border-emerald-400 bg-emerald-950/50 text-emerald-400"
+                                                    : "border-zinc-700 hover:border-zinc-600 text-zinc-400"
+                                                }`}
+                                            style={
+                                                isActive && ds
+                                                    ? {
+                                                        color: ds.color,
+                                                        backgroundColor: ds.bg,
+                                                        borderColor: ds.border,
+                                                    }
+                                                    : {}
+                                            }
+                                        >
+                                            {f}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Table Container */}
+                <div className="mx-auto max-w-[1100px] px-10 pb-16">
+                    {loading ? (
+                        <SkeletonTable />
+                    ) : error ? (
+                        <ErrorState />
+                    ) : filtered.length === 0 ? (
+                        <EmptyState />
+                    ) : (
+                        <table className="w-full mt-2">
+                            <thead>
+                                <tr>
+                                    {["#", "Title", "Difficulty", "Acceptance", ""].map((h) => (
+                                        <th
+                                            key={h}
+                                            className="font-mono text-[11px] text-zinc-500 text-left py-2.5 px-4 border-b border-zinc-800 uppercase tracking-widest font-medium"
+                                        >
+                                            {h}
+                                        </th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filtered.map((p, i) => (
+                                    <ProblemRow key={p.id} problem={p} index={i + 1} />
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+
+                    {/* Footer count + pagination */}
+                    {!loading && !error && (
+                        <div className="flex items-center justify-between font-mono text-sm text-zinc-400 mt-8 pt-4 border-t border-zinc-800">
+                            <span>
+                                Showing{" "}
+                                <span className="text-emerald-400">
+                                    {(page - 1) * limit + 1}–{Math.min(page * limit, total)}
+                                </span>{" "}
+                                of {total} problems
+                            </span>
+
+                            <div className="flex items-center gap-3">
+                                <button
+                                    disabled={page <= 1}
+                                    onClick={() => setPage((p) => p - 1)}
+                                    className="px-4 py-1.5 border border-zinc-700 rounded-md hover:bg-zinc-900 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                                >
+                                    ← Prev
+                                </button>
+                                <span>
+                                    {page} / {totalPages}
+                                </span>
+                                <button
+                                    disabled={page >= totalPages}
+                                    onClick={() => setPage((p) => p + 1)}
+                                    className="px-4 py-1.5 border border-zinc-700 rounded-md hover:bg-zinc-900 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                                >
+                                    Next →
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
-          )}
-        </div>
-      </div>
-    </>
-  );
+        </>
+    );
 }
 
 function ProblemRow({ problem, index }: { problem: Problem; index: number }) {
-  const ds = DIFF_STYLES[problem.difficulty] ?? DIFF_STYLES.Medium;
-  const acceptance = problem.acceptance ?? Math.floor(40 + Math.random() * 45);
+    const ds = DIFF_STYLES[problem.difficulty] ?? DIFF_STYLES.Medium;
+    const acceptance = problem.acceptance ?? Math.floor(40 + Math.random() * 45);
 
-  return (
-    <tr
-      style={{ transition: "background .12s", cursor: "pointer" }}
-      onMouseEnter={(e) =>
-        (e.currentTarget.style.background = "var(--surface)")
-      }
-      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-    >
-      {/* Index */}
-      <td
-        style={{
-          fontFamily: "var(--font-mono), monospace",
-          fontSize: 12,
-          color: "var(--muted)",
-          padding: "14px 16px",
-          borderBottom: "1px solid var(--border)",
-          width: 60,
-        }}
-      >
-        {String(index).padStart(3, "0")}
-      </td>
-
-      {/* Title */}
-      <td
-        style={{
-          padding: "14px 16px",
-          borderBottom: "1px solid var(--border)",
-        }}
-      >
-        <Link
-          href={`/problems/${problem.id}`}
-          style={{
-            fontFamily: "var(--font-syne), sans-serif",
-            fontWeight: 600,
-            fontSize: 15,
-            color: "var(--text)",
-            textDecoration: "none",
-            transition: "color .12s",
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent)")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text)")}
+    return (
+        <tr
+            className="group hover:bg-zinc-900/70 transition-colors cursor-pointer"
         >
-          {problem.title}
-        </Link>
-        {problem.tags && problem.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-1">
-            {problem.tags.slice(0, 3).map((tag) => (
-              <span
-                key={tag}
-                style={{
-                  fontFamily: "var(--font-mono), monospace",
-                  fontSize: 10,
-                  color: "#555",
-                  border: "1px solid var(--border)",
-                  padding: "1px 6px",
-                  borderRadius: 2,
-                }}
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
-      </td>
+            {/* Index */}
+            <td className="font-mono text-sm text-zinc-500 py-4 px-4 border-b border-zinc-800 w-[60px]">
+                {String(index).padStart(3, "0")}
+            </td>
 
-      {/* Difficulty */}
-      <td
-        style={{
-          padding: "14px 16px",
-          borderBottom: "1px solid var(--border)",
-          width: 110,
-        }}
-      >
-        <span
-          style={{
-            fontFamily: "var(--font-mono), monospace",
-            fontSize: 11,
-            fontWeight: 700,
-            color: ds.color,
-            background: ds.bg,
-            border: `1px solid ${ds.border}`,
-            padding: "3px 10px",
-            borderRadius: 2,
-            whiteSpace: "nowrap",
-          }}
-        >
-          {problem.difficulty}
-        </span>
-      </td>
+            {/* Title */}
+            <td className="py-4 px-4 border-b border-zinc-800">
+                <Link
+                    href={`/problems/${problem.id}`}
+                    className="font-semibold text-[15px] text-zinc-100 hover:text-emerald-400 transition-colors"
+                >
+                    {problem.title}
+                </Link>
 
-      {/* Acceptance bar */}
-      <td
-        style={{
-          padding: "14px 16px",
-          borderBottom: "1px solid var(--border)",
-          width: 160,
-        }}
-      >
-        <div
-          className="flex items-center gap-3"
-          style={{ fontFamily: "var(--font-mono), monospace", fontSize: 12 }}
-        >
-          <div
-            style={{
-              flex: 1,
-              height: 3,
-              background: "var(--border-lit)",
-              borderRadius: 2,
-              overflow: "hidden",
-            }}
-          >
-            <div
-              style={{
-                height: "100%",
-                width: `${acceptance}%`,
-                background: ds.color,
-                borderRadius: 2,
-              }}
-            />
-          </div>
-          <span
-            style={{ color: "var(--muted)", minWidth: 36, textAlign: "right" }}
-          >
-            {acceptance}%
-          </span>
-        </div>
-      </td>
+                {problem.tags && problem.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                        {problem.tags.slice(0, 3).map((tag) => (
+                            <span
+                                key={tag}
+                                className="font-mono text-[10px] text-zinc-500 border border-zinc-700 px-2 py-px rounded"
+                            >
+                                {tag}
+                            </span>
+                        ))}
+                    </div>
+                )}
+            </td>
 
-      {/* Arrow */}
-      <td
-        style={{
-          padding: "14px 16px",
-          borderBottom: "1px solid var(--border)",
-          width: 40,
-          textAlign: "right",
-        }}
-      >
-        <Link
-          href={`/problems/${problem.slug || problem.id}`}
-          style={{
-            fontFamily: "var(--font-mono), monospace",
-            fontSize: 13,
-            color: "var(--muted)",
-            textDecoration: "none",
-            transition: "color .12s",
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent)")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--muted)")}
-        >
-          →
-        </Link>
-      </td>
-    </tr>
-  );
+            {/* Difficulty */}
+            <td className="py-4 px-4 border-b border-zinc-800 w-[110px]">
+                <span
+                    className="font-mono text-xs font-bold px-3 py-1 rounded border whitespace-nowrap"
+                    style={{
+                        color: ds.color,
+                        backgroundColor: ds.bg,
+                        borderColor: ds.border,
+                    }}
+                >
+                    {problem.difficulty}
+                </span>
+            </td>
+
+            {/* Acceptance */}
+            <td className="py-4 px-4 border-b border-zinc-800 w-[160px]">
+                <div className="flex items-center gap-3 font-mono text-sm">
+                    <div className="flex-1 h-0.5 bg-zinc-800 rounded overflow-hidden">
+                        <div
+                            className="h-full rounded"
+                            style={{
+                                width: `${acceptance}%`,
+                                backgroundColor: ds.color,
+                            }}
+                        />
+                    </div>
+                    <span className="text-zinc-400 min-w-[36px] text-right">
+                        {acceptance}%
+                    </span>
+                </div>
+            </td>
+
+            {/* Arrow */}
+            <td className="py-4 px-4 border-b border-zinc-800 w-10 text-right">
+                <Link
+                    href={`/problems/${problem.slug || problem.id}`}
+                    className="font-mono text-sm text-zinc-400 group-hover:text-emerald-400 transition-colors"
+                >
+                    →
+                </Link>
+            </td>
+        </tr>
+    );
 }
 
+/* Skeleton */
 function SkeletonTable() {
-  return (
-    <div style={{ marginTop: "0.5rem" }}>
-      {Array.from({ length: 8 }).map((_, i) => (
-        <div
-          key={i}
-          style={{
-            height: 52,
-            borderBottom: "1px solid var(--border)",
-            display: "flex",
-            alignItems: "center",
-            gap: 16,
-            padding: "0 16px",
-          }}
-        >
-          <div
-            style={{
-              width: 40,
-              height: 10,
-              background: "var(--surface)",
-              borderRadius: 2,
-              animation: "pulse 1.5s ease infinite",
-            }}
-          />
-          <div
-            style={{
-              flex: 1,
-              height: 10,
-              background: "var(--surface)",
-              borderRadius: 2,
-              animation: "pulse 1.5s ease infinite",
-              animationDelay: `${i * 0.05}s`,
-            }}
-          />
-          <div
-            style={{
-              width: 60,
-              height: 10,
-              background: "var(--surface)",
-              borderRadius: 2,
-              animation: "pulse 1.5s ease infinite",
-            }}
-          />
+    return (
+        <div className="mt-2 space-y-0.5">
+            {Array.from({ length: 8 }).map((_, i) => (
+                <div
+                    key={i}
+                    className="h-14 border-b border-zinc-800 flex items-center gap-4 px-4 animate-pulse"
+                >
+                    <div className="w-10 h-2.5 bg-zinc-800 rounded" />
+                    <div className="flex-1 h-2.5 bg-zinc-800 rounded" />
+                    <div className="w-16 h-2.5 bg-zinc-800 rounded" />
+                </div>
+            ))}
         </div>
-      ))}
-    </div>
-  );
+    );
 }
 
+/* Empty State */
 function EmptyState() {
-  return (
-    <div
-      className="flex flex-col items-center justify-center"
-      style={{
-        padding: "5rem 2rem",
-        fontFamily: "var(--font-mono), monospace",
-        color: "var(--muted)",
-        textAlign: "center",
-      }}
-    >
-      <div
-        style={{
-          fontSize: 32,
-          marginBottom: "1rem",
-          color: "var(--border-lit)",
-        }}
-      >
-        {"{ }"}
-      </div>
-      <div style={{ fontSize: 14 }}>No problems match your filters.</div>
-      <div style={{ fontSize: 12, marginTop: 6, color: "#333" }}>
-        Try a different search or difficulty.
-      </div>
-    </div>
-  );
+    return (
+        <div className="flex flex-col items-center justify-center py-20 text-center text-zinc-400 font-mono">
+            <div className="text-4xl mb-4 text-zinc-700">{"{ }"}</div>
+            <div className="text-sm">No problems match your filters.</div>
+            <div className="text-xs mt-2 text-zinc-600">
+                Try a different search or difficulty.
+            </div>
+        </div>
+    );
 }
 
+/* Error State */
 function ErrorState() {
-  return (
-    <div
-      className="flex flex-col items-center justify-center"
-      style={{
-        padding: "5rem 2rem",
-        fontFamily: "var(--font-mono), monospace",
-        color: "var(--muted)",
-        textAlign: "center",
-      }}
-    >
-      <div
-        style={{
-          fontSize: 13,
-          color: "#ff4d4d",
-          border: "1px solid #5c1a1a",
-          background: "#2d0d0d",
-          padding: "10px 20px",
-          borderRadius: 2,
-        }}
-      >
-        Error: Could not reach judge server. Is the backend running?
-      </div>
-    </div>
-  );
+    return (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="font-mono text-sm border border-red-900 bg-red-950/50 text-red-400 px-6 py-3 rounded">
+                Error: Could not reach judge server. Is the backend running?
+            </div>
+        </div>
+    );
 }

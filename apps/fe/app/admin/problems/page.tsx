@@ -23,17 +23,28 @@ import { apiFetch } from "@/lib/apiFetch";
  * Contains summary fields for display in the table
  */
 interface Problem {
-  id: string;
-  title: string;
-  slug: string;
-  difficulty: "EASY" | "MEDIUM" | "HARD";
-  isPublic: boolean;
-  createdAt: string;
-  _count?: {
-    testCases: number;
-    submissions: number;
-  };
+    id: string;
+    title: string;
+    slug: string;
+    difficulty: "EASY" | "MEDIUM" | "HARD";
+    isPublic: boolean;
+    createdAt: string;
+    _count?: {
+        testCases: number;
+        submissions: number;
+    };
 }
+
+const DIFFICULTY_BADGE: Record<string, string> = {
+    EASY: "bg-[#0d2818] text-[#22c55e] border-[#166534]",
+    MEDIUM: "bg-[#1c1a0d] text-[#eab308] border-[#854d0e]",
+    HARD: "bg-[#2d0d0d] text-[#ef4444] border-[#991b1b]",
+};
+const DIFFICULTY_BADGE_DEFAULT = "bg-[#1a1a1a] text-[#888] border-[#333]";
+
+const TH_CLASS =
+    "px-4 py-3 text-left font-[family-name:var(--font-mono)] text-[11px] font-semibold text-[var(--muted)] uppercase tracking-[.06em] bg-[#0d0d0d]";
+const TD_CLASS = "px-4 py-3.5 align-middle";
 
 /**
  * Main Admin Problems Page Component
@@ -44,398 +55,232 @@ interface Problem {
  * @returns JSX element with problems table
  */
 export default function AdminProblemsPage() {
-  const router = useRouter();
-  const [problems, setProblems] = useState<Problem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [deleting, setDeleting] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
-  const limit = 25;
+    const router = useRouter();
+    const [problems, setProblems] = useState<Problem[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [deleting, setDeleting] = useState<string | null>(null);
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [total, setTotal] = useState(0);
+    const limit = 25;
 
-  useEffect(() => {
-    setLoading(true);
-    apiFetch(
-      `${process.env.NEXT_PUBLIC_BE_URL}/api/problems?page=${page}&limit=${limit}`,
-      { credentials: "include" },
-    )
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.status === "success") {
-          setProblems(data.data.problems);
-          if (data.data?.meta) {
-            setTotalPages(data.data.meta.totalPages);
-            setTotal(data.data.meta.total);
-          }
+    useEffect(() => {
+        setLoading(true);
+        apiFetch(
+            `${process.env.NEXT_PUBLIC_BE_URL}/api/problems?page=${page}&limit=${limit}`,
+            { credentials: "include" },
+        )
+            .then((res) => res.json())
+            .then((data) => {
+                if (data.status === "success") {
+                    setProblems(data.data.problems);
+                    if (data.data?.meta) {
+                        setTotalPages(data.data.meta.totalPages);
+                        setTotal(data.data.meta.total);
+                    }
+                }
+            })
+            .catch(console.error)
+            .finally(() => setLoading(false));
+    }, [page]);
+
+    /**
+     * Handles problem deletion
+     * Shows confirmation dialog before deleting
+     *
+     * @param id - The ID of the problem to delete
+     * @param title - The title for confirmation message
+     */
+    const handleDelete = async (id: string, title: string) => {
+        // Show confirmation dialog
+        if (!confirm(`Delete problem "${title}"? This cannot be undone.`)) return;
+
+        setDeleting(id); // Show loading for this row
+        try {
+            const res = await apiFetch(
+                `${process.env.NEXT_PUBLIC_BE_URL}/api/problems/${id}`,
+                {
+                    method: "DELETE",
+                    headers: { "X-Requested-By": "AlgoHaven" },
+                    credentials: "include",
+                },
+            );
+            const data = await res.json();
+            if (data.status === "success") {
+                setProblems(problems.filter((p) => p.id !== id));
+            } else {
+                alert(data.message || "Failed to delete");
+            }
+        } catch (err) {
+            alert("Failed to delete");
+        } finally {
+            setDeleting(null);
         }
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, [page]);
+    };
 
-  /**
-   * Handles problem deletion
-   * Shows confirmation dialog before deleting
-   *
-   * @param id - The ID of the problem to delete
-   * @param title - The title for confirmation message
-   */
-  const handleDelete = async (id: string, title: string) => {
-    // Show confirmation dialog
-    if (!confirm(`Delete problem "${title}"? This cannot be undone.`)) return;
+    const getDifficultyClass = (difficulty: string) => {
+        return DIFFICULTY_BADGE[difficulty] ?? DIFFICULTY_BADGE_DEFAULT;
+    };
 
-    setDeleting(id); // Show loading for this row
-    try {
-      const res = await apiFetch(
-        `${process.env.NEXT_PUBLIC_BE_URL}/api/problems/${id}`,
-        {
-          method: "DELETE",
-          headers: { "X-Requested-By": "AlgoHaven" },
-          credentials: "include",
-        },
-      );
-      const data = await res.json();
-      if (data.status === "success") {
-        setProblems(problems.filter((p) => p.id !== id));
-      } else {
-        alert(data.message || "Failed to delete");
-      }
-    } catch (err) {
-      alert("Failed to delete");
-    } finally {
-      setDeleting(null);
+    if (loading) {
+        return (
+            <div className="p-12 text-center text-[var(--muted)] font-[family-name:var(--font-mono)]">
+                Loading problems...
+            </div>
+        );
     }
-  };
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case "EASY":
-        return { bg: "#0d2818", color: "#22c55e", border: "#166534" };
-      case "MEDIUM":
-        return { bg: "#1c1a0d", color: "#eab308", border: "#854d0e" };
-      case "HARD":
-        return { bg: "#2d0d0d", color: "#ef4444", border: "#991b1b" };
-      default:
-        return { bg: "#1a1a1a", color: "#888", border: "#333" };
-    }
-  };
-
-  if (loading) {
     return (
-      <div
-        style={{
-          padding: "3rem",
-          textAlign: "center",
-          color: "var(--muted)",
-          fontFamily: "var(--font-mono), monospace",
-        }}
-      >
-        Loading problems...
-      </div>
-    );
-  }
+        <div className="max-w-[1200px] mx-auto p-8">
+            <div className="flex justify-between items-center mb-8">
+                <div>
+                    <Link
+                        href="/admin"
+                        className="font-[family-name:var(--font-mono)] text-xs text-[var(--muted)] no-underline mb-2 inline-block"
+                    >
+                        ← Back to Dashboard
+                    </Link>
+                    <h1 className="font-[family-name:var(--font-syne)] font-extrabold text-[1.75rem] text-[var(--text)] m-0">
+                        Problems
+                    </h1>
+                </div>
+                <Link
+                    href="/admin/problems/new"
+                    className="bg-[var(--accent)] text-black px-5 py-2.5 rounded-sm font-[family-name:var(--font-mono)] text-[13px] font-bold no-underline"
+                >
+                    + New Problem
+                </Link>
+            </div>
 
-  return (
-    <div style={{ maxWidth: 1200, margin: "0 auto", padding: "2rem" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "2rem",
-        }}
-      >
-        <div>
-          <Link
-            href="/admin"
-            style={{
-              fontFamily: "var(--font-mono), monospace",
-              fontSize: 12,
-              color: "var(--muted)",
-              textDecoration: "none",
-              marginBottom: "0.5rem",
-              display: "inline-block",
-            }}
-          >
-            ← Back to Dashboard
-          </Link>
-          <h1
-            style={{
-              fontFamily: "var(--font-syne), sans-serif",
-              fontWeight: 800,
-              fontSize: "1.75rem",
-              color: "var(--text)",
-              margin: 0,
-            }}
-          >
-            Problems
-          </h1>
-        </div>
-        <Link
-          href="/admin/problems/new"
-          style={{
-            background: "var(--accent)",
-            color: "#000",
-            padding: "10px 20px",
-            borderRadius: 2,
-            fontFamily: "var(--font-mono), monospace",
-            fontSize: 13,
-            fontWeight: 700,
-            textDecoration: "none",
-          }}
-        >
-          + New Problem
-        </Link>
-      </div>
+            {problems.length === 0 ? (
+                <div className="bg-[var(--surface)] border border-[var(--border)] rounded text-center p-16">
+                    <div className="font-[family-name:var(--font-mono)] text-[32px] mb-4">
+                        {}
+                    </div>
+                    <p className="font-[family-name:var(--font-mono)] text-sm text-[var(--muted)] mb-6">
+                        No problems yet
+                    </p>
+                    <Link
+                        href="/admin/problems/new"
+                        className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--accent)]"
+                    >
+                        Create your first problem →
+                    </Link>
+                </div>
+            ) : (
+                <div className="bg-[var(--surface)] border border-[var(--border)] rounded overflow-hidden">
+                    <table className="w-full border-collapse">
+                        <thead>
+                            <tr className="border-b border-[var(--border)]">
+                                <th className={TH_CLASS}>Title</th>
+                                <th className={`${TH_CLASS} w-[100px]`}>Slug</th>
+                                <th className={`${TH_CLASS} w-[100px]`}>Difficulty</th>
+                                <th className={`${TH_CLASS} w-[80px]`}>Status</th>
+                                <th className={`${TH_CLASS} w-[80px]`}>Test Cases</th>
+                                <th className={`${TH_CLASS} w-[100px]`}>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {problems.map((problem) => {
+                                const diffClass = getDifficultyClass(problem.difficulty);
+                                return (
+                                    <tr
+                                        key={problem.id}
+                                        className="border-b border-[var(--border-lit)]"
+                                    >
+                                        <td className={TD_CLASS}>
+                                            <span className="font-[family-name:var(--font-mono)] text-[13px] font-semibold text-[var(--text)]">
+                                                {problem.title}
+                                            </span>
+                                        </td>
+                                        <td className={TD_CLASS}>
+                                            <span className="font-[family-name:var(--font-mono)] text-xs text-[var(--muted)]">
+                                                {problem.slug}
+                                            </span>
+                                        </td>
+                                        <td className={TD_CLASS}>
+                                            <span
+                                                className={`inline-block px-2 py-1 rounded-sm text-[11px] font-bold font-[family-name:var(--font-mono)] border ${diffClass}`}
+                                            >
+                                                {problem.difficulty}
+                                            </span>
+                                        </td>
+                                        <td className={TD_CLASS}>
+                                            <span
+                                                className={`font-[family-name:var(--font-mono)] text-[11px] ${problem.isPublic
+                                                        ? "text-[var(--code-green)]"
+                                                        : "text-[var(--muted)]"
+                                                    }`}
+                                            >
+                                                {problem.isPublic ? "Public" : "Hidden"}
+                                            </span>
+                                        </td>
+                                        <td className={TD_CLASS}>
+                                            <span className="font-[family-name:var(--font-mono)] text-xs text-[var(--muted)]">
+                                                {problem._count?.testCases ?? 0}
+                                            </span>
+                                        </td>
+                                        <td className={TD_CLASS}>
+                                            <div className="flex gap-2">
+                                                <Link
+                                                    href={`/admin/problems/${problem.id}`}
+                                                    className="px-2 py-1 font-[family-name:var(--font-mono)] text-[11px] text-[var(--accent)] no-underline"
+                                                >
+                                                    Edit
+                                                </Link>
+                                                <button
+                                                    onClick={() =>
+                                                        handleDelete(problem.id, problem.title)
+                                                    }
+                                                    disabled={deleting === problem.id}
+                                                    className={`px-2 py-1 font-[family-name:var(--font-mono)] text-[11px] text-[var(--red)] bg-transparent border-none ${deleting === problem.id
+                                                            ? "cursor-not-allowed opacity-50"
+                                                            : "cursor-pointer opacity-100"
+                                                        }`}
+                                                >
+                                                    {deleting === problem.id ? "..." : "Delete"}
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            )}
 
-      {problems.length === 0 ? (
-        <div
-          style={{
-            background: "var(--surface)",
-            border: "1px solid var(--border)",
-            borderRadius: 4,
-            padding: "4rem",
-            textAlign: "center",
-          }}
-        >
-          <div
-            style={{
-              fontFamily: "var(--font-mono), monospace",
-              fontSize: 32,
-              marginBottom: "1rem",
-            }}
-          >
-            {}
-          </div>
-          <p
-            style={{
-              fontFamily: "var(--font-mono), monospace",
-              fontSize: 14,
-              color: "var(--muted)",
-              marginBottom: "1.5rem",
-            }}
-          >
-            No problems yet
-          </p>
-          <Link
-            href="/admin/problems/new"
-            style={{
-              fontFamily: "var(--font-mono), monospace",
-              fontSize: 13,
-              color: "var(--accent)",
-            }}
-          >
-            Create your first problem →
-          </Link>
-        </div>
-      ) : (
-        <div
-          style={{
-            background: "var(--surface)",
-            border: "1px solid var(--border)",
-            borderRadius: 4,
-            overflow: "hidden",
-          }}
-        >
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ borderBottom: "1px solid var(--border)" }}>
-                <th style={thStyle}>Title</th>
-                <th style={{ ...thStyle, width: 100 }}>Slug</th>
-                <th style={{ ...thStyle, width: 100 }}>Difficulty</th>
-                <th style={{ ...thStyle, width: 80 }}>Status</th>
-                <th style={{ ...thStyle, width: 80 }}>Test Cases</th>
-                <th style={{ ...thStyle, width: 100 }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {problems.map((problem) => {
-                const diffStyle = getDifficultyColor(problem.difficulty);
-                return (
-                  <tr
-                    key={problem.id}
-                    style={{ borderBottom: "1px solid var(--border-lit)" }}
-                  >
-                    <td style={tdStyle}>
-                      <span
-                        style={{
-                          fontFamily: "var(--font-mono), monospace",
-                          fontSize: 13,
-                          fontWeight: 600,
-                          color: "var(--text)",
-                        }}
-                      >
-                        {problem.title}
-                      </span>
-                    </td>
-                    <td style={tdStyle}>
-                      <span
-                        style={{
-                          fontFamily: "var(--font-mono), monospace",
-                          fontSize: 12,
-                          color: "var(--muted)",
-                        }}
-                      >
-                        {problem.slug}
-                      </span>
-                    </td>
-                    <td style={tdStyle}>
-                      <span
-                        style={{
-                          display: "inline-block",
-                          padding: "4px 8px",
-                          borderRadius: 2,
-                          fontSize: 11,
-                          fontWeight: 700,
-                          fontFamily: "var(--font-mono), monospace",
-                          background: diffStyle.bg,
-                          color: diffStyle.color,
-                          border: `1px solid ${diffStyle.border}`,
-                        }}
-                      >
-                        {problem.difficulty}
-                      </span>
-                    </td>
-                    <td style={tdStyle}>
-                      <span
-                        style={{
-                          fontFamily: "var(--font-mono), monospace",
-                          fontSize: 11,
-                          color: problem.isPublic
-                            ? "var(--code-green)"
-                            : "var(--muted)",
-                        }}
-                      >
-                        {problem.isPublic ? "Public" : "Hidden"}
-                      </span>
-                    </td>
-                    <td style={tdStyle}>
-                      <span
-                        style={{
-                          fontFamily: "var(--font-mono), monospace",
-                          fontSize: 12,
-                          color: "var(--muted)",
-                        }}
-                      >
-                        {problem._count?.testCases ?? 0}
-                      </span>
-                    </td>
-                    <td style={tdStyle}>
-                      <div style={{ display: "flex", gap: "0.5rem" }}>
-                        <Link
-                          href={`/admin/problems/${problem.id}`}
-                          style={{
-                            padding: "4px 8px",
-                            fontFamily: "var(--font-mono), monospace",
-                            fontSize: 11,
-                            color: "var(--accent)",
-                            textDecoration: "none",
-                          }}
-                        >
-                          Edit
-                        </Link>
+            {/* Pagination */}
+            {totalPages > 1 && (
+                <div className="flex justify-between items-center mt-6 font-[family-name:var(--font-mono)] text-xs">
+                    <span className="text-[var(--muted)]">{total} problems total</span>
+                    <div className="flex gap-2 items-center">
                         <button
-                          onClick={() =>
-                            handleDelete(problem.id, problem.title)
-                          }
-                          disabled={deleting === problem.id}
-                          style={{
-                            padding: "4px 8px",
-                            fontFamily: "var(--font-mono), monospace",
-                            fontSize: 11,
-                            color: "var(--red)",
-                            background: "transparent",
-                            border: "none",
-                            cursor:
-                              deleting === problem.id
-                                ? "not-allowed"
-                                : "pointer",
-                            opacity: deleting === problem.id ? 0.5 : 1,
-                          }}
+                            disabled={page <= 1}
+                            onClick={() => setPage((p) => p - 1)}
+                            className={`font-[family-name:var(--font-mono)] text-xs px-3 py-1.5 rounded-sm border border-[var(--border)] bg-transparent ${page <= 1
+                                    ? "text-[#333] cursor-not-allowed"
+                                    : "text-[var(--muted)] cursor-pointer"
+                                }`}
                         >
-                          {deleting === problem.id ? "..." : "Delete"}
+                            ← Prev
                         </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                        <span className="text-[var(--muted)]">
+                            {page} / {totalPages}
+                        </span>
+                        <button
+                            disabled={page >= totalPages}
+                            onClick={() => setPage((p) => p + 1)}
+                            className={`font-[family-name:var(--font-mono)] text-xs px-3 py-1.5 rounded-sm border border-[var(--border)] bg-transparent ${page >= totalPages
+                                    ? "text-[#333] cursor-not-allowed"
+                                    : "text-[var(--muted)] cursor-pointer"
+                                }`}
+                        >
+                            Next →
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
-      )}
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginTop: "1.5rem",
-            fontFamily: "var(--font-mono), monospace",
-            fontSize: 12,
-          }}
-        >
-          <span style={{ color: "var(--muted)" }}>
-            {total} problems total
-          </span>
-          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-            <button
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-              style={{
-                fontFamily: "var(--font-mono), monospace",
-                fontSize: 12,
-                padding: "6px 12px",
-                borderRadius: 2,
-                border: "1px solid var(--border)",
-                background: "transparent",
-                color: page <= 1 ? "#333" : "var(--muted)",
-                cursor: page <= 1 ? "not-allowed" : "pointer",
-              }}
-            >
-              ← Prev
-            </button>
-            <span style={{ color: "var(--muted)" }}>
-              {page} / {totalPages}
-            </span>
-            <button
-              disabled={page >= totalPages}
-              onClick={() => setPage((p) => p + 1)}
-              style={{
-                fontFamily: "var(--font-mono), monospace",
-                fontSize: 12,
-                padding: "6px 12px",
-                borderRadius: 2,
-                border: "1px solid var(--border)",
-                background: "transparent",
-                color: page >= totalPages ? "#333" : "var(--muted)",
-                cursor: page >= totalPages ? "not-allowed" : "pointer",
-              }}
-            >
-              Next →
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+    );
 }
-
-const thStyle: React.CSSProperties = {
-  padding: "12px 16px",
-  textAlign: "left",
-  fontFamily: "var(--font-mono), monospace",
-  fontSize: 11,
-  fontWeight: 600,
-  color: "var(--muted)",
-  textTransform: "uppercase",
-  letterSpacing: ".06em",
-  background: "#0d0d0d",
-};
-
-const tdStyle: React.CSSProperties = {
-  padding: "14px 16px",
-  verticalAlign: "middle",
-};

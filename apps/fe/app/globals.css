@@ -14,6 +14,7 @@
   --blue: #3b9eff;
 }
 
+/* ─── Base Styles ─── */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -27,109 +28,44 @@ html {
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: var(--font-syne), sans-serif;
+  font-family: var(--font-syne), system-ui, sans-serif;
   overflow-x: hidden;
 }
 
 /* ─── Keyframes ─── */
 @keyframes fadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes scrollLeft {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
 }
 
 @keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.3; }
 }
 
 @keyframes blink {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0;
-  }
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0; }
 }
 
-/* ─── Utility classes ─── */
-.animate-fade-up {
-  animation: fadeUp 0.6s ease both;
-}
+/* ─── Animation Utilities ─── */
+.animate-fade-up     { animation: fadeUp 0.6s ease both; }
+.animate-fade-up-1   { animation: fadeUp 0.6s 0.1s ease both; }
+.animate-fade-up-2   { animation: fadeUp 0.6s 0.2s ease both; }
+.animate-fade-up-3   { animation: fadeUp 0.6s 0.3s ease both; }
+.animate-fade-up-4   { animation: fadeUp 0.6s 0.4s ease both; }
+.animate-fade-up-5   { animation: fadeUp 0.6s 0.5s ease both; }
 
-.animate-fade-up-1 {
-  animation: fadeUp 0.6s 0.1s ease both;
-}
+.animate-scroll-left { animation: scrollLeft 35s linear infinite; }
+.animate-pulse-dot   { animation: pulse 1.5s ease infinite; }
+.animate-blink       { animation: blink 1s step-end infinite; }
 
-.animate-fade-up-2 {
-  animation: fadeUp 0.6s 0.2s ease both;
-}
-
-.animate-fade-up-3 {
-  animation: fadeUp 0.6s 0.3s ease both;
-}
-
-.animate-fade-up-4 {
-  animation: fadeUp 0.6s 0.4s ease both;
-}
-
-.animate-fade-up-5 {
-  animation: fadeUp 0.6s 0.5s ease both;
-}
-
-.animate-scroll-left {
-  animation: scrollLeft 28s linear infinite;
-}
-
-.animate-pulse-dot {
-  animation: pulse 1.5s ease infinite;
-}
-
-.animate-blink {
-  animation: blink 1s step-end infinite;
-}
-
-/* ─── Grid background ─── */
+/* ─── Grid Background ─── */
 .grid-bg {
   position: absolute;
   inset: 0;
@@ -138,72 +74,62 @@ body {
     linear-gradient(var(--border) 1px, transparent 1px),
     linear-gradient(90deg, var(--border) 1px, transparent 1px);
   background-size: 60px 60px;
-  mask-image: radial-gradient(
-    ellipse 80% 60% at 50% 40%,
-    black 30%,
-    transparent 100%
-  );
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 30%, transparent 100%);
 }
 
-/* ─── Verdict chips ─── */
+/* ─── Verdict Chips ─── */
 .v-chip {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   font-family: var(--font-mono), monospace;
-  font-size: 12px;
+  font-size: 13px;
   padding: 4px 12px;
-  border-radius: 2px;
-  flex-shrink: 0;
+  border-radius: 4px;
+  border: 1px solid;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
+/* Verdict Colors */
 .v-ac {
-  background: #0d2e16;
-  color: var(--code-green);
-  border: 1px solid #1a5c2d;
+  background: #0f2a1a;
+  color: #4ade80;
+  border-color: #1f5c2f;
 }
 
 .v-wa {
-  background: #2d0d0d;
-  color: var(--red);
-  border: 1px solid #5c1a1a;
+  background: #2a1616;
+  color: #ff6b6b;
+  border-color: #5c2a2a;
 }
 
 .v-tle {
-  background: #1a1a0d;
-  color: #ffd700;
-  border: 1px solid #4a4a1a;
+  background: #2a2a1a;
+  color: #fcd34d;
+  border-color: #5c5c2a;
 }
 
 .v-mle {
-  background: #0d1a2d;
-  color: var(--blue);
-  border: 1px solid #1a3a6e;
+  background: #1a2333;
+  color: #60a5fa;
+  border-color: #2a4a7a;
 }
 
 .v-re {
-  background: #2d1a0d;
-  color: #ff9500;
-  border: 1px solid #6e3a1a;
+  background: #2a1a1a;
+  color: #f87171;
+  border-color: #5c2a2a;
 }
 
-/* ─── Badge variants ─── */
+/* ─── Badge ─── */
 .badge-ac {
   background: #0d2e16;
   color: var(--code-green);
   border: 1px solid #1a5c2d;
 }
 
-/* ─── Handle colors ─── */
-.handle-master {
-  color: #ef4444;
-}
-
-.handle-expert {
-  color: #a855f7;
-}
-
-.handle-candidate {
-  color: var(--blue);
-}
+/* Handle Rating Colors */
+.handle-master    { color: #ef4444; }
+.handle-expert    { color: #a855f7; }
+.handle-candidate { color: var(--blue); }

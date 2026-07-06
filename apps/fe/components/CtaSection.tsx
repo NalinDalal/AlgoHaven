@@ -2,24 +2,24 @@
 import Link from "next/link";
 
 export default function CtaSection() {
-  return (
-    <section className="text-center py-24 px-8 border-t border-[var(--border)] bg-[repeating-linear-gradient(45deg,transparent,transparent 40px,rgba(232,255,71,.015) 40px,rgba(232,255,71,.015) 41px)]">
-      <h2 className="font-[family-name:var(--font-syne)] font-extrabold text-[clamp(2.5rem,6vw,5rem)] leading-none tracking-[-.03em] mb-6 text-[var(--text)]">
-        Ready to
-        <br />
-        <span className="text-[var(--accent)]">prove it?</span>
-      </h2>
+    return (
+        <section className="text-center py-24 px-8 border-t border-zinc-800 bg-[repeating-linear-gradient(45deg,transparent,transparent_40px,rgba(234,255,71,0.015)_40px,rgba(234,255,71,0.015)_41px)]">
+            <h2 className="font-bold text-[clamp(2.5rem,6vw,5rem)] leading-none tracking-[-0.03em] mb-6 text-zinc-100">
+                Ready to
+                <br />
+                <span className="text-emerald-400">prove it?</span>
+            </h2>
 
-      <p className="font-mono text-[14px] text-[var(--muted)] mb-10">
-        Join 12,000+ programmers. Free forever.
-      </p>
+            <p className="font-mono text-sm text-zinc-400 mb-10">
+                Join 12,000+ programmers. Free forever.
+            </p>
 
-      <Link
-        href="/register"
-        className="bg-[var(--accent)] text-[#0a0a0a] font-mono text-[15px] font-bold py-[15px] px-[36px] rounded-[2px] no-underline inline-block transition-[background,transform] duration-150 hover:bg-[var(--accent-dim)] hover:-translate-y-[1px]"
-      >
-        Create your account →
-      </Link>
-    </section>
-  );
+            <Link
+                href="/register"
+                className="inline-block bg-emerald-400 hover:bg-emerald-300 active:bg-emerald-500 text-black font-mono text-[15px] font-bold py-[15px] px-[36px] rounded transition-all duration-150 hover:-translate-y-0.5 active:scale-[0.985]"
+            >
+                Create your account →
+            </Link>
+        </section>
+    );
 }
