@@ -73,6 +73,10 @@ import {
 import { handleCalculateRatings } from "./routes/ratings";
 import { handleConfirmPlagiarism } from "./routes/plagiarism";
 import { handleGetProfile } from "./routes/profile";
+import {
+  handleAdminListSubmissions,
+  handleAdminRejudgeSubmission,
+} from "./routes/admin";
 import { matchRoute } from "@algohaven/utils";
 
 // pattern: /api/problems/:id
@@ -156,6 +160,10 @@ const routes: Record<string, Record<string, Handler>> = {
   "/api/contest/:id/submissions": { GET: getContestSubmissions },
   "/api/worker/update-plagiarism": { POST: handleWorkerUpdatePlagiarism },
   "/api/plagiarism/:id/confirm": { POST: handleConfirmPlagiarism },
+
+  // ---------------- ADMIN SUBMISSIONS ----------------
+  "/api/admin/submissions": { GET: handleAdminListSubmissions },
+  "/api/admin/submissions/:id/rejudge": { POST: handleAdminRejudgeSubmission },
 };
 
 // -----------------------------------------------------------------------------
