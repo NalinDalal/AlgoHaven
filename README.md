@@ -341,18 +341,18 @@ sequenceDiagram
 ```mermaid
 flowchart LR
     subgraph Submit["Submission Processing"]
-        S1[Worker updates<br/>submission status]
-        S2[Backend calculates<br/>new scores]
-        S3[Update leaderboard<br/>entry in DB]
+        S1["Worker updates submission status"]
+        S2["Backend calculates new scores"]
+        S3["Update leaderboard entry in DB"]
     end
 
     subgraph Publish["Redis Pub/Sub"]
-        P1[Publish to<br/>contest:{id}:leaderboard]
+        P1["Publish to contest:{id}:leaderboard"]
     end
 
     subgraph Broadcast["Real-time Server"]
-        R1[Subscribe to<br/>Redis channel]
-        R2[Broadcast via SSE<br/>to connected clients]
+        R1["Subscribe to Redis channel"]
+        R2["Broadcast via SSE to connected clients"]
     end
 
     S1 --> S2 --> S3 --> P1 --> R1 --> R2
