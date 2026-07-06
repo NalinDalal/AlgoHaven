@@ -16,6 +16,9 @@ import {
 } from "./queue";
 import { handleEnqueue, handleHealth } from "./api";
 
+import { config } from "dotenv";
+import path from "node:path";
+
 interface ScheduleRatingBody {
     contestId?: string;
     endTime?: string;
@@ -23,6 +26,11 @@ interface ScheduleRatingBody {
 
 // The worker must be started with the backend URL and shared worker secret
 // from the root .env so it can authenticate its callbacks.
+
+config({
+    path: path.resolve(import.meta.dir, "../../.env"),
+});
+
 validateEnv(
     {
         BE_URL: { required: true },
