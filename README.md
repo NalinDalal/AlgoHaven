@@ -18,11 +18,13 @@ docker compose up
 cp .env.example .env
 ```
 
-Generate a worker secret and add it to `.env`:
+Generate secrets and add them to `.env`:
 
 ```sh
 # macOS/Linux
 sed -i '' "s/^WORKER_SECRET=.*/WORKER_SECRET=$(openssl rand -hex 32)/" .env
+sed -i '' "s/^POSTGRES_USER=.*/POSTGRES_USER=$(openssl rand -hex 8)/" .env
+sed -i '' "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=$(openssl rand -hex 16)/" .env
 ```
 
 ### 3. Run Migrations
