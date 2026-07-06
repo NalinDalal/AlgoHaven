@@ -1,42 +1,11 @@
 import { prisma, SubmissionStatus } from "@/packages/db";
 import { requireAuth } from "./auth";
 import { success, failure } from "@/packages/utils/response";
+import { getRankTier, BADGES, type BadgeStats } from "@/packages/utils/badges";
 
 /* ────────────────────────────────────────────────────────────── */
 /* helpers                                                        */
 /* ────────────────────────────────────────────────────────────── */
-
-function getRankTier(rating: number | null): {
-  tier: string;
-  color: string;
-  bg: string;
-} {
-  if (rating === null)
-    return { tier: "Unrated", color: "#888888", bg: "#88888815" };
-  if (rating < 1200)
-    return { tier: "Newbie", color: "#808080", bg: "#80808015" };
-  if (rating < 1400)
-    return { tier: "Pupil", color: "#008000", bg: "#00800015" };
-  if (rating < 1600)
-    return { tier: "Specialist", color: "#03a89e", bg: "#03a89e15" };
-  if (rating < 1900)
-    return { tier: "Expert", color: "#0000ff", bg: "#0000ff15" };
-  if (rating < 2100)
-    return { tier: "Candidate Master", color: "#aa00aa", bg: "#aa00aa15" };
-  if (rating < 2300)
-    return { tier: "Master", color: "#ff8c00", bg: "#ff8c0015" };
-  if (rating < 2400)
-    return { tier: "International Master", color: "#ff8c00", bg: "#ff8c0015" };
-  if (rating < 2600)
-    return { tier: "Grandmaster", color: "#ff0000", bg: "#ff000015" };
-  if (rating < 3000)
-    return {
-      tier: "International Grandmaster",
-      color: "#ff0000",
-      bg: "#ff000015",
-    };
-  return { tier: "Legendary Grandmaster", color: "#ff0000", bg: "#ff000015" };
-}
 
 function calculateStreak(submissionDates: Date[]): {
   current: number;
