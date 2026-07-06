@@ -22,8 +22,8 @@ export default function AuthPage() {
 
     const endpoint =
       mode === "login"
-        ? "http://localhost:3001/api/auth/login"
-        : "http://localhost:3001/api/auth/register";
+        ? `${process.env.NEXT_PUBLIC_BE_URL}/api/auth/login`
+        : `${process.env.NEXT_PUBLIC_BE_URL}/api/auth/register`;
 
     const body: Record<string, string> = { email, password };
     if (mode === "register") {

@@ -1,6 +1,7 @@
 import { serve } from "bun";
 import { config } from "dotenv";
 import { be } from "@algohaven/logger";
+import { validateEnv } from "@algohaven/utils/env";
 
 /*
  Load environment variables from .env.
@@ -8,6 +9,16 @@ import { be } from "@algohaven/logger";
  (like Prisma).
 */
 config({ path: "../../.env" });
+
+validateEnv(
+  {
+    DATABASE_URL: { required: true },
+    WORKER_SECRET: { required: true },
+    WORKER_URL: { required: true },
+    CORS_ALLOWED_ORIGINS: { required: false, default: "http://localhost:3000" },
+  },
+  "Backend",
+);
 
 // Prisma client
 import { prisma } from "@/packages/db";

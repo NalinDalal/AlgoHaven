@@ -3,6 +3,7 @@ import { Worker, type Job } from "bullmq";
 import { runCode } from "./docker";
 import { checkContestPlagiarism } from "./plagiarism";
 import { worker } from "@algohaven/logger";
+import { validateEnv } from "@algohaven/utils/env";
 import {
   enqueueSubmission,
   getQueueLength,
@@ -15,10 +16,18 @@ import {
 } from "./queue";
 import { handleEnqueue, handleHealth } from "./api";
 
+validateEnv(
+  {
+    BACKEND_URL: { required: true },
+    WORKER_SECRET: { required: true },
+    REDIS_HOST: { required: false, default: "localhost" },
+    REDIS_PORT: { required: false, default: "6379" },
+  },
+  "Worker",
+);
+
 const BACKEND_URL = process.env.BACKEND_URL!;
 const WORKER_SECRET = process.env.WORKER_SECRET!;
-if (!BACKEND_URL) throw new Error("BACKEND_URL env var required");
-if (!WORKER_SECRET) throw new Error("WORKER_SECRET env var required");
 
 const connection = {
   host: process.env.REDIS_HOST || "localhost",

@@ -1,6 +1,7 @@
 import { serve } from "bun";
 import { config } from "dotenv";
 import { ws } from "@algohaven/logger";
+import { validateEnv } from "@algohaven/utils/env";
 import {
   subscribeToLeaderboard,
   subscribeToAnnouncements,
@@ -8,6 +9,15 @@ import {
 } from "@algohaven/redis";
 
 config({ path: "../../.env" });
+
+validateEnv(
+  {
+    BE_URL: { required: false, default: "http://localhost:3001" },
+    WS_PORT: { required: false, default: "3003" },
+    REDIS_URL: { required: true },
+  },
+  "SSE Server",
+);
 
 const PORT = parseInt(process.env.WS_PORT || "3003");
 const BACKEND_URL = process.env.BE_URL || "http://localhost:3001";

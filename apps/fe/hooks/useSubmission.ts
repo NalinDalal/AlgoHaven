@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from "react";
+import { apiFetch } from "@/lib/apiFetch";
 
 export function useSubmission(problemId: string, endpoint?: string) {
   const [submitting, setSubmitting] = useState(false);
@@ -11,15 +12,16 @@ export function useSubmission(problemId: string, endpoint?: string) {
   ];
 
   const pollStatus = (sid: string, attempt = 0) => {
-    fetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/submissions/${sid}/status`)
+    apiFetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/submissions/${sid}/status`)
       .then((r) => r.json())
       .then((d) => {
-        setResult(d);
+        const data = d.data ?? d;
+        setResult(data);
 
-        if (d.status === "QUEUED") setJudgeMsg("Waiting in queue...");
-        if (d.status === "RUNNING") setJudgeMsg(`Running test ${attempt + 1}...`);
+        if (data.status === "QUEUED") setJudgeMsg("Waiting in queue...");
+        if (data.status === "RUNNING") setJudgeMsg(`Running test ${attempt + 1}...`);
 
-        if (!TERMINAL.includes(d.status)) {
+        if (!TERMINAL.includes(data.status)) {
           pollRef.current = setTimeout(() => pollStatus(sid, attempt + 1), 1200);
         } else {
           setSubmitting(false);
@@ -38,18 +40,19 @@ export function useSubmission(problemId: string, endpoint?: string) {
     setJudgeMsg("Submitting...");
 
     try {
-      const res = await fetch(
+      const res = await apiFetch(
         endpoint ?? `${process.env.NEXT_PUBLIC_BE_URL}/api/problems/${problemId}/submission`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json", "X-Requested-By": "AlgoHaven" },
+          headers: { "Content-Type": "application/json" },
           credentials: "include",
           body: JSON.stringify({ code, language }),
         }
       );
 
       const d = await res.json();
-      const sid = d.submissionId ?? d.id;
+      const data = d.data ?? d;
+      const sid = data.submission_id ?? data.submissionId ?? data.id;
 
       if (sid) {
         setJudgeMsg("Queued...");
