@@ -7,6 +7,7 @@ import {
 } from "@/packages/auth";
 import { success, failure } from "@/packages/utils/response";
 import { getCookie } from "@/packages/utils/cookies";
+import { auth } from "@algohaven/logger";
 
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 const SECURE_COOKIE =
@@ -47,7 +48,9 @@ setInterval(() => {
 // POST /api/auth/register
 // Body: { email, password, username? }
 export async function handleRegister(req: Request): Promise<Response> {
-  if (!checkRateLimit(getClientIp(req), RATE_MAX_REGISTER)) {
+  const ip = getClientIp(req);
+  if (!checkRateLimit(ip, RATE_MAX_REGISTER)) {
+    auth.warn({ ip }, "Rate limit exceeded on register");
     return failure("Too many registration attempts. Try again later.", null, 429);
   }
 
@@ -66,12 +69,14 @@ export async function handleRegister(req: Request): Promise<Response> {
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
+    auth.warn({ email }, "Registration attempt with existing email");
     return failure("Email already registered", null, 409);
   }
 
   if (username) {
     const usernameTaken = await prisma.user.findUnique({ where: { username } });
     if (usernameTaken) {
+      auth.warn({ username }, "Registration attempt with taken username");
       return failure("Username already taken", null, 409);
     }
   }
@@ -90,6 +95,7 @@ export async function handleRegister(req: Request): Promise<Response> {
     },
   });
 
+  auth.info({ userId: user.id, email }, "User registered successfully");
   return success("Registration successful", {
     user: { id: user.id, email: user.email, role: user.role },
   });
@@ -100,6 +106,7 @@ export async function handleRegister(req: Request): Promise<Response> {
 export async function handleLogin(req: Request): Promise<Response> {
   const ip = getClientIp(req);
   if (!checkRateLimit(ip, RATE_MAX_LOGIN)) {
+    auth.warn({ ip }, "Rate limit exceeded on login");
     return failure("Too many login attempts. Try again later.", null, 429);
   }
 
@@ -114,10 +121,12 @@ export async function handleLogin(req: Request): Promise<Response> {
 
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user || !user.passwordHash) {
+    auth.warn({ email }, "Login attempt with invalid email");
     return failure("Invalid email or password", null, 401);
   }
 
   if (!verifyPassword(password, user.passwordHash)) {
+    auth.warn({ userId: user.id, email }, "Login attempt with wrong password");
     return failure("Invalid email or password", null, 401);
   }
 
@@ -130,6 +139,7 @@ export async function handleLogin(req: Request): Promise<Response> {
     },
   });
 
+  auth.info({ userId: user.id, email }, "User logged in successfully");
   return new Response(
     JSON.stringify({
       status: "success",
@@ -154,6 +164,7 @@ export async function handleSignout(req: Request): Promise<Response> {
       where: { tokenHash: hashToken(token) },
       data: { revokedAt: new Date() },
     });
+    auth.info("User signed out");
   }
   return new Response(null, {
     status: 204,
@@ -173,6 +184,7 @@ export async function handleDevLogin(req: Request): Promise<Response> {
   let user = await prisma.user.findUnique({ where: { email } });
   if (!user) {
     user = await prisma.user.create({ data: { email, role: "USER" } });
+    auth.info({ userId: user.id, email }, "Dev user created");
   }
 
   const { raw, hash } = generateSessionToken();
@@ -184,6 +196,7 @@ export async function handleDevLogin(req: Request): Promise<Response> {
     },
   });
 
+  auth.info({ userId: user.id, email }, "Dev login successful");
   return new Response(
     JSON.stringify({
       status: "success",
@@ -284,6 +297,7 @@ export async function handleUpdateUserRole(req: Request): Promise<Response> {
     data: { role: role as "USER" | "ADMIN" },
   });
 
+  auth.info({ targetUserId: id, newRole: role, adminId: authResult.user.id }, "User role updated");
   return success("User role updated", {
     user: { id: updated.id, email: updated.email, role: updated.role },
   });

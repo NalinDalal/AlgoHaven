@@ -4,6 +4,7 @@ import { requireAuth, requireAdmin, getUserFromRequest } from "./auth";
 import { success, failure } from "@/packages/utils/response";
 import { publishLeaderboardUpdate } from "@algohaven/redis";
 import { sendToWorker } from "./worker";
+import { be } from "@algohaven/logger";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -159,6 +160,7 @@ export async function registerForContest(req: Request): Promise<Response> {
         data: { contestId, userId: user.id },
     });
 
+    be.info({ contestId, userId: user.id }, "User registered for contest");
     return success("Registered successfully", null, 201);
 }
 
@@ -396,6 +398,7 @@ export async function submitContestProblemSolution(
         await sendToWorker(submission.id, code, language, testCases);
     }
 
+    be.info({ submissionId: submission.id, contestId, problemId, userId: user.id, language }, "Contest submission created");
     return success(
         "Submission created",
         { submission_id: submission.id, status: submission.status },
@@ -665,10 +668,11 @@ export async function createContest(req: Request): Promise<Response> {
                 }),
             });
         } catch (err) {
-            // non-blocking — rating can be scheduled manually later
+            be.error({ contestId: contest.id, err }, "Failed to schedule rating calculation");
         }
     }
 
+    be.info({ contestId: contest.id, slug, title, isRated: contest.isRated }, "Contest created");
     return success("Contest created", { contest }, 201);
 }
 
@@ -697,6 +701,7 @@ export async function deleteContest(req: Request): Promise<Response> {
         where: { id: contest.id },
     });
 
+    be.info({ contestId: contest.id, slug: contest.slug }, "Contest deleted");
     return success("Contest deleted", { id: contest.id });
 }
 
@@ -763,6 +768,7 @@ export async function updateContest(req: Request): Promise<Response> {
         },
     });
 
+    be.info({ contestId: contest.id, slug: contest.slug }, "Contest updated");
     return success("Contest updated", { contest: updated });
 }
 

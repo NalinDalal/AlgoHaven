@@ -1,6 +1,7 @@
 import { prisma } from "@/packages/db";
 import { requireAdmin } from "./auth";
 import { success, failure } from "@/packages/utils/response";
+import { be } from "@algohaven/logger";
 
 // POST /api/plagiarism/:id/confirm - Admin confirms plagiarism
 export async function handleConfirmPlagiarism(req: Request): Promise<Response> {
@@ -46,6 +47,7 @@ export async function handleConfirmPlagiarism(req: Request): Promise<Response> {
     }),
   ]);
 
+  be.info({ reportId, violatorId, warnings: newWarnings, banned: shouldBan, adminId: admin.id }, "Plagiarism confirmed");
   return success("Plagiarism confirmed", {
     userId: violatorId,
     warnings: newWarnings,

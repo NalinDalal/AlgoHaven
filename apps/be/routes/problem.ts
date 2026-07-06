@@ -12,6 +12,7 @@
 import { prisma } from "@/packages/db";
 import { requireAdmin } from "./auth";
 import { success, failure } from "@/packages/utils/response";
+import { be } from "@algohaven/logger";
 
 /**
  * Request body type for creating a new problem
@@ -275,6 +276,7 @@ export async function handleProblemCreate(req: Request): Promise<Response> {
     include: { testCases: true },
   });
 
+  be.info({ problemId: problem.id, slug, title, testCaseCount: testCases.length }, "Problem created");
   return success("Problem created", { problem }, 201);
 }
 
@@ -388,6 +390,7 @@ export async function handleProblemUpdate(req: Request): Promise<Response> {
     include: { testCases: true },
   });
 
+  be.info({ problemId: problem.id, slug: problem.slug }, "Problem updated");
   return success("Problem updated", { problem: updatedProblem });
 }
 
@@ -431,5 +434,6 @@ export async function handleProblemDelete(req: Request): Promise<Response> {
     where: { id: problem.id },
   });
 
+  be.info({ problemId: problem.id, slug: problem.slug }, "Problem deleted");
   return success("Problem deleted", { id: problem.id });
 }

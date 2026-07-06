@@ -1,3 +1,5 @@
+import { worker } from "@algohaven/logger";
+
 const WORKER_URL = process.env.WORKER_URL;
 const BACKEND_URL = process.env.BACKEND_URL;
 const WORKER_SECRET = process.env.WORKER_SECRET;
@@ -33,6 +35,8 @@ export async function checkContestPlagiarism(
   contestId: string,
 ): Promise<void> {
   requireEnv();
+  worker.info({ contestId }, "Starting plagiarism check");
+  
   const res = await fetch(
     `${BACKEND_URL}/api/contest/${contestId}/submissions`,
     { headers: { "x-worker-secret": WORKER_SECRET! } },
@@ -42,7 +46,10 @@ export async function checkContestPlagiarism(
   const submissions = body.data?.submissions ?? [];
 
   const accepted = submissions.filter((s) => s.code);
-  if (accepted.length < 2) return;
+  if (accepted.length < 2) {
+    worker.info({ contestId, submissionCount: accepted.length }, "Not enough submissions for plagiarism check");
+    return;
+  }
 
   const hashed = await Promise.all(
     accepted.map(async (s) => ({
@@ -73,7 +80,12 @@ export async function checkContestPlagiarism(
     }
   }
 
-  if (reports.length === 0) return;
+  if (reports.length === 0) {
+    worker.info({ contestId }, "No plagiarism detected");
+    return;
+  }
+
+  worker.warn({ contestId, matchCount: reports.length / 2 }, "Plagiarism detected");
 
   const updateRes = await fetch(`${BACKEND_URL}/api/worker/update-plagiarism`, {
     method: "POST",
@@ -84,4 +96,6 @@ export async function checkContestPlagiarism(
     body: JSON.stringify({ contestId, reports }),
   });
   if (!updateRes.ok) throw new Error(`Failed to report plagiarism: ${updateRes.status}`);
+  
+  worker.info({ contestId, reportCount: reports.length }, "Plagiarism reports submitted");
 }

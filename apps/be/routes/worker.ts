@@ -1,3 +1,5 @@
+import { be } from "@algohaven/logger";
+
 function getWorkerSecret(): string {
   const s = process.env.WORKER_SECRET;
   if (!s) throw new Error("WORKER_SECRET env var required");
@@ -30,8 +32,12 @@ export async function sendToWorker(
         testCases,
       }),
     });
+    if (!res.ok) {
+      be.error({ submissionId, status: res.status }, "Worker enqueue failed");
+    }
     return res.ok;
   } catch (error) {
+    be.error({ submissionId, error: error instanceof Error ? error.message : "Unknown error" }, "Worker enqueue error");
     return false;
   }
 }

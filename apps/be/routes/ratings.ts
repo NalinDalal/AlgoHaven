@@ -1,6 +1,7 @@
 import { prisma, SubmissionStatus, Role } from "@/packages/db";
 import { requireAdmin } from "./auth";
 import { success, failure } from "@/packages/utils/response";
+import { be } from "@algohaven/logger";
 
 const DEFAULT_RATING = 1500;
 const MAX_DELTA = 120;
@@ -102,6 +103,7 @@ export async function handleCalculateRatings(req: Request): Promise<Response> {
     ),
   );
 
+  be.info({ contestId, participantCount: ratingChanges.length }, "Ratings calculated");
   return success("Ratings calculated", {
     count: ratingChanges.length,
     ratings: ratingChanges.map((rc) => ({

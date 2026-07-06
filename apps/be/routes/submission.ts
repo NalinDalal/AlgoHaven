@@ -48,9 +48,11 @@ export async function handleRunSolution(req: Request): Promise<Response> {
   const enqueued = await sendToWorker(runId, code, language, testCases);
 
   if (!enqueued) {
+    be.error({ problemId, userId: authResult.user.id }, "Failed to enqueue run");
     return failure("Failed to enqueue for execution", null, 500);
   }
 
+  be.info({ runId, problemId, userId: authResult.user.id, language, testCaseCount: testCases.length }, "Run initiated");
   return success(
     "Run initiated",
     { runId, testCaseCount: testCases.length },
@@ -103,6 +105,7 @@ export async function handleSubmitSolution(req: Request): Promise<Response> {
 
   await sendToWorker(submission.id, code, language, testCases);
 
+  be.info({ submissionId: submission.id, problemId, userId: user.id, language, testCaseCount: testCases.length }, "Submission created");
   return success(
     "Submission created",
     { submission_id: submission.id, status: SubmissionStatus.QUEUED },
@@ -163,11 +166,13 @@ export async function handleWorkerUpdateSubmission(
     },
   });
 
+  be.info({ submissionId, status, executionTimeMs }, "Submission updated by worker");
+
   if (status === SubmissionStatus.ACCEPTED) {
     try {
       await handleLeaderboardUpdate(submissionId);
     } catch (err) {
-      be.error({ err }, "Leaderboard update failed");
+      be.error({ err, submissionId }, "Leaderboard update failed");
     }
   }
 
@@ -202,5 +207,6 @@ export async function handleWorkerUpdatePlagiarism(
     })),
   });
 
+  be.info({ contestId, reportCount: reports.length }, "Plagiarism reports created");
   return success("Plagiarism reports created", { count: reports.length });
 }

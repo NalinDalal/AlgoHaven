@@ -1,5 +1,6 @@
 import { toBase64 } from "@algohaven/utils";
 import { LANGUAGE_CONFIG, DOCKER_OPTIONS_NO_READONLY } from "./config";
+import { worker } from "@algohaven/logger";
 
 export interface ExecutionResult {
   status: string;
@@ -106,6 +107,7 @@ export async function runCode(
 ): Promise<ExecutionResult> {
   const config = LANGUAGE_CONFIG[language];
   if (!config) {
+    worker.warn({ language }, "Unsupported language");
     return {
       status: "COMPILE_ERROR",
       stdout: "",
@@ -118,6 +120,7 @@ export async function runCode(
 
   try {
     const cmd = buildDockerCommand(code, input, language);
+    worker.debug({ language, inputLength: input.length, codeLength: code.length }, "Executing code in Docker");
     const proc = Bun.spawn(cmd);
 
     const exitCode = await new Promise<number>((resolve, reject) => {
@@ -138,6 +141,7 @@ export async function runCode(
     const executionTimeMs = Date.now() - startTime;
 
     if (exitCode === 0) {
+      worker.debug({ language, executionTimeMs }, "Code execution successful");
       return {
         status: "OK",
         stdout: stdout.trim(),
@@ -145,6 +149,7 @@ export async function runCode(
         executionTimeMs,
       };
     } else {
+      worker.warn({ language, exitCode, executionTimeMs }, "Code execution failed with non-zero exit");
       return {
         status: "RUNTIME_ERROR",
         stdout: stdout.trim(),
@@ -154,7 +159,9 @@ export async function runCode(
     }
   } catch (error: unknown) {
     const errMsg = error instanceof Error ? error.message : "Execution failed";
+    const executionTimeMs = Date.now() - startTime;
     if (errMsg === "TLE") {
+      worker.warn({ language, executionTimeMs }, "Code execution TLE");
       return {
         status: "TLE",
         stdout: "",
@@ -162,11 +169,12 @@ export async function runCode(
         executionTimeMs: config.timeout * 1000,
       };
     }
+    worker.error({ language, error: errMsg, executionTimeMs }, "Code execution error");
     return {
       status: "RUNTIME_ERROR",
       stdout: "",
       stderr: errMsg,
-      executionTimeMs: Date.now() - startTime,
+      executionTimeMs,
     };
   }
 }

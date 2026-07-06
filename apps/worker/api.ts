@@ -1,4 +1,5 @@
 import { MAX_CODE_SIZE, MAX_INPUT_SIZE } from "./config";
+import { worker } from "@algohaven/logger";
 
 export interface EnqueueRequest {
   submissionId: string;
@@ -47,6 +48,7 @@ export async function handleEnqueue(
 ): Promise<Response> {
   const authHeader = req.headers.get("x-worker-secret");
   if (!authHeader || authHeader !== authSecret) {
+    worker.warn("Unauthorized enqueue attempt");
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
     });
@@ -56,6 +58,7 @@ export async function handleEnqueue(
   try {
     body = await req.json();
   } catch {
+    worker.warn("Invalid JSON in enqueue request");
     return new Response(JSON.stringify({ error: "Invalid JSON" }), {
       status: 400,
     });
@@ -63,12 +66,14 @@ export async function handleEnqueue(
 
   const validation = validateEnqueueRequest(body);
   if (!validation.valid) {
+    worker.warn({ error: validation.error }, "Enqueue validation failed");
     return new Response(JSON.stringify({ error: validation.error }), {
       status: 400,
     });
   }
 
   const jobId = await enqueueFn(validation.data!);
+  worker.info({ jobId, submissionId: validation.data!.submissionId, language: validation.data!.language }, "Job enqueued successfully");
   return new Response(JSON.stringify({ jobId }), {
     status: 200,
   });
