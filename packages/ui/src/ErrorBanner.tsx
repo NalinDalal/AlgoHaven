@@ -2,21 +2,15 @@ import { ReactNode } from "react";
 
 export interface ErrorBannerProps {
   children: ReactNode;
-  style?: React.CSSProperties;
+  className?: string;
 }
 
-const bannerStyle: React.CSSProperties = {
-  background: "#2d0d0d",
-  border: "1px solid #5c1a1a",
-  color: "var(--red)",
-  padding: "0.75rem",
-  borderRadius: 4,
-  fontSize: 13,
-  fontFamily: "var(--font-mono), monospace",
-};
-
-export function ErrorBanner({ children, style }: ErrorBannerProps) {
-  return <div style={{ ...bannerStyle, ...style }}>{children}</div>;
+export function ErrorBanner({ children, className = "" }: ErrorBannerProps) {
+  return (
+    <div className={`bg-[#2d0d0d] border border-[#5c1a1a] text-[var(--red)] p-3 rounded font-mono text-[13px] ${className}`}>
+      {children}
+    </div>
+  );
 }
 
 /* ─── Full-page error (for detail pages) ─── */
@@ -27,21 +21,7 @@ export interface ErrorPageProps {
 
 export function ErrorPage({ message = "Error loading" }: ErrorPageProps) {
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "var(--bg)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontFamily: "var(--font-mono), monospace",
-        fontSize: 13,
-        color: "var(--red)",
-        border: "1px solid #5c1a1a",
-        padding: "12px 24px",
-        borderRadius: 2,
-      }}
-    >
+    <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center font-mono text-[13px] text-[var(--red)] border border-[#5c1a1a] px-6 py-3 rounded-sm">
       {message}
     </div>
   );

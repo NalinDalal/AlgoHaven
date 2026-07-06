@@ -4,37 +4,11 @@ import { ButtonHTMLAttributes, ReactNode } from "react";
 
 export type ButtonVariant = "primary" | "secondary" | "danger" | "ghost";
 
-const variantStyles: Record<ButtonVariant, React.CSSProperties> = {
-  primary: {
-    background: "var(--accent)",
-    border: "none",
-    color: "#000",
-  },
-  secondary: {
-    background: "transparent",
-    border: "1px solid var(--border)",
-    color: "var(--muted)",
-  },
-  danger: {
-    background: "transparent",
-    border: "1px solid #5c1a1a",
-    color: "var(--red)",
-  },
-  ghost: {
-    background: "none",
-    border: "none",
-    color: "var(--accent)",
-    padding: 0,
-  },
-};
-
-const baseStyle: React.CSSProperties = {
-  borderRadius: 2,
-  fontFamily: "var(--font-mono), monospace",
-  fontSize: 13,
-  fontWeight: 700,
-  cursor: "pointer",
-  transition: "opacity .15s",
+const variantClasses: Record<ButtonVariant, string> = {
+  primary: "bg-[var(--accent)] border-none text-black",
+  secondary: "bg-transparent border border-[var(--border)] text-[var(--muted)]",
+  danger: "bg-transparent border border-[#5c1a1a] text-[var(--red)]",
+  ghost: "bg-transparent border-none text-[var(--accent)] p-0",
 };
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -50,22 +24,16 @@ export function Button({
   fullWidth = false,
   disabled,
   children,
-  style,
+  className = "",
   ...rest
 }: ButtonProps) {
   const isDisabled = disabled || loading;
 
   return (
     <button
-      style={{
-        ...baseStyle,
-        ...variantStyles[variant],
-        ...(fullWidth ? { width: "100%" } : {}),
-        ...(variant === "primary" ? { padding: "12px 32px" } : {}),
-        opacity: isDisabled ? 0.7 : 1,
-        cursor: isDisabled ? "not-allowed" : "pointer",
-        ...style,
-      }}
+      className={`rounded-sm font-mono text-[13px] font-bold cursor-pointer transition-opacity ${variantClasses[variant]} ${
+        variant === "primary" ? "px-8 py-3" : ""
+      } ${fullWidth ? "w-full" : ""} ${isDisabled ? "opacity-70 cursor-not-allowed" : ""} ${className}`}
       disabled={isDisabled}
       {...rest}
     >

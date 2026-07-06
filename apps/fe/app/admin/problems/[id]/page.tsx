@@ -172,59 +172,28 @@ export default function EditProblemPage() {
 
   if (loading) {
     return (
-      <div
-        style={{
-          padding: "3rem",
-          textAlign: "center",
-          color: "var(--muted)",
-          fontFamily: "var(--font-mono), monospace",
-        }}
-      >
+      <div className="p-12 text-center text-[var(--muted)] font-mono">
         Loading problem...
       </div>
     );
   }
 
   return (
-    <div style={{ maxWidth: 900, margin: "0 auto", padding: "2rem" }}>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "1rem",
-          marginBottom: "2rem",
-        }}
-      >
+    <div className="max-w-[900px] mx-auto p-8">
+      <div className="flex items-center gap-4 mb-8">
         <button
           onClick={() => router.push("/admin/problems")}
-          style={{
-            background: "transparent",
-            border: "1px solid var(--border)",
-            borderRadius: 2,
-            padding: "8px 12px",
-            fontFamily: "var(--font-mono), monospace",
-            fontSize: 12,
-            color: "var(--muted)",
-            cursor: "pointer",
-          }}
+          className="bg-transparent border border-[var(--border)] rounded-sm px-3 py-2 font-mono text-xs text-[var(--muted)] cursor-pointer"
         >
           ← Back
         </button>
-        <h1
-          style={{
-            fontFamily: "var(--font-syne), sans-serif",
-            fontWeight: 800,
-            fontSize: "1.75rem",
-            color: "var(--text)",
-            margin: 0,
-          }}
-        >
+        <h1 className="font-[family-name:var(--font-syne)] font-extrabold text-[1.75rem] text-[var(--text)] m-0">
           Edit Problem
         </h1>
       </div>
 
       {error && (
-        <ErrorBanner style={{ marginBottom: "1.5rem" }}>
+        <ErrorBanner className="mb-6">
           {error}
         </ErrorBanner>
       )}
@@ -235,7 +204,7 @@ export default function EditProblemPage() {
             Basic Information
           </SectionHeading>
 
-          <div style={{ display: "grid", gap: "1rem" }}>
+          <div className="grid gap-4">
             <FormField
               label="Title"
               value={form.title}
@@ -253,23 +222,9 @@ export default function EditProblemPage() {
               hint="URL-friendly identifier"
             />
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: "1rem",
-              }}
-            >
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label
-                  style={{
-                    display: "block",
-                    fontFamily: "var(--font-mono), monospace",
-                    fontSize: 12,
-                    color: "var(--muted)",
-                    marginBottom: "0.5rem",
-                  }}
-                >
+                <label className="block font-mono text-xs text-[var(--muted)] mb-2">
                   Difficulty
                 </label>
                 <Select
@@ -285,15 +240,7 @@ export default function EditProblemPage() {
               </div>
 
               <div>
-                <label
-                  style={{
-                    display: "block",
-                    fontFamily: "var(--font-mono), monospace",
-                    fontSize: 12,
-                    color: "var(--muted)",
-                    marginBottom: "0.5rem",
-                  }}
-                >
+                <label className="block font-mono text-xs text-[var(--muted)] mb-2">
                   Tags (comma separated)
                 </label>
                 <Input
@@ -317,10 +264,7 @@ export default function EditProblemPage() {
             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setForm({ ...form, statement: e.target.value })}
             placeholder="Write your problem statement in markdown..."
             required
-            textareaStyle={{
-              minHeight: 250,
-              fontFamily: "var(--font-mono), monospace",
-            }}
+            className="min-h-[250px] font-mono"
           />
         </Card>
 
@@ -333,10 +277,7 @@ export default function EditProblemPage() {
             value={form.editorial}
             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setForm({ ...form, editorial: e.target.value })}
             placeholder="Write your editorial in markdown..."
-            textareaStyle={{
-              minHeight: 150,
-              fontFamily: "var(--font-mono), monospace",
-            }}
+            className="min-h-[150px] font-mono"
           />
         </Card>
 
@@ -345,13 +286,7 @@ export default function EditProblemPage() {
             Limits & Visibility
           </SectionHeading>
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr 1fr",
-              gap: "1rem",
-            }}
-          >
+          <div className="grid grid-cols-3 gap-4">
             <FormField
               label="Time Limit (ms)"
               type="number"
@@ -371,39 +306,19 @@ export default function EditProblemPage() {
             />
 
             <div>
-              <label
-                style={{
-                  display: "block",
-                  fontFamily: "var(--font-mono), monospace",
-                  fontSize: 12,
-                  color: "var(--muted)",
-                  marginBottom: "0.5rem",
-                }}
-              >
+              <label className="block font-mono text-xs text-[var(--muted)] mb-2">
                 Visibility
               </label>
-              <label
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.5rem",
-                  cursor: "pointer",
-                }}
-              >
+              <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={form.isPublic}
                   onChange={(e) =>
                     setForm({ ...form, isPublic: e.target.checked })
                   }
-                  style={{ width: 16, height: 16 }}
+                  className="w-4 h-4"
                 />
-                <span
-                  style={{
-                    fontFamily: "var(--font-mono), monospace",
-                    fontSize: 13,
-                  }}
-                >
+                <span className="font-mono text-[13px]">
                   Public
                 </span>
               </label>
@@ -412,108 +327,50 @@ export default function EditProblemPage() {
         </Card>
 
         <Card>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "1.5rem",
-            }}
-          >
-            <SectionHeading style={{ marginBottom: 0 }}>
+          <div className="flex justify-between items-center mb-6">
+            <SectionHeading className="mb-0">
               Test Cases
             </SectionHeading>
-            <Button variant="secondary" type="button" onClick={addTestCase} style={{ padding: "6px 12px", fontSize: 12, fontWeight: 400 }}>
+            <Button variant="secondary" type="button" onClick={addTestCase} className="px-3 py-1.5 text-xs font-normal">
               + Add Test Case
             </Button>
           </div>
 
-          <div style={{ display: "grid", gap: "1.5rem" }}>
+          <div className="grid gap-6">
             {testCases.map((tc, idx) => (
               <div
                 key={tc.id}
-                style={{
-                  background: "var(--bg)",
-                  border: "1px solid var(--border)",
-                  borderRadius: 4,
-                  padding: "1rem",
-                }}
+                className="bg-[var(--bg)] border border-[var(--border)] rounded p-4"
               >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: "1rem",
-                  }}
-                >
-                  <span
-                    style={{
-                      fontFamily: "var(--font-mono), monospace",
-                      fontSize: 12,
-                      color: "var(--muted)",
-                    }}
-                  >
+                <div className="flex justify-between items-center mb-4">
+                  <span className="font-mono text-xs text-[var(--muted)]">
                     Test Case #{idx + 1}
                   </span>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "1rem",
-                    }}
-                  >
-                    <label
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.5rem",
-                        cursor: "pointer",
-                      }}
-                    >
+                  <div className="flex items-center gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={tc.isSample}
                         onChange={(e) =>
                           updateTestCase(tc.id, "isSample", e.target.checked)
                         }
-                        style={{ width: 14, height: 14 }}
+                        className="w-3.5 h-3.5"
                       />
-                      <span
-                        style={{
-                          fontFamily: "var(--font-mono), monospace",
-                          fontSize: 11,
-                          color: "var(--muted)",
-                        }}
-                      >
+                      <span className="font-mono text-[11px] text-[var(--muted)]">
                         Sample
                       </span>
                     </label>
                     {testCases.length > 1 && (
-                      <Button variant="ghost" type="button" onClick={() => removeTestCase(tc.id)} style={{ color: "var(--red)", fontSize: 12, fontWeight: 400 }}>
+                      <Button variant="ghost" type="button" onClick={() => removeTestCase(tc.id)} className="text-[var(--red)] text-xs font-normal">
                         Remove
                       </Button>
                     )}
                   </div>
                 </div>
 
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: "1rem",
-                  }}
-                >
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label
-                      style={{
-                        display: "block",
-                        fontFamily: "var(--font-mono), monospace",
-                        fontSize: 11,
-                        color: "var(--muted)",
-                        marginBottom: "0.5rem",
-                      }}
-                    >
+                    <label className="block font-mono text-[11px] text-[var(--muted)] mb-2">
                       Input
                     </label>
                     <Textarea
@@ -522,20 +379,12 @@ export default function EditProblemPage() {
                         updateTestCase(tc.id, "input", e.target.value)
                       }
                       placeholder="Input data..."
-                      textareaStyle={{ minHeight: 80 }}
+                      className="min-h-[80px]"
                       required
                     />
                   </div>
                   <div>
-                    <label
-                      style={{
-                        display: "block",
-                        fontFamily: "var(--font-mono), monospace",
-                        fontSize: 11,
-                        color: "var(--muted)",
-                        marginBottom: "0.5rem",
-                      }}
-                    >
+                    <label className="block font-mono text-[11px] text-[var(--muted)] mb-2">
                       Expected Output
                     </label>
                     <Textarea
@@ -544,7 +393,7 @@ export default function EditProblemPage() {
                         updateTestCase(tc.id, "expectedOutput", e.target.value)
                       }
                       placeholder="Expected output..."
-                      textareaStyle={{ minHeight: 80 }}
+                      className="min-h-[80px]"
                       required
                     />
                   </div>
@@ -554,9 +403,7 @@ export default function EditProblemPage() {
           </div>
         </Card>
 
-        <div
-          style={{ display: "flex", gap: "1rem", justifyContent: "flex-end" }}
-        >
+        <div className="flex gap-4 justify-end">
           <Button variant="secondary" type="button" onClick={() => router.push("/admin/problems")}>
             Cancel
           </Button>
@@ -588,16 +435,8 @@ function FormField({
 }) {
   return (
     <div>
-      <label
-        style={{
-          display: "block",
-          fontFamily: "var(--font-mono), monospace",
-          fontSize: 12,
-          color: "var(--muted)",
-          marginBottom: "0.5rem",
-        }}
-      >
-        {label} {required && <span style={{ color: "var(--red)" }}>*</span>}
+      <label className="block font-mono text-xs text-[var(--muted)] mb-2">
+        {label} {required && <span className="text-[var(--red)]">*</span>}
       </label>
       <Input
         type={type}
@@ -607,25 +446,10 @@ function FormField({
         required={required}
       />
       {hint && (
-        <span
-          style={{
-            display: "block",
-            fontFamily: "var(--font-mono), monospace",
-            fontSize: 11,
-            color: "var(--muted)",
-            marginTop: "0.25rem",
-          }}
-        >
+        <span className="block font-mono text-[11px] text-[var(--muted)] mt-1">
           {hint}
         </span>
       )}
     </div>
   );
 }
-
-const checkboxLabel: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: "0.5rem",
-  cursor: "pointer",
-};

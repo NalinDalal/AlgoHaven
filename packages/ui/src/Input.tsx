@@ -2,28 +2,8 @@
 
 import { InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes, ReactNode } from "react";
 
-/* ─── Shared base styles ─── */
-
-const inputBase: React.CSSProperties = {
-  width: "100%",
-  background: "var(--bg)",
-  border: "1px solid var(--border-lit)",
-  borderRadius: 2,
-  padding: "10px 12px",
-  fontSize: 13,
-  fontFamily: "var(--font-mono), monospace",
-  color: "var(--text)",
-  outline: "none",
-  transition: "border-color .15s",
-};
-
-const labelStyle: React.CSSProperties = {
-  display: "block",
-  fontFamily: "var(--font-mono), monospace",
-  fontSize: 12,
-  color: "var(--muted)",
-  marginBottom: "0.5rem",
-};
+const inputClasses =
+  "w-full bg-[var(--bg)] border border-[var(--border-lit)] rounded-sm px-3 py-2.5 text-[13px] font-mono text-[var(--text)] outline-none transition-colors focus:border-[var(--accent)]";
 
 /* ─── FormField wrapper ─── */
 
@@ -32,23 +12,21 @@ export interface FormFieldProps {
   error?: string;
   required?: boolean;
   children: ReactNode;
-  style?: React.CSSProperties;
+  className?: string;
 }
 
-export function FormField({ label, error, required, children, style }: FormFieldProps) {
+export function FormField({ label, error, required, children, className = "" }: FormFieldProps) {
   return (
-    <div style={{ marginBottom: "1rem", ...style }}>
+    <div className={`mb-4 ${className}`}>
       {label && (
-        <label style={labelStyle}>
+        <label className="block font-mono text-xs text-[var(--muted)] mb-2">
           {label}
-          {required && <span style={{ color: "var(--red)", marginLeft: 4 }}>*</span>}
+          {required && <span className="text-[var(--red)] ml-1">*</span>}
         </label>
       )}
       {children}
       {error && (
-        <div style={{ color: "var(--red)", fontSize: 12, marginTop: 4, fontFamily: "var(--font-mono), monospace" }}>
-          {error}
-        </div>
+        <div className="text-[var(--red)] text-xs mt-1 font-mono">{error}</div>
       )}
     </div>
   );
@@ -58,17 +36,12 @@ export function FormField({ label, error, required, children, style }: FormField
 
 export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "style" | "size"> {
   error?: boolean;
-  inputStyle?: React.CSSProperties;
 }
 
-export function Input({ error, inputStyle, ...rest }: InputProps) {
+export function Input({ error, className = "", ...rest }: InputProps) {
   return (
     <input
-      style={{
-        ...inputBase,
-        borderColor: error ? "var(--red)" : undefined,
-        ...inputStyle,
-      }}
+      className={`${inputClasses} ${error ? "!border-[var(--red)]" : ""} ${className}`}
       {...rest}
     />
   );
@@ -78,18 +51,12 @@ export function Input({ error, inputStyle, ...rest }: InputProps) {
 
 export interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, "style"> {
   error?: boolean;
-  selectStyle?: React.CSSProperties;
 }
 
-export function Select({ error, children, selectStyle, ...rest }: SelectProps) {
+export function Select({ error, children, className = "", ...rest }: SelectProps) {
   return (
     <select
-      style={{
-        ...inputBase,
-        cursor: "pointer",
-        borderColor: error ? "var(--red)" : undefined,
-        ...selectStyle,
-      }}
+      className={`${inputClasses} cursor-pointer ${error ? "!border-[var(--red)]" : ""} ${className}`}
       {...rest}
     >
       {children}
@@ -101,19 +68,12 @@ export function Select({ error, children, selectStyle, ...rest }: SelectProps) {
 
 export interface TextareaProps extends Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, "style"> {
   error?: boolean;
-  textareaStyle?: React.CSSProperties;
 }
 
-export function Textarea({ error, textareaStyle, ...rest }: TextareaProps) {
+export function Textarea({ error, className = "", ...rest }: TextareaProps) {
   return (
     <textarea
-      style={{
-        ...inputBase,
-        minHeight: 120,
-        resize: "vertical",
-        borderColor: error ? "var(--red)" : undefined,
-        ...textareaStyle,
-      }}
+      className={`${inputClasses} min-h-[120px] resize-y ${error ? "!border-[var(--red)]" : ""} ${className}`}
       {...rest}
     />
   );

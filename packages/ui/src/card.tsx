@@ -2,37 +2,28 @@ import { ReactNode } from "react";
 
 export interface CardProps {
   children: ReactNode;
-  style?: React.CSSProperties;
+  className?: string;
 }
 
-const defaultStyle: React.CSSProperties = {
-  background: "var(--surface)",
-  border: "1px solid var(--border)",
-  borderRadius: 4,
-  padding: "1.5rem",
-  marginBottom: "1.5rem",
-};
-
-export function Card({ children, style }: CardProps) {
-  return <div style={{ ...defaultStyle, ...style }}>{children}</div>;
+export function Card({ children, className = "" }: CardProps) {
+  return (
+    <div className={`bg-[var(--surface)] border border-[var(--border)] rounded p-6 mb-6 ${className}`}>
+      {children}
+    </div>
+  );
 }
 
 /* ─── Section heading (admin pages) ─── */
 
 export interface SectionHeadingProps {
   children: ReactNode;
-  style?: React.CSSProperties;
+  className?: string;
 }
 
-const headingStyle: React.CSSProperties = {
-  fontFamily: "var(--font-mono), monospace",
-  fontSize: 12,
-  color: "var(--accent)",
-  letterSpacing: ".1em",
-  textTransform: "uppercase" as const,
-  marginBottom: "1.5rem",
-};
-
-export function SectionHeading({ children, style }: SectionHeadingProps) {
-  return <h3 style={{ ...headingStyle, ...style }}>{children}</h3>;
+export function SectionHeading({ children, className = "" }: SectionHeadingProps) {
+  return (
+    <h3 className={`font-mono text-xs text-[var(--accent)] tracking-widest uppercase mb-6 ${className}`}>
+      {children}
+    </h3>
+  );
 }

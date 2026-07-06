@@ -1,29 +1,17 @@
-const badgeBase: React.CSSProperties = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 6,
-  fontFamily: "var(--font-mono), monospace",
-  fontSize: 12,
-  padding: "4px 12px",
-  borderRadius: 2,
-  flexShrink: 0,
-  whiteSpace: "nowrap",
-};
-
 /* ─── Difficulty badge ─── */
 
 export type DifficultyLevel = "easy" | "medium" | "hard" | "extreme";
 
-const difficultyColors: Record<DifficultyLevel, React.CSSProperties> = {
-  easy: { background: "#0d2e16", color: "var(--code-green)", border: "1px solid #1a5c2d" },
-  medium: { background: "#1a1a0d", color: "#ffd700", border: "1px solid #4a4a1a" },
-  hard: { background: "#2d0d0d", color: "var(--red)", border: "1px solid #5c1a1a" },
-  extreme: { background: "#2d1a0d", color: "#ff9500", border: "1px solid #6e3a1a" },
+const difficultyClasses: Record<DifficultyLevel, string> = {
+  easy: "bg-[#0d2e16] text-[var(--code-green)] border border-[#1a5c2d]",
+  medium: "bg-[#1a1a0d] text-[#ffd700] border border-[#4a4a1a]",
+  hard: "bg-[#2d0d0d] text-[var(--red)] border border-[#5c1a1a]",
+  extreme: "bg-[#2d1a0d] text-[#ff9500] border border-[#6e3a1a]",
 };
 
-export function getDifficultyLevel(
-  rating: number
-): DifficultyLevel {
+const badgeBase = "inline-flex items-center gap-1.5 font-mono text-xs px-3 py-1 rounded-sm shrink-0 whitespace-nowrap";
+
+export function getDifficultyLevel(rating: number): DifficultyLevel {
   if (rating < 1200) return "easy";
   if (rating < 1600) return "medium";
   if (rating < 2100) return "hard";
@@ -41,7 +29,7 @@ export function DifficultyBadge({ rating }: { rating: number }) {
   const level = getDifficultyLevel(rating);
   const label = getDifficultyLabel(rating);
   return (
-    <span style={{ ...badgeBase, ...difficultyColors[level] }}>
+    <span className={`${badgeBase} ${difficultyClasses[level]}`}>
       {label} ({rating})
     </span>
   );
@@ -51,23 +39,17 @@ export function DifficultyBadge({ rating }: { rating: number }) {
 
 export type VerdictType = "AC" | "WA" | "TLE" | "MLE" | "RE" | string;
 
-const verdictColors: Record<string, React.CSSProperties> = {
-  AC: { background: "#0d2e16", color: "var(--code-green)", border: "1px solid #1a5c2d" },
-  WA: { background: "#2d0d0d", color: "var(--red)", border: "1px solid #5c1a1a" },
-  TLE: { background: "#1a1a0d", color: "#ffd700", border: "1px solid #4a4a1a" },
-  MLE: { background: "#0d1a2d", color: "var(--blue)", border: "1px solid #1a3a6e" },
-  RE: { background: "#2d1a0d", color: "#ff9500", border: "1px solid #6e3a1a" },
-};
-
-const defaultVerdict: React.CSSProperties = {
-  background: "var(--surface)",
-  color: "var(--muted)",
-  border: "1px solid var(--border)",
+const verdictClasses: Record<string, string> = {
+  AC: "bg-[#0d2e16] text-[var(--code-green)] border border-[#1a5c2d]",
+  WA: "bg-[#2d0d0d] text-[var(--red)] border border-[#5c1a1a]",
+  TLE: "bg-[#1a1a0d] text-[#ffd700] border border-[#4a4a1a]",
+  MLE: "bg-[#0d1a2d] text-[var(--blue)] border border-[#1a3a6e]",
+  RE: "bg-[#2d1a0d] text-[#ff9500] border border-[#6e3a1a]",
 };
 
 export function VerdictBadge({ verdict }: { verdict: string }) {
   return (
-    <span style={{ ...badgeBase, ...verdictColors[verdict] ?? defaultVerdict }}>
+    <span className={`${badgeBase} ${verdictClasses[verdict] ?? "bg-[var(--surface)] text-[var(--muted)] border border-[var(--border)]"}`}>
       {verdict}
     </span>
   );

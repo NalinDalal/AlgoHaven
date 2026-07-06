@@ -114,47 +114,25 @@ export default function EditContestPage() {
 
     if (loading) {
         return (
-            <div
-                style={{
-                    padding: "3rem",
-                    textAlign: "center",
-                    color: "var(--muted)",
-                    fontFamily: "var(--font-mono), monospace",
-                }}
-            >
+            <div className="p-12 text-center text-[var(--muted)] font-mono">
                 Loading contest...
             </div>
         );
     }
 
     return (
-        <div style={{ maxWidth: 800, margin: "0 auto", padding: "2rem" }}>
-            <div
-                style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "1rem",
-                    marginBottom: "2rem",
-                }}
-            >
+        <div className="max-w-[800px] mx-auto p-8">
+            <div className="flex items-center gap-4 mb-8">
                 <Button variant="secondary" onClick={() => router.push("/admin/contests")}>
                     ← Back
                 </Button>
-                <h1
-                    style={{
-                        fontFamily: "var(--font-syne), sans-serif",
-                        fontWeight: 800,
-                        fontSize: "1.75rem",
-                        color: "var(--text)",
-                        margin: 0,
-                    }}
-                >
+                <h1 className="font-[family-name:var(--font-syne)] font-extrabold text-[1.75rem] text-[var(--text)] m-0">
                     Edit Contest
                 </h1>
             </div>
 
             {error && (
-                <ErrorBanner style={{ marginBottom: "1.5rem" }}>
+                <ErrorBanner className="mb-6">
                     {error}
                 </ErrorBanner>
             )}
@@ -163,7 +141,7 @@ export default function EditContestPage() {
                 <Card>
                     <SectionHeading>Contest Details</SectionHeading>
 
-                    <div style={{ display: "grid", gap: "1rem" }}>
+                    <div className="grid gap-4">
                         <FormField
                             label="Title"
                             value={form.title}
@@ -180,13 +158,7 @@ export default function EditContestPage() {
                             required
                         />
 
-                        <div
-                            style={{
-                                display: "grid",
-                                gridTemplateColumns: "1fr 1fr",
-                                gap: "1rem",
-                            }}
-                        >
+                        <div className="grid grid-cols-2 gap-4">
                             <FormField
                                 label="Start Time"
                                 type="datetime-local"
@@ -203,23 +175,9 @@ export default function EditContestPage() {
                             />
                         </div>
 
-                        <div
-                            style={{
-                                display: "grid",
-                                gridTemplateColumns: "1fr 1fr 1fr",
-                                gap: "1rem",
-                            }}
-                        >
+                        <div className="grid grid-cols-3 gap-4">
                             <div>
-                                <label
-                                    style={{
-                                        display: "block",
-                                        fontFamily: "var(--font-mono), monospace",
-                                        fontSize: 12,
-                                        color: "var(--muted)",
-                                        marginBottom: "0.5rem",
-                                    }}
-                                >
+                                <label className="block font-mono text-xs text-[var(--muted)] mb-2">
                                     Visibility
                                 </label>
                                 <Select value={form.visibility} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setForm({ ...form, visibility: e.target.value })}>
@@ -236,14 +194,8 @@ export default function EditContestPage() {
                                 onChange={(v) => setForm({ ...form, freezeTime: v })}
                             />
 
-                            <div
-                                style={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    gap: "0.75rem",
-                                }}
-                            >
-                                <label style={checkboxLabel}>
+                            <div className="flex flex-col gap-3">
+                                <label className="flex items-center gap-2 font-mono text-[13px] text-[var(--text)] cursor-pointer">
                                     <input
                                         type="checkbox"
                                         checked={form.isRated}
@@ -253,7 +205,7 @@ export default function EditContestPage() {
                                     />
                                     Rated
                                 </label>
-                                <label style={checkboxLabel}>
+                                <label className="flex items-center gap-2 font-mono text-[13px] text-[var(--text)] cursor-pointer">
                                     <input
                                         type="checkbox"
                                         checked={form.isPractice}
@@ -263,7 +215,7 @@ export default function EditContestPage() {
                                     />
                                     Practice Mode
                                 </label>
-                                <label style={checkboxLabel}>
+                                <label className="flex items-center gap-2 font-mono text-[13px] text-[var(--text)] cursor-pointer">
                                     <input
                                         type="checkbox"
                                         checked={form.registrationOpen}
@@ -278,9 +230,7 @@ export default function EditContestPage() {
                     </div>
                 </Card>
 
-                <div
-                    style={{ display: "flex", gap: "1rem", justifyContent: "flex-end" }}
-                >
+                <div className="flex gap-4 justify-end">
                     <Button variant="secondary" type="button" onClick={() => router.push("/admin/contests")}>
                         Cancel
                     </Button>
@@ -310,16 +260,8 @@ function FormField({
 }) {
     return (
         <div>
-            <label
-                style={{
-                    display: "block",
-                    fontFamily: "var(--font-mono), monospace",
-                    fontSize: 12,
-                    color: "var(--muted)",
-                    marginBottom: "0.5rem",
-                }}
-            >
-                {label} {required && <span style={{ color: "var(--red)" }}>*</span>}
+            <label className="block font-mono text-xs text-[var(--muted)] mb-2">
+                {label} {required && <span className="text-[var(--red)]">*</span>}
             </label>
             <Input
                 type={type}
@@ -331,13 +273,3 @@ function FormField({
         </div>
     );
 }
-
-const checkboxLabel: React.CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    gap: "0.5rem",
-    fontFamily: "var(--font-mono), monospace",
-    fontSize: 13,
-    color: "var(--text)",
-    cursor: "pointer",
-};

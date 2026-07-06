@@ -1,29 +1,11 @@
 'use client';
 export default function Footer() {
   return (
-    <footer
-      className="flex items-center justify-between"
-      style={{
-        borderTop: "1px solid var(--border)",
-        padding: "1.5rem 2.5rem",
-      }}
-    >
-      <span
-        style={{
-          fontFamily: "var(--font-mono), monospace",
-          fontSize: 12,
-          color: "#333",
-        }}
-      >
+    <footer className="flex items-center justify-between border-t border-[var(--border)] py-6 px-10">
+      <span className="font-mono text-[12px] text-[#333]">
         [AlgoHaven] · Built for competitors, by competitors
       </span>
-      <span
-        style={{
-          fontFamily: "var(--font-mono), monospace",
-          fontSize: 12,
-          color: "#333",
-        }}
-      >
+      <span className="font-mono text-[12px] text-[#333]">
         © 2025
       </span>
     </footer>

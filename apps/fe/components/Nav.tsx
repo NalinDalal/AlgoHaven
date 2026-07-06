@@ -43,28 +43,15 @@ export default function Nav() {
     setUser(null);
   };
   return (
-    <nav
-      className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-10 h-15 border-b"
-      style={{
-        background: "rgba(10,10,10,0.85)",
-        backdropFilter: "blur(12px)",
-        borderColor: "var(--border)",
-      }}
-    >
+    <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-10 h-15 border-b border-[var(--border)] bg-[rgba(10,10,10,0.85)] backdrop-blur-md">
       {/* Logo */}
       <Link
         href="/"
-        className="flex items-center gap-2 no-underline"
-        style={{
-          fontFamily: "var(--font-mono), monospace",
-          fontWeight: 700,
-          fontSize: 15,
-          color: "var(--text)",
-        }}
+        className="flex items-center gap-2 no-underline font-mono text-[15px] font-bold text-[var(--text)]"
       >
-        <span style={{ color: "var(--accent)" }}>[</span>
+        <span className="text-[var(--accent)]">[</span>
         AlgoHaven
-        <span style={{ color: "var(--accent)" }}>]</span>
+        <span className="text-[var(--accent)]">]</span>
       </Link>
 
       {/* Links */}
@@ -73,19 +60,7 @@ export default function Nav() {
           <li key={link.href}>
             <Link
               href={link.href}
-              style={{
-                fontFamily: "var(--font-mono), monospace",
-                fontSize: 13,
-                color: "var(--muted)",
-                textDecoration: "none",
-                transition: "color .15s",
-              }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.color = "var(--text)")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.color = "var(--muted)")
-              }
+              className="font-mono text-[13px] text-[var(--muted)] no-underline transition-colors hover:text-[var(--text)]"
             >
               {link.label}
             </Link>
@@ -98,27 +73,13 @@ export default function Nav() {
         <div className="flex items-center gap-4">
           <Link
             href="/me"
-            style={{
-              fontFamily: "var(--font-mono), monospace",
-              fontSize: 13,
-              color: "var(--muted)",
-              textDecoration: "none",
-            }}
+            className="font-mono text-[13px] text-[var(--muted)] no-underline"
           >
             {user.username || user.email}
           </Link>
           <button
             onClick={handleSignOut}
-            style={{
-              fontFamily: "var(--font-mono), monospace",
-              fontSize: 13,
-              color: "var(--text)",
-              background: "transparent",
-              border: "1px solid var(--border)",
-              padding: "8px 16px",
-              borderRadius: 2,
-              cursor: "pointer",
-            }}
+            className="font-mono text-[13px] text-[var(--text)] bg-transparent border border-[var(--border)] px-4 py-2 rounded-sm cursor-pointer"
           >
             Sign Out
           </button>
@@ -126,23 +87,7 @@ export default function Nav() {
       ) : (
         <Link
           href="/auth"
-          style={{
-            fontFamily: "var(--font-mono), monospace",
-            fontSize: 13,
-            fontWeight: 700,
-            background: "var(--accent)",
-            color: "#0a0a0a",
-            padding: "8px 20px",
-            borderRadius: 2,
-            textDecoration: "none",
-            transition: "background .15s",
-          }}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.background = "var(--accent-dim)")
-          }
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.background = "var(--accent)")
-          }
+          className="font-mono text-[13px] font-bold bg-[var(--accent)] text-black px-5 py-2 rounded-sm no-underline transition-colors hover:bg-[var(--accent-dim)]"
         >
           Sign In
         </Link>

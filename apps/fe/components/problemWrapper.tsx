@@ -67,10 +67,7 @@ export default function ProblemWrapper({ problem, submitEndpoint, onVerdict }: P
   return (
     <>
       <Nav />
-      <div
-        className="flex flex-col bg-[#0a0a0a] overflow-hidden"
-        style={{ minHeight: "100vh", paddingTop: 70 }}
-      >
+      <div className="flex flex-col bg-[#0a0a0a] overflow-hidden min-h-screen pt-[70px]">
         {/* Breadcrumb */}
         <div className="border-b border-[#1e1e1e] px-5 h-10 flex items-center gap-2 shrink-0 font-mono text-xs text-zinc-500">
           <Link href="/problems" className="hover:text-[#e8ff47] transition-colors">
@@ -88,10 +85,7 @@ export default function ProblemWrapper({ problem, submitEndpoint, onVerdict }: P
         </div>
 
         {/* Split pane */}
-        <div
-          className="flex-1 grid grid-cols-2 overflow-hidden"
-          style={{ height: "calc(100vh - 110px)" }}
-        >
+        <div className="flex-1 grid grid-cols-2 overflow-hidden h-[calc(100vh-110px)]">
           <ProblemPanel problem={problem} />
           <EditorPanel
             problemId={problem.id}

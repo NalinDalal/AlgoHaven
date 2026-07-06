@@ -80,104 +80,36 @@ const pipColors: Record<Pip, string> = {
 
 export default function Leaderboard() {
   return (
-    <section
-      className="mx-auto"
-      style={{ padding: "4rem 2rem 6rem", maxWidth: 1100 }}
-    >
-      <div
-        style={{
-          fontFamily: "var(--font-mono), monospace",
-          fontSize: 12,
-          color: "var(--accent)",
-          letterSpacing: ".12em",
-          textTransform: "uppercase",
-          marginBottom: "1rem",
-        }}
-      >
+    <section className="mx-auto py-16 px-8 pb-24 max-w-[1100px]">
+      <div className="font-mono text-[12px] text-[var(--accent)] tracking-[.12em] uppercase mb-4">
         // Live right now
       </div>
 
-      <h2
-        style={{
-          fontFamily: "var(--font-syne), sans-serif",
-          fontWeight: 800,
-          fontSize: "clamp(2rem, 4vw, 3rem)",
-          lineHeight: 1.05,
-          letterSpacing: "-.02em",
-          marginBottom: "1.5rem",
-        }}
-      >
+      <h2 className="font-[family-name:var(--font-syne)] font-extrabold text-[clamp(2rem,4vw,3rem)] leading-[1.05] tracking-[-.02em] mb-6">
         AlgoHaven Round #41
       </h2>
 
-      <div
-        style={{
-          background: "var(--surface)",
-          border: "1px solid var(--border-lit)",
-          borderRadius: 6,
-          overflow: "hidden",
-        }}
-      >
+      <div className="bg-[var(--surface)] border border-[var(--border-lit)] rounded-md overflow-hidden">
         {/* Header */}
-        <div
-          className="flex items-center justify-between"
-          style={{
-            background: "#0d0d0d",
-            borderBottom: "1px solid var(--border)",
-            padding: "14px 24px",
-          }}
-        >
-          <span
-            style={{
-              fontFamily: "var(--font-mono), monospace",
-              fontSize: 13,
-              fontWeight: 700,
-              color: "var(--text)",
-            }}
-          >
+        <div className="flex items-center justify-between bg-[#0d0d0d] border-b border-[var(--border)] py-3.5 px-6">
+          <span className="font-mono text-[13px] font-bold text-[var(--text)]">
             Standings — 1:14:22 remaining
           </span>
-          <span
-            className="flex items-center gap-2"
-            style={{
-              fontFamily: "var(--font-mono), monospace",
-              fontSize: 11,
-              color: "var(--code-green)",
-            }}
-          >
-            <span
-              className="animate-pulse-dot"
-              style={{
-                display: "inline-block",
-                width: 7,
-                height: 7,
-                borderRadius: "50%",
-                background: "var(--code-green)",
-              }}
-            />
+          <span className="flex items-center gap-2 font-mono text-[11px] text-[var(--code-green)]">
+            <span className="animate-pulse-dot inline-block w-[7px] h-[7px] rounded-full bg-[var(--code-green)]" />
             LIVE
           </span>
         </div>
 
         {/* Table */}
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
             <thead>
               <tr>
                 {["#", "Handle", "Score", "Penalty", "A B C D E"].map((h) => (
                   <th
                     key={h}
-                    style={{
-                      fontFamily: "var(--font-mono), monospace",
-                      fontSize: 11,
-                      color: "var(--muted)",
-                      textAlign: "left",
-                      padding: "10px 24px",
-                      borderBottom: "1px solid var(--border)",
-                      letterSpacing: ".06em",
-                      textTransform: "uppercase",
-                      fontWeight: 500,
-                    }}
+                    className="font-mono text-[11px] text-[var(--muted)] text-left py-2.5 px-6 border-b border-[var(--border)] tracking-[.06em] uppercase font-medium"
                   >
                     {h}
                   </th>
@@ -188,22 +120,12 @@ export default function Leaderboard() {
               {players.map((p) => (
                 <tr
                   key={p.rank}
-                  style={{ transition: "background .15s" }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.background = "#161616")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.background = "transparent")
-                  }
+                  className="transition-[background] duration-150 hover:bg-[#161616]"
                 >
                   {/* Rank */}
                   <td
+                    className="font-mono text-[13px] py-3.5 px-6 border-b border-[var(--border)] font-bold"
                     style={{
-                      fontFamily: "var(--font-mono), monospace",
-                      fontSize: 13,
-                      padding: "14px 24px",
-                      borderBottom: "1px solid var(--border)",
-                      fontWeight: 700,
                       color: p.rankStyle
                         ? rankColors[p.rankStyle]
                         : "var(--muted)",
@@ -214,12 +136,8 @@ export default function Leaderboard() {
 
                   {/* Handle */}
                   <td
+                    className="font-mono text-[13px] py-3.5 px-6 border-b border-[var(--border)] font-semibold"
                     style={{
-                      fontFamily: "var(--font-mono), monospace",
-                      fontSize: 13,
-                      padding: "14px 24px",
-                      borderBottom: "1px solid var(--border)",
-                      fontWeight: 600,
                       color: p.handleStyle
                         ? handleColors[p.handleStyle]
                         : "var(--text)",
@@ -230,12 +148,8 @@ export default function Leaderboard() {
 
                   {/* Score */}
                   <td
+                    className="font-mono text-[13px] py-3.5 px-6 border-b border-[var(--border)] font-bold"
                     style={{
-                      fontFamily: "var(--font-mono), monospace",
-                      fontSize: 13,
-                      padding: "14px 24px",
-                      borderBottom: "1px solid var(--border)",
-                      fontWeight: 700,
                       color:
                         p.handleStyle === "ghost"
                           ? "#333"
@@ -246,36 +160,18 @@ export default function Leaderboard() {
                   </td>
 
                   {/* Penalty */}
-                  <td
-                    style={{
-                      fontFamily: "var(--font-mono), monospace",
-                      fontSize: 12,
-                      padding: "14px 24px",
-                      borderBottom: "1px solid var(--border)",
-                      color: "var(--muted)",
-                    }}
-                  >
+                  <td className="font-mono text-[12px] py-3.5 px-6 border-b border-[var(--border)] text-[var(--muted)]">
                     {p.penalty}
                   </td>
 
                   {/* Pips */}
-                  <td
-                    style={{
-                      padding: "14px 24px",
-                      borderBottom: "1px solid var(--border)",
-                    }}
-                  >
+                  <td className="py-3.5 px-6 border-b border-[var(--border)]">
                     <div className="flex items-center gap-1">
                       {p.pips.map((pip, i) => (
                         <span
                           key={i}
-                          style={{
-                            display: "inline-block",
-                            width: 8,
-                            height: 8,
-                            borderRadius: "50%",
-                            background: pipColors[pip],
-                          }}
+                          className="inline-block w-2 h-2 rounded-full"
+                          style={{ background: pipColors[pip] }}
                         />
                       ))}
                     </div>

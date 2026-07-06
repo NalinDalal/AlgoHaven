@@ -1,28 +1,10 @@
 "use client";
 
-/**
- * New Problem Creation Page
- *
- * Provides a form for admin users to create new problems.
- * Includes fields for:
- * - Basic information (title, slug, difficulty, tags)
- * - Problem statement and editorial (markdown)
- * - Time and memory limits
- * - Visibility settings
- * - Test cases (input/output pairs)
- *
- * Route: /admin/problems/new
- */
-
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Input, Select, Textarea, ErrorBanner, Card, SectionHeading } from "@repo/ui";
 import { apiFetch } from "@/lib/apiFetch";
 
-/**
- * Interface representing a test case
- * Test cases define inputs and expected outputs for judging solutions
- */
 interface TestCase {
   id: string;
   input: string;
@@ -30,53 +12,30 @@ interface TestCase {
   isSample: boolean;
 }
 
-/**
- * Main New Problem Page Component
- *
- * Renders a form for creating new problems.
- * Handles form submission to create problem via API.
- *
- * @returns JSX element with problem creation form
- */
 export default function NewProblemPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false); // Form submission state
-  const [error, setError] = useState<string | null>(null); // Error message state
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  /**
-   * Form state for problem fields
-   * Stores all basic problem information
-   * Tags are stored as comma-separated string (converted to array on submit)
-   */
   const [form, setForm] = useState({
     title: "",
     slug: "",
-    difficulty: "MEDIUM", // Default difficulty
+    difficulty: "MEDIUM",
     statement: "",
     tags: "",
-    timeLimitMs: 2000, // Default: 2 seconds
-    memoryLimitKb: 262144, // Default: 256 MB
-    isPublic: false, // Default: private
+    timeLimitMs: 2000,
+    memoryLimitKb: 262144,
+    isPublic: false,
   });
 
-  /**
-   * Test cases state
-   * Initialized with one empty sample test case
-   */
   const [testCases, setTestCases] = useState<TestCase[]>([
     { id: "1", input: "", expectedOutput: "", isSample: true },
   ]);
 
-  /**
-   * Handles form submission
-   * Sends POST request to create a new problem
-   *
-   * @param e - React form event
-   */
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); // Prevent default form submission
-    setLoading(true); // Show loading indicator
-    setError(null); // Clear previous errors
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
 
     try {
       const response = await apiFetch(
@@ -86,14 +45,11 @@ export default function NewProblemPage() {
           headers: { "Content-Type": "application/json", "X-Requested-By": "AlgoHaven" },
           credentials: "include",
           body: JSON.stringify({
-            // Spread form data
             ...form,
-            // Convert comma-separated tags to array
             tags: form.tags
               .split(",")
               .map((t) => t.trim())
               .filter(Boolean),
-            // Format test cases for API
             testCases: testCases.map((tc) => ({
               input: tc.input,
               expectedOutput: tc.expectedOutput,
@@ -106,25 +62,17 @@ export default function NewProblemPage() {
       const data = await response.json();
 
       if (data.status === "success") {
-        // Redirect to admin dashboard on success
         router.push("/admin");
       } else {
-        // Display API error message
         setError(data.message || "Failed to create problem");
       }
     } catch (err) {
-      // Handle network errors
       setError("Network error");
     } finally {
-      // Stop loading indicator
       setLoading(false);
     }
   };
 
-  /**
-   * Adds a new empty test case to the form
-   * Generates unique ID based on current timestamp
-   */
   const addTestCase = () => {
     setTestCases([
       ...testCases,
@@ -137,25 +85,12 @@ export default function NewProblemPage() {
     ]);
   };
 
-  /**
-   * Removes a test case from the form
-   * Prevents removing the last remaining test case
-   *
-   * @param id - The ID of the test case to remove
-   */
   const removeTestCase = (id: string) => {
     if (testCases.length > 1) {
       setTestCases(testCases.filter((tc) => tc.id !== id));
     }
   };
 
-  /**
-   * Updates a specific field of a test case
-   *
-   * @param id - The ID of the test case to update
-   * @param field - The field name to update
-   * @param value - The new value for the field
-   */
   const updateTestCase = (
     id: string,
     field: keyof TestCase,
@@ -167,31 +102,22 @@ export default function NewProblemPage() {
   };
 
   return (
-    <div style={{ maxWidth: 900, margin: "0 auto", padding: "2rem" }}>
-      <h1
-        style={{
-          fontFamily: "var(--font-syne), sans-serif",
-          fontWeight: 800,
-          fontSize: "1.75rem",
-          color: "var(--text)",
-          marginBottom: "2rem",
-        }}
-      >
+    <div className="max-w-[900px] mx-auto p-8">
+      <h1 className="font-[family-name:var(--font-syne)] font-extrabold text-[1.75rem] text-[var(--text)] mb-8">
         Create New Problem
       </h1>
 
       {error && (
-        <ErrorBanner style={{ marginBottom: "1.5rem" }}>
+        <ErrorBanner className="mb-6">
           {error}
         </ErrorBanner>
       )}
 
       <form onSubmit={handleSubmit}>
-        {/* Basic Info */}
         <Card>
           <SectionHeading>Basic Information</SectionHeading>
 
-          <div style={{ display: "grid", gap: "1rem" }}>
+          <div className="grid gap-4">
             <FormField
               label="Title"
               value={form.title}
@@ -209,23 +135,9 @@ export default function NewProblemPage() {
               hint="URL-friendly identifier"
             />
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: "1rem",
-              }}
-            >
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label
-                  style={{
-                    display: "block",
-                    fontFamily: "var(--font-mono), monospace",
-                    fontSize: 12,
-                    color: "var(--muted)",
-                    marginBottom: "0.5rem",
-                  }}
-                >
+                <label className="block font-mono text-xs text-[var(--muted)] mb-2">
                   Difficulty
                 </label>
                 <Select value={form.difficulty} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setForm({ ...form, difficulty: e.target.value })}>
@@ -236,15 +148,7 @@ export default function NewProblemPage() {
               </div>
 
               <div>
-                <label
-                  style={{
-                    display: "block",
-                    fontFamily: "var(--font-mono), monospace",
-                    fontSize: 12,
-                    color: "var(--muted)",
-                    marginBottom: "0.5rem",
-                  }}
-                >
+                <label className="block font-mono text-xs text-[var(--muted)] mb-2">
                   Tags (comma separated)
                 </label>
                 <Input
@@ -257,7 +161,7 @@ export default function NewProblemPage() {
             </div>
           </div>
         </Card>
-        {/* Statement */}
+
         <Card>
           <SectionHeading>Problem Statement (Markdown)</SectionHeading>
 
@@ -266,21 +170,14 @@ export default function NewProblemPage() {
             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setForm({ ...form, statement: e.target.value })}
             placeholder="Write your problem statement in markdown..."
             required
-            textareaStyle={{ minHeight: 250 }}
+            className="min-h-[250px]"
           />
         </Card>
 
-        {/* Limits */}
         <Card>
           <SectionHeading>Limits & Visibility</SectionHeading>
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr 1fr",
-              gap: "1rem",
-            }}
-          >
+          <div className="grid grid-cols-3 gap-4">
             <FormField
               label="Time Limit (ms)"
               type="number"
@@ -300,39 +197,19 @@ export default function NewProblemPage() {
             />
 
             <div>
-              <label
-                style={{
-                  display: "block",
-                  fontFamily: "var(--font-mono), monospace",
-                  fontSize: 12,
-                  color: "var(--muted)",
-                  marginBottom: "0.5rem",
-                }}
-              >
+              <label className="block font-mono text-xs text-[var(--muted)] mb-2">
                 Visibility
               </label>
-              <label
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.5rem",
-                  cursor: "pointer",
-                }}
-              >
+              <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={form.isPublic}
                   onChange={(e) =>
                     setForm({ ...form, isPublic: e.target.checked })
                   }
-                  style={{ width: 16, height: 16 }}
+                  className="w-4 h-4"
                 />
-                <span
-                  style={{
-                    fontFamily: "var(--font-mono), monospace",
-                    fontSize: 13,
-                  }}
-                >
+                <span className="font-mono text-[13px]">
                   Public
                 </span>
               </label>
@@ -340,139 +217,74 @@ export default function NewProblemPage() {
           </div>
         </Card>
 
-        {/* Test Cases */}
         <Card>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "1.5rem",
-            }}
-          >
-            <SectionHeading>Test Cases</SectionHeading>
-            <Button variant="secondary" type="button" onClick={addTestCase} style={{ padding: "6px 12px", fontSize: 12, fontWeight: 400 }}>
+          <div className="flex justify-between items-center mb-6">
+            <SectionHeading className="mb-0">
+              Test Cases
+            </SectionHeading>
+            <Button variant="secondary" type="button" onClick={addTestCase} className="px-3 py-1.5 text-xs font-normal">
               + Add Test Case
             </Button>
           </div>
 
-          <div style={{ display: "grid", gap: "1.5rem" }}>
+          <div className="grid gap-6">
             {testCases.map((tc, idx) => (
               <div
                 key={tc.id}
-                style={{
-                  background: "var(--bg)",
-                  border: "1px solid var(--border)",
-                  borderRadius: 4,
-                  padding: "1rem",
-                }}
+                className="bg-[var(--bg)] border border-[var(--border)] rounded p-4"
               >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: "1rem",
-                  }}
-                >
-                  <span
-                    style={{
-                      fontFamily: "var(--font-mono), monospace",
-                      fontSize: 12,
-                      color: "var(--muted)",
-                    }}
-                  >
+                <div className="flex justify-between items-center mb-4">
+                  <span className="font-mono text-xs text-[var(--muted)]">
                     Test Case #{idx + 1}
                   </span>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "1rem",
-                    }}
-                  >
-                    <label
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.5rem",
-                        cursor: "pointer",
-                      }}
-                    >
+                  <div className="flex items-center gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={tc.isSample}
                         onChange={(e) =>
                           updateTestCase(tc.id, "isSample", e.target.checked)
                         }
-                        style={{ width: 14, height: 14 }}
+                        className="w-3.5 h-3.5"
                       />
-                      <span
-                        style={{
-                          fontFamily: "var(--font-mono), monospace",
-                          fontSize: 11,
-                          color: "var(--muted)",
-                        }}
-                      >
+                      <span className="font-mono text-[11px] text-[var(--muted)]">
                         Sample
                       </span>
                     </label>
                     {testCases.length > 1 && (
-                      <Button variant="ghost" type="button" onClick={() => removeTestCase(tc.id)} style={{ color: "var(--red)", fontSize: 12, fontWeight: 400 }}>
+                      <Button variant="ghost" type="button" onClick={() => removeTestCase(tc.id)} className="text-[var(--red)] text-xs font-normal">
                         Remove
                       </Button>
                     )}
                   </div>
                 </div>
 
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: "1rem",
-                  }}
-                >
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label
-                      style={{
-                        display: "block",
-                        fontFamily: "var(--font-mono), monospace",
-                        fontSize: 11,
-                        color: "var(--muted)",
-                        marginBottom: "0.5rem",
-                      }}
-                    >
+                    <label className="block font-mono text-[11px] text-[var(--muted)] mb-2">
                       Input
                     </label>
-                    <textarea
+                    <Textarea
                       value={tc.input}
-                      onChange={(e) =>
+                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                         updateTestCase(tc.id, "input", e.target.value)
                       }
                       placeholder="Input data..."
-                      style={{ minHeight: 80, width: "100%", background: "var(--bg)", border: "1px solid var(--border-lit)", borderRadius: 2, padding: "10px 12px", fontFamily: "var(--font-mono), monospace", fontSize: 13, color: "var(--text)", outline: "none", resize: "vertical" }}
+                      className="min-h-[80px]"
                       required
                     />
                   </div>
                   <div>
-                    <label
-                      style={{
-                        display: "block",
-                        fontFamily: "var(--font-mono), monospace",
-                        fontSize: 11,
-                        color: "var(--muted)",
-                        marginBottom: "0.5rem",
-                      }}
-                    >
+                    <label className="block font-mono text-[11px] text-[var(--muted)] mb-2">
                       Expected Output
                     </label>
-                    <textarea
+                    <Textarea
                       value={tc.expectedOutput}
-                      onChange={(e) =>
+                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                         updateTestCase(tc.id, "expectedOutput", e.target.value)
                       }
                       placeholder="Expected output..."
-                      style={{ minHeight: 80, width: "100%", background: "var(--bg)", border: "1px solid var(--border-lit)", borderRadius: 2, padding: "10px 12px", fontFamily: "var(--font-mono), monospace", fontSize: 13, color: "var(--text)", outline: "none", resize: "vertical" }}
+                      className="min-h-[80px]"
                       required
                     />
                   </div>
@@ -481,10 +293,8 @@ export default function NewProblemPage() {
             ))}
           </div>
         </Card>
-        {/* Submit */}
-        <div
-          style={{ display: "flex", gap: "1rem", justifyContent: "flex-end" }}
-        >
+
+        <div className="flex gap-4 justify-end">
           <Button variant="secondary" type="button" onClick={() => router.push("/admin")}>
             Cancel
           </Button>
@@ -497,15 +307,6 @@ export default function NewProblemPage() {
   );
 }
 
-/**
- * Reusable form field component
- *
- * Renders a label, input field, and optional hint text.
- * Used throughout the form for consistent styling.
- *
- * @param props - Component props
- * @returns JSX element for the form field
- */
 function FormField({
   label,
   value,
@@ -525,17 +326,8 @@ function FormField({
 }) {
   return (
     <div>
-      <label
-        style={{
-          display: "block",
-          fontFamily: "var(--font-mono), monospace",
-          fontSize: 12,
-          color: "var(--muted)",
-          marginBottom: "0.5rem",
-        }}
-      >
-        {/* Display asterisk for required fields */}
-        {label} {required && <span style={{ color: "var(--red)" }}>*</span>}
+      <label className="block font-mono text-xs text-[var(--muted)] mb-2">
+        {label} {required && <span className="text-[var(--red)]">*</span>}
       </label>
       <Input
         type={type}
@@ -544,21 +336,11 @@ function FormField({
         placeholder={placeholder}
         required={required}
       />
-      {/* Display hint text below field if provided */}
       {hint && (
-        <span
-          style={{
-            display: "block",
-            fontFamily: "var(--font-mono), monospace",
-            fontSize: 11,
-            color: "var(--muted)",
-            marginTop: "0.25rem",
-          }}
-        >
+        <span className="block font-mono text-[11px] text-[var(--muted)] mt-1">
           {hint}
         </span>
       )}
     </div>
   );
 }
-

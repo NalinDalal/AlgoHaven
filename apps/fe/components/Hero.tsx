@@ -42,78 +42,42 @@ const codeLines = [
 ];
 
 const tokenColors: Record<string, string> = {
-  kw: "#c792ea",
-  fn: "#82aaff",
-  str: "#c3e88d",
-  cm: "#444",
-  num: "#f78c6c",
-  var: "var(--text)",
-  sp: "var(--text)",
+  kw: "text-[#c792ea]",
+  fn: "text-[#82aaff]",
+  str: "text-[#c3e88d]",
+  cm: "text-[#444]",
+  num: "text-[#f78c6c]",
+  var: "text-[var(--text)]",
+  sp: "text-[var(--text)]",
 };
 
 export default function Hero() {
   return (
-    <section
-      className="min-h-screen flex flex-col items-center justify-center text-center relative overflow-hidden"
-      style={{ padding: "80px 2rem 4rem" }}
-    >
+    <section className="min-h-screen flex flex-col items-center justify-center text-center relative overflow-hidden px-8 pt-20 pb-16">
       <div className="grid-bg" />
 
       {/* Eyebrow */}
-      <div
-        className="animate-fade-up inline-block mb-8"
-        style={{
-          fontFamily: "var(--font-mono), monospace",
-          fontSize: 12,
-          fontWeight: 500,
-          color: "var(--accent)",
-          letterSpacing: ".12em",
-          textTransform: "uppercase",
-          border: "1px solid var(--accent)",
-          padding: "5px 14px",
-          borderRadius: 2,
-        }}
-      >
+      <div className="animate-fade-up inline-block mb-8 font-mono text-[12px] font-medium text-[var(--accent)] tracking-[.12em] uppercase border border-[var(--accent)] py-[5px] px-[14px] rounded-[2px]">
         Competitive Programming Platform
       </div>
 
       {/* Title */}
-      <h1
-        className="animate-fade-up-1"
-        style={{
-          fontFamily: "var(--font-syne), sans-serif",
-          fontWeight: 800,
-          fontSize: "clamp(3rem, 8vw, 7rem)",
-          lineHeight: 0.95,
-          letterSpacing: "-.03em",
-        }}
-      >
-        <span style={{ color: "#333" }}>Compete.</span>
+      <h1 className="animate-fade-up-1 font-[family-name:var(--font-syne)] font-extrabold text-[clamp(3rem,8vw,7rem)] leading-[0.95] tracking-[-.03em]">
+        <span className="text-[#333]">Compete.</span>
         <br />
-        <span style={{ color: "var(--text)" }}>Solve.</span>
+        <span className="text-[var(--text)]">Solve.</span>
         <br />
-        <span style={{ color: "var(--accent)" }}>
+        <span className="text-[var(--accent)]">
           Dominate
-          <span className="animate-blink" style={{ color: "var(--accent)" }}>
-            _
-          </span>
+          <span className="animate-blink text-[var(--accent)]">_</span>
         </span>
       </h1>
 
       {/* Subtext */}
-      <p
-        className="animate-fade-up-2 mt-7"
-        style={{
-          fontFamily: "var(--font-mono), monospace",
-          fontSize: 14,
-          lineHeight: 1.8,
-          color: "var(--muted)",
-          maxWidth: 520,
-        }}
-      >
+      <p className="animate-fade-up-2 mt-7 font-mono text-[14px] leading-[1.8] text-[var(--muted)] max-w-[520px]">
         Sharpen your algorithms on real contest problems.
         <br />
-        <span style={{ color: "var(--text)", fontWeight: 400 }}>
+        <span className="text-[var(--text)] font-normal">
           Real-time leaderboards. Docker-sandboxed judging.
         </span>
         <br />
@@ -121,168 +85,65 @@ export default function Hero() {
       </p>
 
       {/* CTA Buttons */}
-      <div
-        className="animate-fade-up-3 flex flex-col sm:flex-row gap-4 mt-10 items-center"
-      >
+      <div className="animate-fade-up-3 flex flex-col sm:flex-row gap-4 mt-10 items-center">
         <Link
           href="/register"
-          style={{
-            background: "var(--accent)",
-            color: "#0a0a0a",
-            fontFamily: "var(--font-mono), monospace",
-            fontSize: 14,
-            fontWeight: 700,
-            padding: "13px 28px",
-            borderRadius: 2,
-            textDecoration: "none",
-            transition: "background .15s, transform .1s",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = "var(--accent-dim)";
-            e.currentTarget.style.transform = "translateY(-1px)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = "var(--accent)";
-            e.currentTarget.style.transform = "translateY(0)";
-          }}
+          className="bg-[var(--accent)] text-[#0a0a0a] font-mono text-[14px] font-bold py-[13px] px-[28px] rounded-[2px] no-underline transition-[background,transform] duration-150 hover:bg-[var(--accent-dim)] hover:-translate-y-[1px]"
         >
           Start Competing →
         </Link>
         <Link
           href="/problems"
-          style={{
-            background: "transparent",
-            color: "var(--muted)",
-            border: "1px solid var(--border-lit)",
-            fontFamily: "var(--font-mono), monospace",
-            fontSize: 14,
-            fontWeight: 500,
-            padding: "13px 28px",
-            borderRadius: 2,
-            textDecoration: "none",
-            transition: "color .15s, border-color .15s",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.color = "var(--text)";
-            e.currentTarget.style.borderColor = "#555";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.color = "var(--muted)";
-            e.currentTarget.style.borderColor = "var(--border-lit)";
-          }}
+          className="bg-transparent text-[var(--muted)] border border-[var(--border-lit)] font-mono text-[14px] font-medium py-[13px] px-[28px] rounded-[2px] no-underline transition-[color,border-color] duration-150 hover:text-[var(--text)] hover:border-[#555]"
         >
           Browse Problems
         </Link>
       </div>
 
       {/* Stats */}
-      <div
-        className="animate-fade-up-4 flex items-center mt-14"
-        style={{ gap: "3rem" }}
-      >
+      <div className="animate-fade-up-4 flex items-center mt-14 gap-12">
         {stats.map((s, i) => (
-          <div key={s.label} className="flex items-center" style={{ gap: "3rem" }}>
+          <div key={s.label} className="flex items-center gap-12">
             <div className="text-center">
-              <div
-                style={{
-                  fontFamily: "var(--font-mono), monospace",
-                  fontSize: 22,
-                  fontWeight: 700,
-                  color: "var(--text)",
-                }}
-              >
+              <div className="font-mono text-[22px] font-bold text-[var(--text)]">
                 {s.num}
               </div>
-              <div
-                style={{
-                  fontFamily: "var(--font-mono), monospace",
-                  fontSize: 11,
-                  color: "var(--muted)",
-                  marginTop: 3,
-                  letterSpacing: ".06em",
-                }}
-              >
+              <div className="font-mono text-[11px] text-[var(--muted)] mt-[3px] tracking-[.06em]">
                 {s.label}
               </div>
             </div>
             {i < stats.length - 1 && (
-              <div
-                style={{
-                  width: 1,
-                  height: 36,
-                  background: "var(--border-lit)",
-                }}
-              />
+              <div className="w-px h-9 bg-[var(--border-lit)]" />
             )}
           </div>
         ))}
       </div>
 
       {/* Code Window */}
-      <div
-        className="animate-fade-up-5 w-full mt-20"
-        style={{
-          maxWidth: 680,
-          background: "var(--surface)",
-          border: "1px solid var(--border-lit)",
-          borderRadius: 6,
-          overflow: "hidden",
-        }}
-      >
+      <div className="animate-fade-up-5 w-full mt-20 max-w-[680px] bg-[var(--surface)] border border-[var(--border-lit)] rounded-md overflow-hidden">
         {/* Titlebar */}
-        <div
-          className="flex items-center gap-2"
-          style={{
-            background: "#161616",
-            borderBottom: "1px solid var(--border)",
-            padding: "10px 16px",
-          }}
-        >
-          <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#ff5f57", display: "inline-block" }} />
-          <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#febc2e", display: "inline-block" }} />
-          <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#28c840", display: "inline-block" }} />
-          <span
-            style={{
-              fontFamily: "var(--font-mono), monospace",
-              fontSize: 12,
-              color: "var(--muted)",
-              marginLeft: 8,
-            }}
-          >
+        <div className="flex items-center gap-2 bg-[#161616] border-b border-[var(--border)] py-2.5 px-4">
+          <span className="inline-block w-[10px] h-[10px] rounded-full bg-[#ff5f57]" />
+          <span className="inline-block w-[10px] h-[10px] rounded-full bg-[#febc2e]" />
+          <span className="inline-block w-[10px] h-[10px] rounded-full bg-[#28c840]" />
+          <span className="font-mono text-[12px] text-[var(--muted)] ml-2">
             solution.cpp — Problem 1847C
           </span>
-          <span
-            className="badge-ac ml-auto"
-            style={{
-              fontFamily: "var(--font-mono), monospace",
-              fontSize: 11,
-              fontWeight: 700,
-              padding: "3px 10px",
-              borderRadius: 2,
-            }}
-          >
+          <span className="badge-ac ml-auto font-mono text-[11px] font-bold py-[3px] px-[10px] rounded-[2px]">
             AC · 124ms
           </span>
         </div>
 
         {/* Code body */}
-        <div style={{ padding: "20px 20px 24px", textAlign: "left" }}>
+        <div className="py-5 px-5 pb-6 text-left">
           {codeLines.map((line, i) => (
-            <div
-              key={i}
-              className="flex gap-4"
-              style={{
-                fontFamily: "var(--font-mono), monospace",
-                fontSize: 13,
-                lineHeight: 1.9,
-              }}
-            >
-              <span style={{ color: "#333", minWidth: 16, textAlign: "right", userSelect: "none" }}>
+            <div key={i} className="flex gap-4 font-mono text-[13px] leading-[1.9]">
+              <span className="text-[#333] min-w-[16px] text-right select-none">
                 {i + 1}
               </span>
               <span>
                 {line.map((tok, j) => (
-                  <span key={j} style={{ color: tokenColors[tok.t] ?? "var(--text)" }}>
+                  <span key={j} className={tokenColors[tok.t] ?? "text-[var(--text)]"}>
                     {tok.v}
                   </span>
                 ))}

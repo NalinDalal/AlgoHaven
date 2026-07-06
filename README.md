@@ -242,12 +242,13 @@ curl -X POST http://localhost:3002/api/worker/enqueue \
 - [x] User management (make users admin)
 - [x] Problem/contest edit functionality
 - [x] Add more languages (C++, Java, Go)
+- [x] Virtual contests (practice mode on past contests)
 
 ### Todo 📋
 
 - [x] Rating system post-contest (automated 3-day delay via BullMQ)
 - [x] Plagiarism detection (hash-based, runs after contest ends)
-- [ ] Virtual contests
+- [x] Virtual contests
 
 ---
 

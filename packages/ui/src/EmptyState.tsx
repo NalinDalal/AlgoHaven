@@ -2,21 +2,12 @@ import { ReactNode } from "react";
 
 export interface EmptyStateProps {
   children: ReactNode;
-  style?: React.CSSProperties;
+  className?: string;
 }
 
-export function EmptyState({ children, style }: EmptyStateProps) {
+export function EmptyState({ children, className = "" }: EmptyStateProps) {
   return (
-    <div
-      style={{
-        fontFamily: "var(--font-mono), monospace",
-        fontSize: 13,
-        color: "var(--muted)",
-        textAlign: "center",
-        padding: "3rem 1rem",
-        ...style,
-      }}
-    >
+    <div className={`font-mono text-[13px] text-[var(--muted)] text-center py-12 px-4 ${className}`}>
       {children}
     </div>
   );

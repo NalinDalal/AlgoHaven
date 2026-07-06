@@ -97,7 +97,7 @@ export default function AuthPage() {
         </p>
 
         {message && (
-          <ErrorBanner style={{ marginBottom: "1rem" }}>
+          <ErrorBanner className="mb-4">
             {message}
           </ErrorBanner>
         )}

@@ -60,21 +60,13 @@ export default function NewContestPage() {
   };
 
   return (
-    <div style={{ maxWidth: 800, margin: "0 auto", padding: "2rem" }}>
-      <h1
-        style={{
-          fontFamily: "var(--font-syne), sans-serif",
-          fontWeight: 800,
-          fontSize: "1.75rem",
-          color: "var(--text)",
-          marginBottom: "2rem",
-        }}
-      >
+    <div className="max-w-[800px] mx-auto p-8">
+      <h1 className="font-[family-name:var(--font-syne)] font-extrabold text-[1.75rem] text-[var(--text)] mb-8">
         Create New Contest
       </h1>
 
       {error && (
-        <ErrorBanner style={{ marginBottom: "1.5rem" }}>
+        <ErrorBanner className="mb-6">
           {error}
         </ErrorBanner>
       )}
@@ -83,7 +75,7 @@ export default function NewContestPage() {
         <Card>
           <SectionHeading>Contest Details</SectionHeading>
 
-          <div style={{ display: "grid", gap: "1rem" }}>
+          <div className="grid gap-4">
             <FormField
               label="Title"
               value={form.title}
@@ -100,13 +92,7 @@ export default function NewContestPage() {
               required
             />
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: "1rem",
-              }}
-            >
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 label="Start Time"
                 type="datetime-local"
@@ -123,23 +109,9 @@ export default function NewContestPage() {
               />
             </div>
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr 1fr",
-                gap: "1rem",
-              }}
-            >
+            <div className="grid grid-cols-3 gap-4">
               <div>
-                <label
-                  style={{
-                    display: "block",
-                    fontFamily: "var(--font-mono), monospace",
-                    fontSize: 12,
-                    color: "var(--muted)",
-                    marginBottom: "0.5rem",
-                  }}
-                >
+                <label className="block font-mono text-xs text-[var(--muted)] mb-2">
                   Visibility
                 </label>
                 <Select
@@ -155,15 +127,7 @@ export default function NewContestPage() {
               </div>
 
               <div>
-                <label
-                  style={{
-                    display: "block",
-                    fontFamily: "var(--font-mono), monospace",
-                    fontSize: 12,
-                    color: "var(--muted)",
-                    marginBottom: "0.5rem",
-                  }}
-                >
+                <label className="block font-mono text-xs text-[var(--muted)] mb-2">
                   Freeze Time (optional)
                 </label>
                 <Input
@@ -175,14 +139,8 @@ export default function NewContestPage() {
                 />
               </div>
 
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "0.75rem",
-                }}
-              >
-                <label style={checkboxLabel}>
+              <div className="flex flex-col gap-3">
+                <label className="flex items-center gap-2 font-mono text-[13px] text-[var(--text)] cursor-pointer">
                   <input
                     type="checkbox"
                     checked={form.isRated}
@@ -192,7 +150,7 @@ export default function NewContestPage() {
                   />
                   Rated
                 </label>
-                <label style={checkboxLabel}>
+                <label className="flex items-center gap-2 font-mono text-[13px] text-[var(--text)] cursor-pointer">
                   <input
                     type="checkbox"
                     checked={form.isPractice}
@@ -202,7 +160,7 @@ export default function NewContestPage() {
                   />
                   Practice Mode
                 </label>
-                <label style={checkboxLabel}>
+                <label className="flex items-center gap-2 font-mono text-[13px] text-[var(--text)] cursor-pointer">
                   <input
                     type="checkbox"
                     checked={form.registrationOpen}
@@ -217,9 +175,7 @@ export default function NewContestPage() {
           </div>
         </Card>
 
-        <div
-          style={{ display: "flex", gap: "1rem", justifyContent: "flex-end" }}
-        >
+        <div className="flex gap-4 justify-end">
           <Button
             type="button"
             variant="secondary"
@@ -256,16 +212,8 @@ function FormField({
 }) {
   return (
     <div>
-      <label
-        style={{
-          display: "block",
-          fontFamily: "var(--font-mono), monospace",
-          fontSize: 12,
-          color: "var(--muted)",
-          marginBottom: "0.5rem",
-        }}
-      >
-        {label} {required && <span style={{ color: "var(--red)" }}>*</span>}
+      <label className="block font-mono text-xs text-[var(--muted)] mb-2">
+        {label} {required && <span className="text-[var(--red)]">*</span>}
       </label>
       <Input
         type={type}
@@ -277,13 +225,3 @@ function FormField({
     </div>
   );
 }
-
-const checkboxLabel: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: "0.5rem",
-  fontFamily: "var(--font-mono), monospace",
-  fontSize: 13,
-  color: "var(--text)",
-  cursor: "pointer",
-};

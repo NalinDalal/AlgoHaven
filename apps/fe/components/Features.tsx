@@ -34,48 +34,18 @@ const features = [
 
 export default function Features() {
   return (
-    <section
-      className="mx-auto"
-      style={{ padding: "6rem 2rem", maxWidth: 1100 }}
-    >
-      <div
-        style={{
-          fontFamily: "var(--font-mono), monospace",
-          fontSize: 12,
-          color: "var(--accent)",
-          letterSpacing: ".12em",
-          textTransform: "uppercase",
-          marginBottom: "1rem",
-        }}
-      >
+    <section className="mx-auto py-24 px-8 max-w-[1100px]">
+      <div className="font-mono text-[12px] text-[var(--accent)] tracking-[.12em] uppercase mb-4">
         // What you get
       </div>
 
-      <h2
-        style={{
-          fontFamily: "var(--font-syne), sans-serif",
-          fontWeight: 800,
-          fontSize: "clamp(2rem, 4vw, 3rem)",
-          lineHeight: 1.05,
-          letterSpacing: "-.02em",
-          marginBottom: "3.5rem",
-        }}
-      >
+      <h2 className="font-[family-name:var(--font-syne)] font-extrabold text-[clamp(2rem,4vw,3rem)] leading-[1.05] tracking-[-.02em] mb-14">
         Everything a contest
         <br />
         platform should have.
       </h2>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-          gap: "1px",
-          border: "1px solid var(--border)",
-          borderRadius: 4,
-          overflow: "hidden",
-        }}
-      >
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-px border border-[var(--border)] rounded overflow-hidden">
         {features.map((f) => (
           <FeatureCard key={f.tag} {...f} />
         ))}
@@ -94,59 +64,18 @@ function FeatureCard({
   desc: string;
 }) {
   return (
-    <div
-      style={{
-        background: "var(--surface)",
-        padding: "2rem",
-        borderRight: "1px solid var(--border)",
-        borderBottom: "1px solid var(--border)",
-        transition: "background .2s",
-        cursor: "default",
-      }}
-      onMouseEnter={(e) =>
-        (e.currentTarget.style.background = "#161616")
-      }
-      onMouseLeave={(e) =>
-        (e.currentTarget.style.background = "var(--surface)")
-      }
-    >
+    <div className="bg-[var(--surface)] p-8 border-r border-b border-[var(--border)] transition-[background] duration-200 cursor-default hover:bg-[#161616]">
       {/* Tag */}
-      <div
-        style={{
-          fontFamily: "var(--font-mono), monospace",
-          fontSize: 11,
-          fontWeight: 700,
-          color: "var(--accent)",
-          letterSpacing: ".08em",
-          marginBottom: "1rem",
-          display: "flex",
-          alignItems: "center",
-          gap: 6,
-        }}
-      >
-        <span style={{ color: "#333" }}>//</span>
+      <div className="font-mono text-[11px] font-bold text-[var(--accent)] tracking-[.08em] mb-4 flex items-center gap-1.5">
+        <span className="text-[#333]">//</span>
         {tag}
       </div>
 
-      <div
-        style={{
-          fontWeight: 700,
-          fontSize: 17,
-          marginBottom: ".5rem",
-          color: "var(--text)",
-        }}
-      >
+      <div className="font-bold text-[17px] mb-2 text-[var(--text)]">
         {title}
       </div>
 
-      <div
-        style={{
-          fontFamily: "var(--font-mono), monospace",
-          fontSize: 13,
-          color: "var(--muted)",
-          lineHeight: 1.7,
-        }}
-      >
+      <div className="font-mono text-[13px] text-[var(--muted)] leading-[1.7]">
         {desc}
       </div>
     </div>
