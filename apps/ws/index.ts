@@ -1,8 +1,6 @@
 import { serve } from "bun";
 import { config } from "dotenv";
 import { ws } from "@algohaven/logger";
-// Import from the workspace package root so Bun resolves it through the
-// package manifest instead of a tsconfig-only path alias.
 import { validateEnv } from "@algohaven/utils";
 import {
   subscribeToLeaderboard,
