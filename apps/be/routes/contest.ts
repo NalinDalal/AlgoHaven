@@ -834,12 +834,26 @@ export async function handleLeaderboardUpdate(
     if (!contestProblem) return;
 
     if (submission.status === SubmissionStatus.ACCEPTED) {
-        const isFirstAccept = !entry?.lastSolvedAt;
+        // A user should earn points once per contest problem, not once per contest.
+        // We therefore look for any earlier accepted submission on the same problem.
+        const existingAccepted = await prisma.submission.findFirst({
+            where: {
+                contestId: submission.contestId,
+                userId: submission.userId,
+                problemId: submission.problemId,
+                status: SubmissionStatus.ACCEPTED,
+                id: { not: submission.id },
+            },
+            select: { id: true },
+        });
 
-        const newSolved = isFirstAccept
+        // Only the first accepted submission for this problem should change the leaderboard.
+        const isFirstAcceptForProblem = !existingAccepted;
+
+        const newSolved = isFirstAcceptForProblem
             ? (entry?.solved ?? 0) + 1
             : (entry?.solved ?? 0);
-        const newPoints = isFirstAccept
+        const newPoints = isFirstAcceptForProblem
             ? (entry?.totalPoints ?? 0) + contestProblem.points
             : (entry?.totalPoints ?? 0);
 
@@ -849,7 +863,7 @@ export async function handleLeaderboardUpdate(
         const contestStartMins = contest
             ? Math.floor((Date.now() - contest.startTime.getTime()) / 60000)
             : 0;
-        const newPenaltyMins = isFirstAccept
+        const newPenaltyMins = isFirstAcceptForProblem
             ? (entry?.penaltyMins ?? 0) + contestStartMins
             : (entry?.penaltyMins ?? 0);
 
@@ -866,13 +880,15 @@ export async function handleLeaderboardUpdate(
                 totalPoints: newPoints,
                 solved: newSolved,
                 penaltyMins: newPenaltyMins,
-                lastSolvedAt: submission.createdAt,
+                // Keep the tie-breaker aligned with the first solve on this problem.
+                lastSolvedAt: isFirstAcceptForProblem ? submission.createdAt : null,
             },
             update: {
                 totalPoints: newPoints,
                 solved: newSolved,
                 penaltyMins: newPenaltyMins,
-                lastSolvedAt: submission.createdAt,
+                // Do not move the tie-breaker for repeat ACs on the same problem.
+                lastSolvedAt: isFirstAcceptForProblem ? submission.createdAt : entry?.lastSolvedAt,
             },
         });
 
