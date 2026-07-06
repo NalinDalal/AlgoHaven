@@ -56,8 +56,8 @@ export function useContestLeaderboard({
         setUserRank(data.data.userRank);
         setIsFrozen(data.data.isFrozen || false);
       }
-    } catch (err) {
-      console.error("[Leaderboard] Fetch failed:", err);
+    } catch {
+      // Silently ignore — leaderboard will retry on next poll or reconnect
     }
   }, [contestId]);
 
@@ -82,8 +82,8 @@ export function useContestLeaderboard({
           (e: LeaderboardEntry) => e.userId === "current-user",
         );
         if (me) setUserRank(me.rank);
-      } catch (err) {
-        console.error("[Leaderboard] Parse error:", err);
+      } catch {
+        // Malformed SSE data — ignore, next update will overwrite
       }
     });
 
