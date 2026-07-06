@@ -110,9 +110,20 @@ export async function handleRegister(req: Request): Promise<Response> {
   });
 
   auth.info({ userId: user.id, email }, "User registered successfully");
-  return success("Registration successful", {
-    user: { id: user.id, email: user.email, role: user.role },
-  });
+  return new Response(
+    JSON.stringify({
+      status: "success",
+      message: "Registration successful",
+      data: { user: { id: user.id, email: user.email, role: user.role } },
+    }),
+    {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Set-Cookie": `session=${raw}; HttpOnly; ${SECURE_COOKIE}SameSite=Lax; Path=/; Max-Age=${SESSION_TTL_MS / 1000};`,
+      },
+    },
+  );
 }
 
 // POST /api/auth/login
