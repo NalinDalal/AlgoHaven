@@ -18,9 +18,10 @@ export type {
   Session,
 } from "./generated/prisma/client";
 
-console.log("[DB] Loading, DATABASE_URL:", process.env.DATABASE_URL);
-
-const connectionString = process.env.DATABASE_URL as string;
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+  throw new Error("DATABASE_URL environment variable is required");
+}
 
 const pool = new pg.Pool({ connectionString });
 const adapter = new PrismaPg(pool);
