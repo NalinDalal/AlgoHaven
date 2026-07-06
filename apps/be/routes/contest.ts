@@ -2,7 +2,7 @@ import { prisma, SubmissionStatus, JudgePhase, Role } from "@/packages/db";
 
 import { requireAuth, requireAdmin, getUserFromRequest, type AuthUser } from "./auth";
 import { success, failure } from "@/packages/utils/response";
-import { publishLeaderboardUpdate } from "@algohaven/redis";
+import { publishLeaderboardUpdate, publishAnnouncement } from "@algohaven/redis";
 import { sendToWorker } from "./worker";
 import { be } from "@algohaven/logger";
 import {
@@ -598,8 +598,7 @@ export async function postContestAnnouncement(req: Request): Promise<Response> {
         select: { id: true, message: true, createdAt: true },
     });
 
-    // TODO: broadcast via WebSocket / SSE
-    // await broadcastToContest(contestId, { type: 'ANNOUNCEMENT', data: announcement });
+    await publishAnnouncement(contestId, { contestId, announcement });
 
     return success("Announcement created", { announcement }, 201);
 }

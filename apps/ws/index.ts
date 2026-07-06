@@ -112,7 +112,7 @@ async function validateSession(cookie: string): Promise<string | null> {
 async function startRedisSubscriptions(): Promise<void> {
   await connectRedis();
 
-  await subscribeToLeaderboard("all", (data: unknown) => {
+  await subscribeToLeaderboard("*", (data: unknown) => {
     const update = data as { contestId: string; entries: LeaderboardEntry[] };
     if (update.contestId) {
       broadcastToContest(
@@ -123,7 +123,7 @@ async function startRedisSubscriptions(): Promise<void> {
     }
   });
 
-  await subscribeToAnnouncements("all", (data: unknown) => {
+  await subscribeToAnnouncements("*", (data: unknown) => {
     const announcement = data as {
       contestId: string;
       announcement: Announcement;

@@ -45,23 +45,21 @@ export async function subscribeToLeaderboard(
   contestId: string,
   callback: (data: unknown) => void,
 ): Promise<() => void> {
-  const channel = leaderboardChannel(contestId);
+  const pattern = `contest:${contestId}:leaderboard`;
   const subscriber = new Redis(REDIS_URL);
 
-  subscriber.on("message", (ch, message) => {
-    if (ch === channel) {
-      try {
-        callback(JSON.parse(message));
-      } catch (e) {
-        logger.warn({ err: e }, "Failed to parse leaderboard message");
-      }
+  subscriber.on("pmessage", (_pattern, _channel, message) => {
+    try {
+      callback(JSON.parse(message));
+    } catch (e) {
+      logger.warn({ err: e }, "Failed to parse leaderboard message");
     }
   });
 
-  await subscriber.subscribe(channel);
+  await subscriber.psubscribe(pattern);
 
   return () => {
-    subscriber.unsubscribe(channel).then(() => subscriber.quit());
+    subscriber.punsubscribe(pattern).then(() => subscriber.quit());
   };
 }
 
@@ -69,23 +67,21 @@ export async function subscribeToAnnouncements(
   contestId: string,
   callback: (data: unknown) => void,
 ): Promise<() => void> {
-  const channel = announcementChannel(contestId);
+  const pattern = `contest:${contestId}:announcements`;
   const subscriber = new Redis(REDIS_URL);
 
-  subscriber.on("message", (ch, message) => {
-    if (ch === channel) {
-      try {
-        callback(JSON.parse(message));
-      } catch (e) {
-        logger.warn({ err: e }, "Failed to parse announcement message");
-      }
+  subscriber.on("pmessage", (_pattern, _channel, message) => {
+    try {
+      callback(JSON.parse(message));
+    } catch (e) {
+      logger.warn({ err: e }, "Failed to parse announcement message");
     }
   });
 
-  await subscriber.subscribe(channel);
+  await subscriber.psubscribe(pattern);
 
   return () => {
-    subscriber.unsubscribe(channel).then(() => subscriber.quit());
+    subscriber.punsubscribe(pattern).then(() => subscriber.quit());
   };
 }
 
