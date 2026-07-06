@@ -45,27 +45,33 @@ interface Problem {
  */
 export default function AdminProblemsPage() {
   const router = useRouter();
-  const [problems, setProblems] = useState<Problem[]>([]); // Problems list state
-  const [loading, setLoading] = useState(true); // Loading state
-  const [deleting, setDeleting] = useState<string | null>(null); // Track deletion in progress
+  const [problems, setProblems] = useState<Problem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const limit = 25;
 
-  /**
-   * Effect hook to fetch problems on component mount
-   * Loads all problems from the API
-   */
   useEffect(() => {
-    apiFetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/problems`, {
-      credentials: "include", // Include cookies for authentication
-    })
+    setLoading(true);
+    apiFetch(
+      `${process.env.NEXT_PUBLIC_BE_URL}/api/problems?page=${page}&limit=${limit}`,
+      { credentials: "include" },
+    )
       .then((res) => res.json())
       .then((data) => {
         if (data.status === "success") {
           setProblems(data.data.problems);
+          if (data.data?.meta) {
+            setTotalPages(data.data.meta.totalPages);
+            setTotal(data.data.meta.total);
+          }
         }
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, []);
+  }, [page]);
 
   /**
    * Handles problem deletion
@@ -356,6 +362,61 @@ export default function AdminProblemsPage() {
               })}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginTop: "1.5rem",
+            fontFamily: "var(--font-mono), monospace",
+            fontSize: 12,
+          }}
+        >
+          <span style={{ color: "var(--muted)" }}>
+            {total} problems total
+          </span>
+          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+            <button
+              disabled={page <= 1}
+              onClick={() => setPage((p) => p - 1)}
+              style={{
+                fontFamily: "var(--font-mono), monospace",
+                fontSize: 12,
+                padding: "6px 12px",
+                borderRadius: 2,
+                border: "1px solid var(--border)",
+                background: "transparent",
+                color: page <= 1 ? "#333" : "var(--muted)",
+                cursor: page <= 1 ? "not-allowed" : "pointer",
+              }}
+            >
+              ← Prev
+            </button>
+            <span style={{ color: "var(--muted)" }}>
+              {page} / {totalPages}
+            </span>
+            <button
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => p + 1)}
+              style={{
+                fontFamily: "var(--font-mono), monospace",
+                fontSize: 12,
+                padding: "6px 12px",
+                borderRadius: 2,
+                border: "1px solid var(--border)",
+                background: "transparent",
+                color: page >= totalPages ? "#333" : "var(--muted)",
+                cursor: page >= totalPages ? "not-allowed" : "pointer",
+              }}
+            >
+              Next →
+            </button>
+          </div>
         </div>
       )}
     </div>
