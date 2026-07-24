@@ -404,41 +404,4 @@ export async function handleMe(req: Request): Promise<Response> {
   });
 }
 
-/* ────────────────────────────────────────────────────────────── */
-/* POST /api/me                                                   */
-/* ────────────────────────────────────────────────────────────── */
 
-export async function handleMePost(req: Request): Promise<Response> {
-  const authResult = await requireAuth(req);
-  if (authResult instanceof Response) return authResult;
-
-  const { user } = authResult;
-  const body = (await req.json()) as { rating?: number };
-  const rating = Number(body?.rating ?? 0);
-
-  if (!Number.isFinite(rating)) {
-    return failure("rating must be a number", null, 400);
-  }
-
-  const lastRating = await prisma.userRating.findFirst({
-    where: { userId: user.id },
-    orderBy: { createdAt: "desc" },
-    select: { ratingAfter: true },
-  });
-
-  if (lastRating?.ratingAfter === rating) {
-    return failure("rating unchanged", null, 400);
-  }
-
-  await prisma.userRating.create({
-    data: {
-      userId: user.id,
-      contestId: "manual",
-      ratingBefore: lastRating?.ratingAfter ?? rating,
-      ratingAfter: rating,
-      rank: 0,
-    },
-  });
-
-  return success("rating updated", { rating });
-}
