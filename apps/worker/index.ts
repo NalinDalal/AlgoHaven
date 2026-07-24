@@ -11,10 +11,12 @@ import {
     submissionQueue,
     scheduleRatingCalculation,
     scheduleJudgePhaseTransition,
+    scheduleFreeze,
     type JobData,
     type CompletedJob,
     type RatingJobData,
     type PhaseTransitionJobData,
+    type FreezeJobData,
 } from "./queue";
 import { handleEnqueue, handleHealth, validateEnqueueRequest } from "./api";
 
@@ -108,6 +110,22 @@ async function callTransitionJudgePhase(contestId: string): Promise<void> {
     }
 }
 
+async function callFreezeContest(contestId: string): Promise<void> {
+    const res = await fetch(
+        `${BACKEND_URL}/api/contest/${contestId}/freeze`,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "x-worker-secret": WORKER_SECRET,
+            },
+        },
+    );
+    if (!res.ok) {
+        throw new Error(`Freeze contest failed: ${res.status}`);
+    }
+}
+
 const server = serve({
     port: 3002,
     fetch(req: Request) {
@@ -142,6 +160,19 @@ const server = serve({
                 return { valid: true, data };
             }, async (body) => {
                 const jobId = await scheduleJudgePhaseTransition(body.contestId!, new Date(body.endTime!));
+                return jobId;
+            });
+        }
+
+        if (req.method === "POST" && url.pathname === "/api/worker/schedule-freeze") {
+            return handleEnqueue(req, WORKER_SECRET, (body) => {
+                const data = body as { contestId: string; freezeTime: string };
+                if (!data.contestId || !data.freezeTime) {
+                    return { valid: false, error: "contestId and freezeTime are required" };
+                }
+                return { valid: true, data };
+            }, async (body) => {
+                const jobId = await scheduleFreeze(body.contestId!, new Date(body.freezeTime!));
                 return jobId;
             });
         }
@@ -308,6 +339,37 @@ phaseTransitionWorker.on("failed", (job, err) => {
 worker.info("BullMQ phase transition worker started");
 
 // -----------------------------------------------------------------------------
+// Freeze Worker
+// -----------------------------------------------------------------------------
+
+const freezeWorker = new Worker<FreezeJobData>(
+    "freezes",
+    async (job: Job<FreezeJobData>) => {
+        const { contestId } = job.data;
+        worker.info({ contestId }, "Processing leaderboard freeze");
+        await callFreezeContest(contestId);
+        worker.info({ contestId }, "Leaderboard freeze complete");
+    },
+    { connection },
+);
+
+freezeWorker.on("completed", (job) => {
+    worker.info(
+        { jobId: job.id, contestId: job.data.contestId },
+        "Freeze completed",
+    );
+});
+
+freezeWorker.on("failed", (job, err) => {
+    worker.error(
+        { jobId: job?.id, err: err.message },
+        "Freeze failed",
+    );
+});
+
+worker.info("BullMQ freeze worker started");
+
+// -----------------------------------------------------------------------------
 // Graceful shutdown
 // -----------------------------------------------------------------------------
 
@@ -317,6 +379,7 @@ async function shutdown(signal: string) {
     await myWorker.close();
     await ratingWorker.close();
     await phaseTransitionWorker.close();
+    await freezeWorker.close();
 
     server.stop();
     worker.info("Shutdown complete");

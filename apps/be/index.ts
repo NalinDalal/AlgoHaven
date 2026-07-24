@@ -71,6 +71,7 @@ import {
   listContestAnnouncements,
   postContestAnnouncement,
   getContestSubmissions,
+  handleFreezeContest,
 } from "./routes/contest";
 
 import { handleCalculateRatings } from "./routes/ratings";
@@ -162,6 +163,7 @@ const routes: Record<string, Record<string, Handler>> = {
     POST: postContestAnnouncement,
   },
   "/api/contest/:id/calculate-ratings": { POST: handleCalculateRatings },
+  "/api/contest/:id/freeze": { POST: handleFreezeContest },
   "/api/contest/:id/submissions": { GET: getContestSubmissions },
   "/api/plagiarism/:id/confirm": { POST: handleConfirmPlagiarism },
 

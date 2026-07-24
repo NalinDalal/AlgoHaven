@@ -152,3 +152,32 @@ export async function scheduleJudgePhaseTransition(
   worker.info({ contestId, delayMs: delay }, "Judge phase transition scheduled");
   return job.id!;
 }
+
+// ─── Freeze Queue ───────────────────────────────────────────────────────────────
+
+export interface FreezeJobData {
+  contestId: string;
+}
+
+export const freezeQueue = new Queue<FreezeJobData>("freezes", {
+  connection,
+  defaultJobOptions: {
+    attempts: 3,
+    backoff: { type: "exponential", delay: 5000 },
+    removeOnComplete: true,
+    removeOnFail: false,
+  },
+});
+
+export async function scheduleFreeze(
+  contestId: string,
+  freezeTime: Date,
+): Promise<string> {
+  const now = Date.now();
+  const freeze = freezeTime.getTime();
+  const delay = Math.max(0, freeze - now);
+
+  const job = await freezeQueue.add("freeze", { contestId }, { delay });
+  worker.info({ contestId, delayMs: delay }, "Leaderboard freeze scheduled");
+  return job.id!;
+}

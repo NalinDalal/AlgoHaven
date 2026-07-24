@@ -499,9 +499,14 @@ export async function getContestLeaderboard(req: Request): Promise<Response> {
         now >= contest.freezeTime &&
         now <= contest.endTime;
 
-    // Pull all entries for rank computation; let DB do the primary sort
+    // Pull all entries for rank computation. During a freeze window, non-admin
+    // callers see only the rows that were stamped isFrozen=true by the background
+    // job, rather than any entries that mutated after freezeTime.
     const allEntries = await prisma.leaderboardEntry.findMany({
-        where: { contestId },
+        where: {
+            contestId,
+            ...(isFrozen && !isAdmin ? { isFrozen: true } : {}),
+        },
         select: {
             userId: true,
             totalPoints: true,
@@ -653,6 +658,34 @@ export async function getContestSubmissions(req: Request): Promise<Response> {
     return success("Submissions retrieved", { submissions });
 }
 
+// POST /api/contest/:id/freeze  [worker only, via x-worker-secret]
+// Marks all leaderboard entries for the contest as isFrozen=true.
+// Idempotent: re-running against an already-frozen contest is a no-op.
+export async function handleFreezeContest(req: Request): Promise<Response> {
+    const workerSecret = req.headers.get("x-worker-secret");
+    if (workerSecret !== process.env.WORKER_SECRET) {
+        return new Response("Unauthorized", { status: 401 });
+    }
+
+    const { id: contestId } = getIdParams(req);
+    if (!contestId) return failure("Missing contest id", null, 400);
+
+    const contest = await prisma.contest.findUnique({
+        where: { id: contestId },
+        select: { id: true, freezeTime: true },
+    });
+    if (!contest) return failure("Contest not found", null, 404);
+    if (!contest.freezeTime) return success("No freezeTime set — nothing to do");
+
+    const result = await prisma.leaderboardEntry.updateMany({
+        where: { contestId, isFrozen: false },
+        data: { isFrozen: true },
+    });
+
+    be.info({ contestId, count: result.count }, "Leaderboard frozen");
+    return success(`Frozen ${result.count} leaderboard entries`, { count: result.count });
+}
+
 // ─── 8. Create Contest ────────────────────────────────────────────────────────
 
 // POST /api/contest/create  [admin only]
@@ -755,6 +788,27 @@ export async function createContest(req: Request): Promise<Response> {
         }
     }
 
+    if (contest.freezeTime) {
+        try {
+            const ws = process.env.WORKER_SECRET;
+            const wu = process.env.WORKER_URL;
+            if (!ws || !wu) throw new Error("WORKER_SECRET and WORKER_URL required");
+            await fetch(`${wu}/api/worker/schedule-freeze`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "x-worker-secret": ws,
+                },
+                body: JSON.stringify({
+                    contestId: contest.id,
+                    freezeTime: contest.freezeTime.toISOString(),
+                }),
+            });
+        } catch (err) {
+            be.error({ contestId: contest.id, err }, "Failed to schedule leaderboard freeze");
+        }
+    }
+
     be.info({ contestId: contest.id, slug, title, isRated: contest.isRated }, "Contest created");
     return success("Contest created", { contest }, 201);
 }
@@ -841,6 +895,27 @@ export async function updateContest(req: Request): Promise<Response> {
         },
     });
 
+    if (updated.freezeTime && !updated.isPractice) {
+        try {
+            const ws = process.env.WORKER_SECRET;
+            const wu = process.env.WORKER_URL;
+            if (!ws || !wu) throw new Error("WORKER_SECRET and WORKER_URL required");
+            await fetch(`${wu}/api/worker/schedule-freeze`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "x-worker-secret": ws,
+                },
+                body: JSON.stringify({
+                    contestId: updated.id,
+                    freezeTime: updated.freezeTime.toISOString(),
+                }),
+            });
+        } catch (err) {
+            be.error({ contestId: updated.id, err }, "Failed to schedule leaderboard freeze");
+        }
+    }
+
     be.info({ contestId: contest.id, slug: contest.slug }, "Contest updated");
     return success("Contest updated", { contest: updated });
 }
@@ -854,6 +929,19 @@ export async function handleLeaderboardUpdate(
     });
 
     if (!submission || !submission.contestId) return;
+
+    const contest = await prisma.contest.findUnique({
+        where: { id: submission.contestId },
+        select: { freezeTime: true, endTime: true },
+    });
+
+    const now = new Date();
+    const isFrozen =
+        !!contest?.freezeTime &&
+        now >= contest.freezeTime &&
+        now <= (contest.endTime ?? now);
+
+    if (isFrozen) return;
 
     const entry = await prisma.leaderboardEntry.findUnique({
         where: {
