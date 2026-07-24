@@ -5,7 +5,7 @@ import {
   hashPassword,
   verifyPassword,
 } from "@algohaven/auth";
-import { success, failure, getCookie, getParams, getIdParams, type IdParams } from "@algohaven/utils";
+import { success, failure, getCookie, getIdParams, type IdParams } from "@algohaven/utils";
 import { auth } from "@algohaven/logger";
 
 export interface AuthUser {
@@ -201,7 +201,14 @@ export async function handleDevLogin(req: Request): Promise<Response> {
     return failure("Not available in production", null, 404);
   }
 
-  const { email } = (await req.json()) as { email?: string };
+  const devSecret = process.env.DEV_LOGIN_SECRET;
+  const body = (await req.json().catch(() => ({}))) as { email?: string; secret?: string };
+
+  if (!devSecret || body.secret !== devSecret) {
+    return failure("Invalid dev login secret", null, 403);
+  }
+
+  const { email } = body;
   if (!email) return failure("Email required", null, 400);
 
   let user = await prisma.user.findUnique({ where: { email } });
