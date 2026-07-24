@@ -70,7 +70,7 @@ export async function handleAdminListSubmissions(
 }
 
 // POST /api/admin/submissions/:id/rejudge
-// Admin only - rejudge a single submission by resending it to the worker
+// Admin only - create a single-submission rejudge via RejudgeJob
 export async function handleAdminRejudgeSubmission(
   req: Request,
 ): Promise<Response> {
@@ -82,53 +82,32 @@ export async function handleAdminRejudgeSubmission(
 
   const submission = await prisma.submission.findUnique({
     where: { id: submissionId },
-    include: {
-      problem: {
-        include: { testCases: { select: { input: true, expectedOutput: true } } },
-      },
-    },
+    select: { id: true, problemId: true, contestId: true },
   });
 
   if (!submission) return failure("Submission not found", null, 404);
 
-  const judgePhase = submission.judgePhase;
-
-  // Reset submission to QUEUED
-  await prisma.submission.update({
-    where: { id: submissionId },
+  const job = await prisma.rejudgeJob.create({
     data: {
-      status: SubmissionStatus.QUEUED,
-      points: 0,
-      executionTimeMs: null,
-      memoryUsedKb: null,
-      compilerOutput: null,
-      judgeOutput: null,
+      problemId: submission.problemId,
+      contestId: submission.contestId ?? undefined,
+      submissionId,
+      triggeredById: authResult.user.id,
+      status: "PENDING",
+      totalCount: 1,
     },
   });
 
-  // Send to worker
-  const testCases = submission.problem.testCases.map((tc) => ({
-    input: tc.input,
-    expectedOutput: tc.expectedOutput,
-  }));
+  be.info({ jobId: job.id, submissionId, adminId: authResult.user.id }, "Single-submission rejudge job created");
 
-  const enqueued = await sendToWorker(
+  processRejudgeJob(job.id).catch((err) => {
+    be.error({ jobId: job.id, error: err instanceof Error ? err.message : "Unknown error" }, "Rejudge job processing failed");
+  });
+
+  return success("Rejudge job created", {
+    jobId: job.id,
     submissionId,
-    submission.code,
-    submission.language,
-    testCases,
-    judgePhase,
-  );
-
-  if (!enqueued) {
-    be.error({ submissionId, adminId: authResult.user.id }, "Rejudge enqueue failed");
-    return failure("Failed to enqueue rejudge", null, 500);
-  }
-
-  be.info({ submissionId, adminId: authResult.user.id }, "Submission rejudged");
-  return success("Submission rejudged", {
-    id: submissionId,
-    status: SubmissionStatus.QUEUED,
+    totalCount: 1,
   });
 }
 
@@ -244,7 +223,7 @@ async function processRejudgeJob(jobId: string): Promise<void> {
 
   const job = await prisma.rejudgeJob.findUnique({
     where: { id: jobId },
-    select: { problemId: true, contestId: true },
+    select: { problemId: true, contestId: true, submissionId: true },
   });
 
   if (!job) {
@@ -255,14 +234,31 @@ async function processRejudgeJob(jobId: string): Promise<void> {
     return;
   }
 
-  // Find all submissions to rejudge
-  const where: Record<string, unknown> = { problemId: job.problemId };
-  if (job.contestId) where.contestId = job.contestId;
+  let submissions: { id: string; code: string; language: string; judgePhase: string; problemId: string }[];
 
-  const submissions = await prisma.submission.findMany({
-    where,
-    select: { id: true, code: true, language: true, judgePhase: true, problemId: true },
-  });
+  if (job.submissionId) {
+    const sub = await prisma.submission.findUnique({
+      where: { id: job.submissionId },
+      select: { id: true, code: true, language: true, judgePhase: true, problemId: true },
+    });
+    submissions = sub ? [sub] : [];
+  } else {
+    const where: Record<string, unknown> = { problemId: job.problemId };
+    if (job.contestId) where.contestId = job.contestId;
+
+    submissions = await prisma.submission.findMany({
+      where,
+      select: { id: true, code: true, language: true, judgePhase: true, problemId: true },
+    });
+  }
+
+  if (submissions.length === 0) {
+    await prisma.rejudgeJob.update({
+      where: { id: jobId },
+      data: { status: "DONE", doneCount: 0, errorLog: "No submissions matched" },
+    });
+    return;
+  }
 
   // Fetch test cases and checker info for the problem
   const problem = await prisma.problem.findUnique({

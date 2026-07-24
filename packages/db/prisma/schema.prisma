@@ -320,6 +320,7 @@ model RejudgeJob {
   id            String        @id @default(uuid())
   problemId   String // which problem to rejudge
   contestId     String? // scope to a specific contest, or null = all submissions
+  submissionId  String? // scope to a single submission, or null = problem-scoped
   triggeredById String
   status        RejudgeStatus @default(PENDING)
   totalCount    Int           @default(0)
@@ -333,4 +334,5 @@ model RejudgeJob {
 
   @@index([problemId])
   @@index([status])
+  @@index([submissionId])
 }
