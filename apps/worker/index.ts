@@ -58,6 +58,8 @@ async function updateSubmission(
     status: string,
     executionTimeMs: number,
     judgePhase: string,
+    memoryUsedKb: number = 0,
+    judgeOutput: string = "",
 ): Promise<void> {
     const res = await fetch(`${BACKEND_URL}/api/worker/update-submission`, {
         method: "POST",
@@ -70,6 +72,8 @@ async function updateSubmission(
             status,
             executionTimeMs,
             judgePhase,
+            memoryUsedKb,
+            judgeOutput,
         }),
     });
     if (!res.ok) {
@@ -210,10 +214,13 @@ const myWorker = new Worker<JobData, CompletedJob>(
 
         let allAccepted = true;
         let totalTime = 0;
+        let maxMemoryKb = 0;
+        let lastStderr = "";
 
         for (const testCase of testCases) {
             const result = await runCode(code, testCase.input, language);
             totalTime += result.executionTimeMs;
+            maxMemoryKb = Math.max(maxMemoryKb, result.memoryUsedKb);
 
             const actual = result.stdout.trim();
             const expected = testCase.expectedOutput.trim();
@@ -221,11 +228,16 @@ const myWorker = new Worker<JobData, CompletedJob>(
             if (result.status === "TLE") {
                 worker.warn({ submissionId }, "Test case TLE");
                 allAccepted = false;
+            } else if (result.status === "MLE") {
+                worker.warn({ submissionId }, "Test case MLE");
+                lastStderr = result.stderr;
+                allAccepted = false;
             } else if (result.status === "RUNTIME_ERROR") {
                 worker.warn(
                     { submissionId, stderr: result.stderr },
                     "Test case RUNTIME_ERROR",
                 );
+                lastStderr = result.stderr;
                 allAccepted = false;
             } else if (hasCustomChecker && checkerCode) {
                 const checkerResult = await runChecker(checkerCode, testCase.input, actual, expected);
@@ -250,17 +262,23 @@ const myWorker = new Worker<JobData, CompletedJob>(
             }
         }
 
-        const finalStatus = allAccepted ? "ACCEPTED" : "WRONG_ANSWER";
+        // Check if any test case hit MLE
+        let finalStatus = allAccepted ? "ACCEPTED" : "WRONG_ANSWER";
+        if (!allAccepted && lastStderr === "Memory limit exceeded") {
+            finalStatus = "MLE";
+        }
+
         worker.info(
             {
                 submissionId,
                 status: finalStatus,
                 totalTimeMs: totalTime,
+                memoryUsedKb: maxMemoryKb,
             },
             "Submission final result",
         );
 
-        await updateSubmission(submissionId, finalStatus, totalTime, judgePhase);
+        await updateSubmission(submissionId, finalStatus, totalTime, judgePhase, maxMemoryKb, lastStderr);
 
         return { id: job.id!, submissionId, status: finalStatus, executionTimeMs: totalTime, judgePhase };
     },

@@ -7,6 +7,7 @@ export interface ExecutionResult {
   stdout: string;
   stderr: string;
   executionTimeMs: number;
+  memoryUsedKb: number;
 }
 
 export interface CheckerResult {
@@ -121,6 +122,7 @@ export async function runCode(
       stdout: "",
       stderr: `Unsupported language: ${language}`,
       executionTimeMs: 0,
+      memoryUsedKb: 0,
     };
   }
 
@@ -148,6 +150,18 @@ export async function runCode(
 
     const executionTimeMs = Date.now() - startTime;
 
+    // Docker exit code 137 = OOM killed (SIGKILL)
+    if (exitCode === 137) {
+      worker.warn({ language, executionTimeMs }, "Code execution MLE (OOM killed)");
+      return {
+        status: "MLE",
+        stdout: stdout.trim(),
+        stderr: "Memory limit exceeded",
+        executionTimeMs,
+        memoryUsedKb: 0,
+      };
+    }
+
     if (exitCode === 0) {
       worker.debug({ language, executionTimeMs }, "Code execution successful");
       return {
@@ -155,6 +169,7 @@ export async function runCode(
         stdout: stdout.trim(),
         stderr: stderr.trim(),
         executionTimeMs,
+        memoryUsedKb: 0,
       };
     } else {
       worker.warn({ language, exitCode, executionTimeMs }, "Code execution failed with non-zero exit");
@@ -163,6 +178,7 @@ export async function runCode(
         stdout: stdout.trim(),
         stderr: stderr.trim() || "Runtime error",
         executionTimeMs,
+        memoryUsedKb: 0,
       };
     }
   } catch (error: unknown) {
@@ -175,6 +191,7 @@ export async function runCode(
         stdout: "",
         stderr: "Time limit exceeded",
         executionTimeMs: config.timeout * 1000,
+        memoryUsedKb: 0,
       };
     }
     worker.error({ language, error: errMsg, executionTimeMs }, "Code execution error");
@@ -183,6 +200,7 @@ export async function runCode(
       stdout: "",
       stderr: errMsg,
       executionTimeMs,
+      memoryUsedKb: 0,
     };
   }
 }

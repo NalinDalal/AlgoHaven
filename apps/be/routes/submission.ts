@@ -30,7 +30,11 @@ export async function handleRunSolution(req: Request): Promise<Response> {
   // Get ONLY sample test cases for running
   const problem = await prisma.problem.findUnique({
     where: { id: problemId },
-    include: { testCases: { where: { isSample: true } } },
+    select: {
+      testCases: { where: { isSample: true }, select: { input: true, expectedOutput: true } },
+      hasCustomChecker: true,
+      checkerCode: true,
+    },
   });
 
   if (!problem) {
@@ -50,7 +54,15 @@ export async function handleRunSolution(req: Request): Promise<Response> {
     expectedOutput: tc.expectedOutput,
   }));
 
-  const enqueued = await sendToWorker(runId, code, language, testCases, JudgePhase.PRACTICE);
+  const enqueued = await sendToWorker(
+    runId,
+    code,
+    language,
+    testCases,
+    JudgePhase.PRACTICE,
+    problem.hasCustomChecker,
+    problem.checkerCode ?? undefined,
+  );
 
   if (!enqueued) {
     be.error({ problemId, userId: authResult.user.id }, "Failed to enqueue run");
@@ -160,6 +172,7 @@ interface WorkerUpdateBody {
   executionTimeMs?: number;
   memoryUsedKb?: number;
   judgePhase?: string;
+  judgeOutput?: string;
 }
 
 export async function handleWorkerUpdateSubmission(
@@ -171,7 +184,7 @@ export async function handleWorkerUpdateSubmission(
   }
 
   const body = (await req.json()) as WorkerUpdateBody;
-  const { submissionId, status, points, executionTimeMs, memoryUsedKb, judgePhase } = body;
+  const { submissionId, status, points, executionTimeMs, memoryUsedKb, judgePhase, judgeOutput } = body;
 
   if (!submissionId || !status) {
     return failure("submissionId and status required", null, 400);
@@ -180,7 +193,7 @@ export async function handleWorkerUpdateSubmission(
   // Phase guard: discard stale updates from a previous judge phase
   const current = await prisma.submission.findUnique({
     where: { id: submissionId },
-    select: { judgePhase: true },
+    select: { judgePhase: true, status: true, wrongAttempts: true },
   });
   if (!current) return failure("Submission not found", null, 404);
 
@@ -192,6 +205,10 @@ export async function handleWorkerUpdateSubmission(
     return success("Update discarded — stale judge phase", { submissionId });
   }
 
+  // Increment wrongAttempts on non-accepted, non-queued statuses
+  const isWrong = status !== SubmissionStatus.ACCEPTED && status !== SubmissionStatus.QUEUED && status !== SubmissionStatus.RUNNING;
+  const wrongAttemptsIncrement = isWrong ? 1 : 0;
+
   await prisma.submission.update({
     where: { id: submissionId },
     data: {
@@ -199,6 +216,8 @@ export async function handleWorkerUpdateSubmission(
       points: points ?? 0,
       executionTimeMs,
       memoryUsedKb,
+      judgeOutput: judgeOutput || null,
+      wrongAttempts: current.wrongAttempts + wrongAttemptsIncrement,
     },
   });
 
