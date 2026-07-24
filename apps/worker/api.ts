@@ -69,7 +69,12 @@ export async function handleEnqueue<TBody>(
   }
 
   const jobId = await enqueueFn(validation.data!);
-  worker.info({ jobId, submissionId: validation.data!.submissionId, language: validation.data!.language }, "Job enqueued successfully");
+  const logData: Record<string, unknown> = { jobId };
+  if (validation.data && "submissionId" in validation.data) {
+    logData.submissionId = (validation.data as { submissionId: string }).submissionId;
+    logData.language = (validation.data as { language: string }).language;
+  }
+  worker.info(logData, "Job enqueued successfully");
   return new Response(JSON.stringify({ jobId }), {
     status: 200,
   });
