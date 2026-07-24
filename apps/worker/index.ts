@@ -126,7 +126,7 @@ const server = serve({
                 }
                 return { valid: true, data };
             }, async (body) => {
-                const jobId = await scheduleRatingCalculation(body.contestId, new Date(body.endTime));
+                const jobId = await scheduleRatingCalculation(body.contestId!, new Date(body.endTime!));
                 return jobId;
             });
         }
@@ -139,7 +139,7 @@ const server = serve({
                 }
                 return { valid: true, data };
             }, async (body) => {
-                const jobId = await scheduleJudgePhaseTransition(body.contestId, new Date(body.endTime));
+                const jobId = await scheduleJudgePhaseTransition(body.contestId!, new Date(body.endTime!));
                 return jobId;
             });
         }
