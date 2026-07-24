@@ -1,5 +1,4 @@
 import { prisma, SubmissionStatus, JudgePhase } from "@algohaven/db";
-import type { RejudgeJob } from "@algohaven/db";
 import { requireAdmin } from "./auth";
 import { success, failure, getIdParams } from "@algohaven/utils";
 import { sendToWorker } from "./worker";
