@@ -30,6 +30,12 @@ export default function AdminDashboard() {
                     icon="↗"
                 />
                 <AdminCard
+                    title="Rejudge Jobs"
+                    description="Monitor bulk rejudge progress and history"
+                    href="/admin/rejudge-jobs"
+                    icon="↻"
+                />
+                <AdminCard
                     title="Users"
                     description="Manage user roles and permissions"
                     href="/admin/users"

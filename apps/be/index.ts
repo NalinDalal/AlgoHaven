@@ -80,6 +80,8 @@ import { handleGetProfile } from "./routes/profile";
 import {
   handleAdminListSubmissions,
   handleAdminRejudgeSubmission,
+  handleAdminBulkRejudge,
+  handleAdminListRejudgeJobs,
 } from "./routes/admin";
 import { matchRoute } from "@algohaven/utils";
 
@@ -170,6 +172,10 @@ const routes: Record<string, Record<string, Handler>> = {
   // ---------------- ADMIN SUBMISSIONS ----------------
   "/api/admin/submissions": { GET: handleAdminListSubmissions },
   "/api/admin/submissions/:id/rejudge": { POST: handleAdminRejudgeSubmission },
+
+  // ---------------- ADMIN REJUDGE JOBS ----------------
+  "/api/admin/problems/:id/rejudge": { POST: handleAdminBulkRejudge },
+  "/api/admin/rejudge-jobs": { GET: handleAdminListRejudgeJobs },
 };
 
 // -----------------------------------------------------------------------------

@@ -36,6 +36,8 @@ export default function EditProblemPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [rejudging, setRejudging] = useState(false);
+  const [rejudgeResult, setRejudgeResult] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     title: "",
@@ -168,6 +170,33 @@ export default function EditProblemPage() {
     setTestCases(
       testCases.map((tc) => (tc.id === id ? { ...tc, [field]: value } : tc)),
     );
+  };
+
+  const handleBulkRejudge = async () => {
+    if (!confirm("Rejudge all submissions for this problem? This cannot be undone.")) return;
+    setRejudging(true);
+    setRejudgeResult(null);
+    try {
+      const res = await apiFetch(
+        `${process.env.NEXT_PUBLIC_BE_URL}/api/admin/problems/${id}/rejudge`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Requested-By": "AlgoHaven" },
+          credentials: "include",
+          body: JSON.stringify({}),
+        },
+      );
+      const data = await res.json();
+      if (data.status === "success") {
+        setRejudgeResult(`Rejudge started: ${data.data.totalCount} submissions queued`);
+      } else {
+        setRejudgeResult(data.message || "Failed to start rejudge");
+      }
+    } catch (err) {
+      setRejudgeResult("Network error");
+    } finally {
+      setRejudging(false);
+    }
   };
 
   if (loading) {
@@ -454,6 +483,40 @@ else:
                 </div>
               </div>
             ))}
+          </div>
+        </Card>
+
+        <Card>
+          <SectionHeading>
+            Bulk Rejudge
+          </SectionHeading>
+
+          <div className="grid gap-4">
+            <p className="font-mono text-[13px] text-[var(--muted)]">
+              Rejudge all submissions for this problem. This will reset each submission to QUEUED and resend it to the worker.
+            </p>
+
+            {rejudgeResult && (
+              <div className={`font-mono text-[13px] p-3 rounded-sm border ${
+                rejudgeResult.includes("started")
+                  ? "text-[#4ade80] bg-[#0d2e16] border-[#1a5c2d]"
+                  : "text-[#ff4d4d] bg-[#2d0d0d] border-[#5c1a1a]"
+              }`}>
+                {rejudgeResult}
+              </div>
+            )}
+
+            <div>
+              <Button
+                variant="secondary"
+                type="button"
+                onClick={handleBulkRejudge}
+                disabled={rejudging}
+                className="text-[var(--accent)] border-[var(--accent)]"
+              >
+                {rejudging ? "Starting rejudge..." : "Rejudge All Submissions"}
+              </Button>
+            </div>
           </div>
         </Card>
 
