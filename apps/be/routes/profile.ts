@@ -165,7 +165,8 @@ export async function handleGetProfile(req: Request): Promise<Response> {
   const streak = calculateStreak(submissionDates);
 
   const heatmap: Record<string, { count: number; accepted: number }> = {};
-  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+  const yearAgo = new Date();
+  yearAgo.setFullYear(yearAgo.getFullYear() - 1);
   for (const sub of allSubmissionDates) {
     const date = sub.createdAt.toISOString().split("T")[0];
     if (!heatmap[date]) heatmap[date] = { count: 0, accepted: 0 };
