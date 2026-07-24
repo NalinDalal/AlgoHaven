@@ -407,6 +407,10 @@ export async function submitContestProblemSolution(
     });
     if (recentSub) return failure("Please wait before resubmitting", null, 429);
 
+    const judgePhase = contest.isPractice
+        ? JudgePhase.PRACTICE
+        : JudgePhase.CONTEST_PHASE1;
+
     const submission = await prisma.submission.create({
         data: {
             userId: user.id,
@@ -415,25 +419,34 @@ export async function submitContestProblemSolution(
             code,
             language,
             status: SubmissionStatus.QUEUED,
-            judgePhase: JudgePhase.CONTEST_PHASE1,
+            judgePhase,
         },
-        select: { id: true, status: true, createdAt: true },
+        select: { id: true, status: true, createdAt: true, judgePhase: true },
     });
 
     const problem = await prisma.problem.findUnique({
         where: { id: problemId },
-        select: { testCases: { select: { input: true, expectedOutput: true } } },
+        select: {
+            testCases: {
+                select: { input: true, expectedOutput: true, isSample: true },
+            },
+        },
     });
 
     if (problem) {
-        const testCases = problem.testCases.map((tc) => ({
-            input: tc.input,
-            expectedOutput: tc.expectedOutput,
-        }));
+        const isPhase1 = submission.judgePhase === JudgePhase.CONTEST_PHASE1;
+        const testCases = isPhase1
+            ? problem.testCases.filter((tc) => tc.isSample).map((tc) => ({
+                input: tc.input,
+                expectedOutput: tc.expectedOutput,
+            }))
+            : problem.testCases.map((tc) => ({
+                input: tc.input,
+                expectedOutput: tc.expectedOutput,
+            }));
         await sendToWorker(submission.id, code, language, testCases);
+        be.info({ submissionId: submission.id, contestId, problemId, userId: user.id, language, testCaseCount: testCases.length, judgePhase: submission.judgePhase }, "Contest submission created");
     }
-
-    be.info({ submissionId: submission.id, contestId, problemId, userId: user.id, language }, "Contest submission created");
     return success(
         "Submission created",
         { submission_id: submission.id, status: submission.status },
@@ -708,6 +721,27 @@ export async function createContest(req: Request): Promise<Response> {
             });
         } catch (err) {
             be.error({ contestId: contest.id, err }, "Failed to schedule rating calculation");
+        }
+    }
+
+    if (!contest.isPractice) {
+        try {
+            const ws = process.env.WORKER_SECRET;
+            const wu = process.env.WORKER_URL;
+            if (!ws || !wu) throw new Error("WORKER_SECRET and WORKER_URL required");
+            await fetch(`${wu}/api/worker/schedule-phase-transition`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "x-worker-secret": ws,
+                },
+                body: JSON.stringify({
+                    contestId: contest.id,
+                    endTime: contest.endTime.toISOString(),
+                }),
+            });
+        } catch (err) {
+            be.error({ contestId: contest.id, err }, "Failed to schedule judge phase transition");
         }
     }
 

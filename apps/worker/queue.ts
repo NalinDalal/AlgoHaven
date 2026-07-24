@@ -87,6 +87,17 @@ export interface RatingJobData {
   contestId: string;
 }
 
+export interface PhaseTransitionJobData {
+  contestId: string;
+}
+
+export interface PhaseTransitionJobResult {
+  contestId: string;
+  succeeded: number;
+  failed: number;
+  total: number;
+}
+
 export const ratingQueue = new Queue<RatingJobData>("ratings", {
   connection,
   defaultJobOptions: {
@@ -108,5 +119,31 @@ export async function scheduleRatingCalculation(
 
   const job = await ratingQueue.add("calculate-ratings", { contestId }, { delay });
   worker.info({ contestId, delayMs: delay }, "Rating calculation scheduled");
+  return job.id!;
+}
+
+export const phaseTransitionQueue = new Queue<PhaseTransitionJobData>(
+  "phase-transitions",
+  {
+    connection,
+    defaultJobOptions: {
+      attempts: 3,
+      backoff: { type: "exponential", delay: 5000 },
+      removeOnComplete: true,
+      removeOnFail: false,
+    },
+  },
+);
+
+export async function scheduleJudgePhaseTransition(
+  contestId: string,
+  contestEndTime: Date,
+): Promise<string> {
+  const now = Date.now();
+  const end = contestEndTime.getTime();
+  const delay = Math.max(0, end - now);
+
+  const job = await phaseTransitionQueue.add("transition", { contestId }, { delay });
+  worker.info({ contestId, delayMs: delay }, "Judge phase transition scheduled");
   return job.id!;
 }

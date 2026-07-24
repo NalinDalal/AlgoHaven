@@ -10,9 +10,11 @@ import {
     getActiveJob,
     submissionQueue,
     scheduleRatingCalculation,
+    scheduleJudgePhaseTransition,
     type JobData,
     type CompletedJob,
     type RatingJobData,
+    type PhaseTransitionJobData,
 } from "./queue";
 import { handleEnqueue, handleHealth } from "./api";
 
@@ -87,6 +89,23 @@ async function callCalculateRatings(contestId: string): Promise<void> {
     }
 }
 
+async function callTransitionJudgePhase(contestId: string): Promise<void> {
+    const res = await fetch(
+        `${BACKEND_URL}/api/worker/transition-judge-phase`,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "x-worker-secret": WORKER_SECRET,
+            },
+            body: JSON.stringify({ contestId }),
+        },
+    );
+    if (!res.ok) {
+        throw new Error(`Judge phase transition failed: ${res.status}`);
+    }
+}
+
 const server = serve({
     port: 3002,
     fetch(req: Request) {
@@ -106,6 +125,17 @@ const server = serve({
                     throw new Error("contestId and endTime are required");
                 }
                 const jobId = await scheduleRatingCalculation(contestId, new Date(endTime));
+                return jobId;
+            });
+        }
+
+        if (req.method === "POST" && url.pathname === "/api/worker/schedule-phase-transition") {
+            return handleEnqueue(req, WORKER_SECRET, async (body) => {
+                const { contestId, endTime } = body as { contestId: string; endTime: string };
+                if (!contestId || !endTime) {
+                    throw new Error("contestId and endTime are required");
+                }
+                const jobId = await scheduleJudgePhaseTransition(contestId, new Date(endTime));
                 return jobId;
             });
         }
@@ -229,6 +259,37 @@ ratingWorker.on("failed", (job, err) => {
 worker.info("BullMQ rating worker started");
 
 // -----------------------------------------------------------------------------
+// Judge Phase Transition Worker
+// -----------------------------------------------------------------------------
+
+const phaseTransitionWorker = new Worker<PhaseTransitionJobData>(
+    "phase-transitions",
+    async (job: Job<PhaseTransitionJobData>) => {
+        const { contestId } = job.data;
+        worker.info({ contestId }, "Processing judge phase transition");
+        await callTransitionJudgePhase(contestId);
+        worker.info({ contestId }, "Judge phase transition complete");
+    },
+    { connection },
+);
+
+phaseTransitionWorker.on("completed", (job) => {
+    worker.info(
+        { jobId: job.id, contestId: job.data.contestId },
+        "Phase transition completed",
+    );
+});
+
+phaseTransitionWorker.on("failed", (job, err) => {
+    worker.error(
+        { jobId: job?.id, err: err.message },
+        "Phase transition failed",
+    );
+});
+
+worker.info("BullMQ phase transition worker started");
+
+// -----------------------------------------------------------------------------
 // Graceful shutdown
 // -----------------------------------------------------------------------------
 
@@ -237,6 +298,7 @@ async function shutdown(signal: string) {
 
     await myWorker.close();
     await ratingWorker.close();
+    await phaseTransitionWorker.close();
 
     server.stop();
     worker.info("Shutdown complete");

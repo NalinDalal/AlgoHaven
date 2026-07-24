@@ -51,6 +51,7 @@ import {
   handleSubmissionStatus,
   handleWorkerUpdateSubmission,
   handleWorkerUpdatePlagiarism,
+  handleTransitionJudgePhaseWorker,
   handleRunSolution,
 } from "./routes/submission";
 
@@ -134,6 +135,8 @@ const routes: Record<string, Record<string, Handler>> = {
 
   // ---------------- WORKER ----------------
   "/api/worker/update-submission": { POST: handleWorkerUpdateSubmission },
+  "/api/worker/update-plagiarism": { POST: handleWorkerUpdatePlagiarism },
+  "/api/worker/transition-judge-phase": { POST: handleTransitionJudgePhaseWorker },
 
   // ---------------- CONTEST ----------------
   // NOTE: Static routes MUST come before dynamic routes.
@@ -160,7 +163,6 @@ const routes: Record<string, Record<string, Handler>> = {
   },
   "/api/contest/:id/calculate-ratings": { POST: handleCalculateRatings },
   "/api/contest/:id/submissions": { GET: getContestSubmissions },
-  "/api/worker/update-plagiarism": { POST: handleWorkerUpdatePlagiarism },
   "/api/plagiarism/:id/confirm": { POST: handleConfirmPlagiarism },
 
   // ---------------- ADMIN SUBMISSIONS ----------------

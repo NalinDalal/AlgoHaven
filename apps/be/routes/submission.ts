@@ -1,4 +1,4 @@
-import { prisma, SubmissionStatus } from "@algohaven/db";
+import { prisma, SubmissionStatus, JudgePhase } from "@algohaven/db";
 import { requireAuth } from "./auth";
 import { success, failure } from "@algohaven/utils";
 import { handleLeaderboardUpdate } from "./contest";
@@ -100,6 +100,7 @@ export async function handleSubmitSolution(req: Request): Promise<Response> {
       code,
       language,
       status: SubmissionStatus.QUEUED,
+      judgePhase: JudgePhase.PRACTICE,
     },
   });
 
@@ -223,4 +224,78 @@ export async function handleWorkerUpdatePlagiarism(
 
   be.info({ contestId, reportCount: reports.length }, "Plagiarism reports created");
   return success("Plagiarism reports created", { count: reports.length });
+}
+
+export async function handleTransitionJudgePhaseWorker(
+  req: Request,
+): Promise<Response> {
+  const workerSecret = req.headers.get("x-worker-secret");
+  if (workerSecret !== process.env.WORKER_SECRET) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
+  const { contestId } = (await req.json()) as { contestId?: string };
+  if (!contestId) return failure("contestId required", null, 400);
+
+  const contest = await prisma.contest.findUnique({
+    where: { id: contestId },
+    select: { isPractice: true },
+  });
+  if (!contest) return failure("Contest not found", null, 404);
+  if (contest.isPractice)
+    return success("Practice contest — no transition needed");
+
+  const submissions = await prisma.submission.findMany({
+    where: {
+      contestId,
+      judgePhase: JudgePhase.CONTEST_PHASE1,
+      status: SubmissionStatus.ACCEPTED,
+    },
+    select: { id: true, problemId: true, code: true, language: true },
+  });
+
+  if (submissions.length === 0) {
+    return success("No submissions to transition", { count: 0 });
+  }
+
+  const problemIds = [...new Set(submissions.map((s) => s.problemId))];
+  const testCases = await prisma.testCase.findMany({
+    where: { problemId: { in: problemIds } },
+    select: { problemId: true, input: true, expectedOutput: true },
+  });
+  const testCasesByProblem = new Map<string, { input: string; expectedOutput: string }[]>();
+  for (const tc of testCases) {
+    const arr = testCasesByProblem.get(tc.problemId) ?? [];
+    arr.push({ input: tc.input, expectedOutput: tc.expectedOutput });
+    testCasesByProblem.set(tc.problemId, arr);
+  }
+
+  const results = await Promise.allSettled(
+    submissions.map(async (sub) => {
+      await prisma.submission.update({
+        where: { id: sub.id },
+        data: {
+          judgePhase: JudgePhase.CONTEST_PHASE2,
+          status: SubmissionStatus.QUEUED,
+          points: 0,
+          wrongAttempts: 0,
+          executionTimeMs: null,
+          memoryUsedKb: null,
+          compilerOutput: null,
+          judgeOutput: null,
+        },
+      });
+
+      const problemTestCases = testCasesByProblem.get(sub.problemId) ?? [];
+      await sendToWorker(sub.id, sub.code, sub.language, problemTestCases);
+    }),
+  );
+
+  const succeeded = results.filter((r) => r.status === "fulfilled").length;
+  const failed = results.filter((r) => r.status === "rejected").length;
+
+  return success(
+    `Transitioned ${succeeded} submissions to phase 2${failed > 0 ? ` (${failed} failed)` : ""}`,
+    { succeeded, failed, total: submissions.length },
+  );
 }
