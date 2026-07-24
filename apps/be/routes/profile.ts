@@ -3,6 +3,42 @@ import { success, failure } from "@algohaven/utils";
 import { getRankTier, BADGES, type BadgeStats } from "@algohaven/utils";
 import { getUsernameParams } from "@algohaven/utils";
 
+function calculateStreak(submissionDates: Date[]): {
+  current: number;
+  longest: number;
+} {
+  if (submissionDates.length === 0) return { current: 0, longest: 0 };
+
+  const sorted = [...submissionDates].sort((a, b) => b.getTime() - a.getTime());
+  const uniqueDays = [
+    ...new Set(sorted.map((d) => d.toISOString().split("T")[0])),
+  ];
+
+  let current = 0;
+  let longest = 0;
+  let streak = 0;
+  const today = new Date().toISOString().split("T")[0];
+
+  for (let i = 0; i < uniqueDays.length; i++) {
+    const day = uniqueDays[i];
+    const expectedDate = new Date();
+    expectedDate.setDate(expectedDate.getDate() - i);
+    const expected = expectedDate.toISOString().split("T")[0];
+
+    if (day === expected || (i === 0 && day === today)) {
+      streak++;
+      if (i === 0) current = streak;
+    } else {
+      longest = Math.max(longest, streak);
+      streak = 1;
+      if (i === 0) current = 1;
+    }
+  }
+  longest = Math.max(longest, streak);
+
+  return { current, longest };
+}
+
 export async function handleGetProfile(req: Request): Promise<Response> {
   const { username } = getUsernameParams(req);
   if (!username) return failure("Username required", null, 400);
@@ -10,7 +46,7 @@ export async function handleGetProfile(req: Request): Promise<Response> {
   const user = await prisma.user.findUnique({ where: { username } });
   if (!user) return failure("User not found", null, 404);
 
-  const [submissions, ratingHistoryRaw, solvedProblemsData, contestStats] =
+  const [submissions, allSubmissionDates, ratingHistoryRaw, solvedProblemsData, contestStats] =
     await Promise.all([
       prisma.submission.findMany({
         where: { userId: user.id },
@@ -32,6 +68,11 @@ export async function handleGetProfile(req: Request): Promise<Response> {
             },
           },
         },
+      }),
+
+      prisma.submission.findMany({
+        where: { userId: user.id },
+        select: { createdAt: true, status: true },
       }),
 
       prisma.userRating.findMany({
@@ -120,12 +161,24 @@ export async function handleGetProfile(req: Request): Promise<Response> {
   const solvedCount = solvedProblemsData.length;
   const contestsEntered = contestStats.length;
 
+  const submissionDates = allSubmissionDates.map((s) => new Date(s.createdAt));
+  const streak = calculateStreak(submissionDates);
+
+  const heatmap: Record<string, { count: number; accepted: number }> = {};
+  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+  for (const sub of allSubmissionDates) {
+    const date = sub.createdAt.toISOString().split("T")[0];
+    if (!heatmap[date]) heatmap[date] = { count: 0, accepted: 0 };
+    heatmap[date].count++;
+    if (sub.status === SubmissionStatus.ACCEPTED) heatmap[date].accepted++;
+  }
+
   const stats: BadgeStats = {
     totalSubmissions,
     acceptedCount,
     solvedCount,
     difficultyBreakdown,
-    streak: { current: 0, longest: 0 },
+    streak,
     contestsEntered,
     ratingDelta,
   };
@@ -166,6 +219,10 @@ export async function handleGetProfile(req: Request): Promise<Response> {
     },
 
     badges: earnedBadges,
+
+    streak,
+
+    heatmap,
 
     recentSubmissions: submissions.map((s) => ({
       id: s.id,
