@@ -116,9 +116,8 @@ model Problem {
   slug       String     @unique
   difficulty Difficulty @default(MEDIUM)
 
-  // Statement — notionDocId is kept for MVP; move to `statement` field later
-  notionDocId String?
-  statement   String // markdown, populated once migrated off Notion
+  // Statement
+  statement   String // markdown
 
   editorial String? // markdown, published after contest ends
   tags      String[] // e.g. ["dp", "graphs", "binary-search"]
