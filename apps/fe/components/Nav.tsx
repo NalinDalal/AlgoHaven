@@ -7,8 +7,6 @@ import { apiFetch } from "@/lib/apiFetch";
 const navLinks = [
     { href: "/problems", label: "Problems" },
     { href: "/contests", label: "Contests" },
-    { href: "/leaderboard", label: "Leaderboard" },
-    { href: "/editorial", label: "Editorial" },
     { href: "/admin", label: "Admin" },
 ];
 
