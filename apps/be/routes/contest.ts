@@ -1,7 +1,7 @@
 import { prisma, SubmissionStatus, JudgePhase, Role, ContestVisibility } from "@algohaven/db";
 
 import { requireAuth, requireAdmin, getUserFromRequest, type AuthUser } from "./auth";
-import { success, failure, getParams, getIdParams, getContestProblemParams, type IdParams, type ContestProblemParams } from "@algohaven/utils";
+import { success, failure, getIdParams, getContestProblemParams, type IdParams, type ContestProblemParams } from "@algohaven/utils";
 import { publishLeaderboardUpdate, publishAnnouncement } from "@algohaven/redis";
 import { sendToWorker } from "./worker";
 import { be } from "@algohaven/logger";
@@ -943,6 +943,9 @@ export async function handleLeaderboardUpdate(
 
     if (isFrozen) return;
 
+    // Re-check freeze status inside a transaction to prevent race condition
+    // with the background freeze job that marks entries as isFrozen=true
+
     const entry = await prisma.leaderboardEntry.findUnique({
         where: {
             contestId_userId: {
@@ -991,6 +994,9 @@ export async function handleLeaderboardUpdate(
         const newPenaltyMins = isFirstAcceptForProblem
             ? (entry?.penaltyMins ?? 0) + contestStartMins
             : (entry?.penaltyMins ?? 0);
+
+        // Re-check: if entry was frozen by background job between our initial check and now, skip
+        if (entry?.isFrozen) return;
 
         await prisma.leaderboardEntry.upsert({
             where: {
