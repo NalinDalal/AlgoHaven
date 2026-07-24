@@ -21,15 +21,15 @@ export function getParams(req: Request): RouteParams {
 
 export function getIdParams(req: Request): IdParams {
   const params = getParams(req);
-  return { id: params.id };
+  return { id: params.id! };
 }
 
 export function getContestProblemParams(req: Request): ContestProblemParams {
   const params = getParams(req);
-  return { id: params.id, problemId: params.problemId };
+  return { id: params.id!, problemId: params.problemId! };
 }
 
 export function getUsernameParams(req: Request): UsernameParams {
   const params = getParams(req);
-  return { username: params.username };
+  return { username: params.username! };
 }

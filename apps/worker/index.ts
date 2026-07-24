@@ -22,8 +22,8 @@ import { config } from "dotenv";
 import path from "node:path";
 
 interface ScheduleRatingBody {
-    contestId?: string;
-    endTime?: string;
+  contestId: string;
+  endTime: string;
 }
 
 // The worker must be started with the backend URL and shared worker secret

@@ -16,6 +16,7 @@
     "build": "bunx tsc --noEmit -p tsconfig.json",
     "lint": "eslint . --max-warnings 0",
     "dev": "bun --env-file=../../.env --env-file=../../.env run index.ts"
+,"check-types": "tsc --noEmit"
   },
   "dependencies": {
     "@algohaven/auth": "workspace:*",
