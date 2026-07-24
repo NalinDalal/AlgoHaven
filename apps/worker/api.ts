@@ -36,15 +36,11 @@ export function validateEnqueueRequest(body: unknown): {
   return { valid: true, data };
 }
 
-export async function handleEnqueue(
+export async function handleEnqueue<TBody>(
   req: Request,
   authSecret: string,
-  enqueueFn: (job: {
-    submissionId: string;
-    code: string;
-    language: string;
-    testCases: { input: string; expectedOutput: string }[];
-  }) => Promise<string>,
+  validateFn: (body: unknown) => { valid: boolean; error?: string; data?: TBody },
+  enqueueFn: (job: TBody) => Promise<string>,
 ): Promise<Response> {
   const authHeader = req.headers.get("x-worker-secret");
   if (!authHeader || authHeader !== authSecret) {
@@ -64,7 +60,7 @@ export async function handleEnqueue(
     });
   }
 
-  const validation = validateEnqueueRequest(body);
+  const validation = validateFn(body);
   if (!validation.valid) {
     worker.warn({ error: validation.error }, "Enqueue validation failed");
     return new Response(JSON.stringify({ error: validation.error }), {

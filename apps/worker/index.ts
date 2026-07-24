@@ -16,7 +16,7 @@ import {
     type RatingJobData,
     type PhaseTransitionJobData,
 } from "./queue";
-import { handleEnqueue, handleHealth } from "./api";
+import { handleEnqueue, handleHealth, validateEnqueueRequest } from "./api";
 
 import { config } from "dotenv";
 import path from "node:path";
@@ -112,19 +112,21 @@ const server = serve({
         const url = new URL(req.url);
 
         if (req.method === "POST" && url.pathname === "/api/worker/enqueue") {
-            return handleEnqueue(req, WORKER_SECRET, async (jobData) => {
+            return handleEnqueue(req, WORKER_SECRET, validateEnqueueRequest, async (jobData) => {
                 const jobId = await enqueueSubmission(jobData as JobData);
                 return jobId;
             });
         }
 
         if (req.method === "POST" && url.pathname === "/api/worker/schedule-rating") {
-            return handleEnqueue(req, WORKER_SECRET, async (body) => {
-                const { contestId, endTime } = body as ScheduleRatingBody;
-                if (!contestId || !endTime) {
-                    throw new Error("contestId and endTime are required");
+            return handleEnqueue(req, WORKER_SECRET, (body) => {
+                const data = body as ScheduleRatingBody;
+                if (!data.contestId || !data.endTime) {
+                    return { valid: false, error: "contestId and endTime are required" };
                 }
-                const jobId = await scheduleRatingCalculation(contestId, new Date(endTime));
+                return { valid: true, data };
+            }, async (body) => {
+                const jobId = await scheduleRatingCalculation(body.contestId, new Date(body.endTime));
                 return jobId;
             });
         }
