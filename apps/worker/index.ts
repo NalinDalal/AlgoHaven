@@ -132,12 +132,14 @@ const server = serve({
         }
 
         if (req.method === "POST" && url.pathname === "/api/worker/schedule-phase-transition") {
-            return handleEnqueue(req, WORKER_SECRET, async (body) => {
-                const { contestId, endTime } = body as { contestId: string; endTime: string };
-                if (!contestId || !endTime) {
-                    throw new Error("contestId and endTime are required");
+            return handleEnqueue(req, WORKER_SECRET, (body) => {
+                const data = body as { contestId: string; endTime: string };
+                if (!data.contestId || !data.endTime) {
+                    return { valid: false, error: "contestId and endTime are required" };
                 }
-                const jobId = await scheduleJudgePhaseTransition(contestId, new Date(endTime));
+                return { valid: true, data };
+            }, async (body) => {
+                const jobId = await scheduleJudgePhaseTransition(body.contestId, new Date(body.endTime));
                 return jobId;
             });
         }
