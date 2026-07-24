@@ -9,15 +9,16 @@ const CENTERED_SCREEN_CLASS =
 function DevLoginContent() {
     const searchParams = useSearchParams();
     const email = searchParams.get("email") || "admin@test.com";
+    const secret = searchParams.get("secret") || "";
     useEffect(() => {
         apiFetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/auth/dev-login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email }),
+            body: JSON.stringify({ email, secret }),
         }).then(() => {
             window.location.href = "/admin";
         });
-    }, [email]);
+    }, [email, secret]);
     return (
         <div className={CENTERED_SCREEN_CLASS}>
             Logging in as {email}...
