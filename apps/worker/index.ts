@@ -1,6 +1,6 @@
 import { serve } from "bun";
 import { Worker, type Job } from "bullmq";
-import { runCode } from "./docker";
+import { runCode, runChecker } from "./docker";
 import { checkContestPlagiarism } from "./plagiarism";
 import { worker } from "@algohaven/logger";
 import { validateEnv } from "@algohaven/utils";
@@ -166,7 +166,7 @@ worker.info(
 const myWorker = new Worker<JobData, CompletedJob>(
     "submissions",
     async (job: Job<JobData, CompletedJob>) => {
-        const { submissionId, code, language, testCases, judgePhase } = job.data;
+        const { submissionId, code, language, testCases, judgePhase, hasCustomChecker, checkerCode } = job.data;
 
         worker.info(
             {
@@ -196,6 +196,18 @@ const myWorker = new Worker<JobData, CompletedJob>(
                     "Test case RUNTIME_ERROR",
                 );
                 allAccepted = false;
+            } else if (hasCustomChecker && checkerCode) {
+                const checkerResult = await runChecker(checkerCode, testCase.input, actual, expected);
+                totalTime += checkerResult.executionTimeMs;
+                if (checkerResult.accepted) {
+                    worker.debug({ submissionId }, "Test case ACCEPTED (custom checker)");
+                } else {
+                    worker.warn(
+                        { submissionId, message: checkerResult.message },
+                        "Test case WRONG_ANSWER (custom checker)",
+                    );
+                    allAccepted = false;
+                }
             } else if (actual === expected) {
                 worker.debug({ submissionId }, "Test case ACCEPTED");
             } else {

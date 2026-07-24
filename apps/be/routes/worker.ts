@@ -18,6 +18,8 @@ export async function sendToWorker(
   language: string,
   testCases: { input: string; expectedOutput: string }[],
   judgePhase: string,
+  hasCustomChecker: boolean = false,
+  checkerCode?: string,
 ) {
   try {
     const res = await fetch(`${getWorkerUrl()}/api/worker/enqueue`, {
@@ -32,6 +34,8 @@ export async function sendToWorker(
         language,
         testCases,
         judgePhase,
+        hasCustomChecker,
+        checkerCode,
       }),
     });
     if (!res.ok) {

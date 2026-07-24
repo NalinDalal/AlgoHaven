@@ -85,7 +85,11 @@ export async function handleSubmitSolution(req: Request): Promise<Response> {
   // Get test cases for the problem
   const problem = await prisma.problem.findUnique({
     where: { id: problemId },
-    include: { testCases: true },
+    select: {
+      testCases: true,
+      hasCustomChecker: true,
+      checkerCode: true,
+    },
   });
 
   if (!problem) {
@@ -109,7 +113,15 @@ export async function handleSubmitSolution(req: Request): Promise<Response> {
     expectedOutput: tc.expectedOutput,
   }));
 
-  await sendToWorker(submission.id, code, language, testCases, JudgePhase.PRACTICE);
+  await sendToWorker(
+    submission.id,
+    code,
+    language,
+    testCases,
+    JudgePhase.PRACTICE,
+    problem?.hasCustomChecker ?? false,
+    problem?.checkerCode ?? undefined,
+  );
 
   be.info({ submissionId: submission.id, problemId, userId: user.id, language, testCaseCount: testCases.length }, "Submission created");
   return success(
@@ -286,6 +298,15 @@ export async function handleTransitionJudgePhaseWorker(
     testCasesByProblem.set(tc.problemId, arr);
   }
 
+  const problems = await prisma.problem.findMany({
+    where: { id: { in: problemIds } },
+    select: { id: true, hasCustomChecker: true, checkerCode: true },
+  });
+  const checkerByProblem = new Map<string, { hasCustomChecker: boolean; checkerCode: string | null }>();
+  for (const p of problems) {
+    checkerByProblem.set(p.id, p);
+  }
+
   const results = await Promise.allSettled(
     submissions.map(async (sub) => {
       await prisma.submission.update({
@@ -303,7 +324,16 @@ export async function handleTransitionJudgePhaseWorker(
       });
 
       const problemTestCases = testCasesByProblem.get(sub.problemId) ?? [];
-      await sendToWorker(sub.id, sub.code, sub.language, problemTestCases, JudgePhase.CONTEST_PHASE2);
+      const checker = checkerByProblem.get(sub.problemId);
+      await sendToWorker(
+        sub.id,
+        sub.code,
+        sub.language,
+        problemTestCases,
+        JudgePhase.CONTEST_PHASE2,
+        checker?.hasCustomChecker ?? false,
+        checker?.checkerCode ?? undefined,
+      );
     }),
   );
 

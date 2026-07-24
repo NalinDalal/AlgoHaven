@@ -9,6 +9,12 @@ export interface ExecutionResult {
   executionTimeMs: number;
 }
 
+export interface CheckerResult {
+  accepted: boolean;
+  message: string;
+  executionTimeMs: number;
+}
+
 function buildDockerCommand(
   code: string,
   input: string,
@@ -176,6 +182,68 @@ export async function runCode(
       status: "RUNTIME_ERROR",
       stdout: "",
       stderr: errMsg,
+      executionTimeMs,
+    };
+  }
+}
+
+export async function runChecker(
+  checkerCode: string,
+  input: string,
+  actualOutput: string,
+  expectedOutput: string,
+): Promise<CheckerResult> {
+  const checkerInput = `${input}\n${actualOutput}\n${expectedOutput}`;
+  const checkerB64 = toBase64(checkerCode);
+  const inputB64 = toBase64(checkerInput);
+  const checkerFilePath = `/tmp/checker.py`;
+
+  const cmd = [
+    "docker",
+    "run",
+    ...DOCKER_OPTIONS,
+    "-i",
+    "python:3.11-slim",
+    "bash",
+    "-c",
+    `printf '%s' '${checkerB64}' | base64 -d > ${checkerFilePath} && printf '%s' '${inputB64}' | base64 -d | python3 ${checkerFilePath}`,
+  ];
+
+  const startTime = Date.now();
+
+  try {
+    const proc = Bun.spawn(cmd);
+
+    const exitCode = await new Promise<number>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        proc.kill();
+        reject(new Error("TLE"));
+      }, 5000);
+
+      proc.exited.then((code) => {
+        clearTimeout(timeout);
+        resolve(code);
+      });
+    });
+
+    const stdout = await new Response(proc.stdout).text();
+    const stderr = await new Response(proc.stderr).text();
+    const executionTimeMs = Date.now() - startTime;
+
+    return {
+      accepted: exitCode === 0,
+      message: exitCode === 0
+        ? "Accepted by custom checker"
+        : `Rejected by custom checker: ${stderr.trim() || stdout.trim() || "non-zero exit"}`,
+      executionTimeMs,
+    };
+  } catch (error: unknown) {
+    const errMsg = error instanceof Error ? error.message : "Checker execution failed";
+    const executionTimeMs = Date.now() - startTime;
+    worker.error({ error: errMsg, executionTimeMs }, "Custom checker execution error");
+    return {
+      accepted: false,
+      message: `Checker error: ${errMsg}`,
       executionTimeMs,
     };
   }

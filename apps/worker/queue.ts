@@ -13,6 +13,8 @@ export interface JobData {
   language: string;
   testCases: TestCase[];
   judgePhase: string;
+  hasCustomChecker: boolean;
+  checkerCode?: string;
 }
 
 export interface CompletedJob {

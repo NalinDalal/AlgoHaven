@@ -7,6 +7,8 @@ export interface EnqueueRequest {
   language: string;
   testCases: { input: string; expectedOutput: string }[];
   judgePhase: string;
+  hasCustomChecker: boolean;
+  checkerCode?: string;
 }
 
 export function validateEnqueueRequest(body: unknown): {

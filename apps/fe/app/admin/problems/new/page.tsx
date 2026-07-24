@@ -26,6 +26,8 @@ export default function NewProblemPage() {
     timeLimitMs: 2000,
     memoryLimitKb: 262144,
     isPublic: false,
+    hasCustomChecker: false,
+    checkerCode: "",
   });
 
   const [testCases, setTestCases] = useState<TestCase[]>([
@@ -214,6 +216,58 @@ export default function NewProblemPage() {
                 </span>
               </label>
             </div>
+          </div>
+        </Card>
+
+        <Card>
+          <SectionHeading>Custom Checker (Optional)</SectionHeading>
+
+          <div className="grid gap-4">
+            <div>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.hasCustomChecker}
+                  onChange={(e) =>
+                    setForm({ ...form, hasCustomChecker: e.target.checked })
+                  }
+                  className="w-4 h-4"
+                />
+                <span className="font-mono text-[13px]">
+                  Enable custom checker
+                </span>
+              </label>
+              <span className="block font-mono text-[11px] text-[var(--muted)] mt-1">
+                Use this for problems with multiple valid outputs. The checker receives input, actual output, and expected output on stdin. Exit 0 for accepted, non-zero for rejected.
+              </span>
+            </div>
+
+            {form.hasCustomChecker && (
+              <div>
+                <label className="block font-mono text-xs text-[var(--muted)] mb-2">
+                  Checker Code (Python) <span className="text-[var(--red)]">*</span>
+                </label>
+                <Textarea
+                  value={form.checkerCode}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                    setForm({ ...form, checkerCode: e.target.value })
+                  }
+                  placeholder={`import sys
+
+input_data = sys.stdin.readline().strip()
+actual_output = sys.stdin.readline().strip()
+expected_output = sys.stdin.readline().strip()
+
+# Your comparison logic here
+if actual_output == expected_output:
+    sys.exit(0)  # Accepted
+else:
+    sys.exit(1)  # Rejected`}
+                  className="min-h-[200px] font-mono"
+                  required
+                />
+              </div>
+            )}
           </div>
         </Card>
 
