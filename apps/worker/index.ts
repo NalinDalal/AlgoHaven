@@ -7,7 +7,6 @@ import { validateEnv } from "@algohaven/utils";
 import {
     enqueueSubmission,
     getQueueLength,
-    getActiveJob,
     submissionQueue,
     scheduleRatingCalculation,
     scheduleJudgePhaseTransition,
