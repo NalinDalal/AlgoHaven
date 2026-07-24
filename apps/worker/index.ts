@@ -55,6 +55,7 @@ async function updateSubmission(
     submissionId: string,
     status: string,
     executionTimeMs: number,
+    judgePhase: string,
 ): Promise<void> {
     const res = await fetch(`${BACKEND_URL}/api/worker/update-submission`, {
         method: "POST",
@@ -66,6 +67,7 @@ async function updateSubmission(
             submissionId,
             status,
             executionTimeMs,
+            judgePhase,
         }),
     });
     if (!res.ok) {
@@ -164,7 +166,7 @@ worker.info(
 const myWorker = new Worker<JobData, CompletedJob>(
     "submissions",
     async (job: Job<JobData, CompletedJob>) => {
-        const { submissionId, code, language, testCases } = job.data;
+        const { submissionId, code, language, testCases, judgePhase } = job.data;
 
         worker.info(
             {
@@ -215,9 +217,9 @@ const myWorker = new Worker<JobData, CompletedJob>(
             "Submission final result",
         );
 
-        await updateSubmission(submissionId, finalStatus, totalTime);
+        await updateSubmission(submissionId, finalStatus, totalTime, judgePhase);
 
-        return { id: job.id!, submissionId, status: finalStatus, executionTimeMs: totalTime };
+        return { id: job.id!, submissionId, status: finalStatus, executionTimeMs: totalTime, judgePhase };
     },
     { connection },
 );

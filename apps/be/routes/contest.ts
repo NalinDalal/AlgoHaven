@@ -444,7 +444,7 @@ export async function submitContestProblemSolution(
                 input: tc.input,
                 expectedOutput: tc.expectedOutput,
             }));
-        await sendToWorker(submission.id, code, language, testCases);
+        await sendToWorker(submission.id, code, language, testCases, submission.judgePhase);
         be.info({ submissionId: submission.id, contestId, problemId, userId: user.id, language, testCaseCount: testCases.length, judgePhase: submission.judgePhase }, "Contest submission created");
     }
     return success(

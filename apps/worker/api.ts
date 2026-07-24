@@ -6,6 +6,7 @@ export interface EnqueueRequest {
   code: string;
   language: string;
   testCases: { input: string; expectedOutput: string }[];
+  judgePhase: string;
 }
 
 export function validateEnqueueRequest(body: unknown): {

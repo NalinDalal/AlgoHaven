@@ -1,4 +1,4 @@
-import { prisma, SubmissionStatus } from "@algohaven/db";
+import { prisma, SubmissionStatus, JudgePhase } from "@algohaven/db";
 import { requireAdmin } from "./auth";
 import { success, failure, getIdParams } from "@algohaven/utils";
 import { sendToWorker } from "./worker";
@@ -91,6 +91,8 @@ export async function handleAdminRejudgeSubmission(
 
   if (!submission) return failure("Submission not found", null, 404);
 
+  const judgePhase = submission.judgePhase;
+
   // Reset submission to QUEUED
   await prisma.submission.update({
     where: { id: submissionId },
@@ -115,6 +117,7 @@ export async function handleAdminRejudgeSubmission(
     submission.code,
     submission.language,
     testCases,
+    judgePhase,
   );
 
   if (!enqueued) {

@@ -12,6 +12,7 @@ export interface JobData {
   code: string;
   language: string;
   testCases: TestCase[];
+  judgePhase: string;
 }
 
 export interface CompletedJob {
@@ -19,6 +20,7 @@ export interface CompletedJob {
   submissionId: string;
   status: string;
   executionTimeMs: number;
+  judgePhase: string;
 }
 
 const connection = {
@@ -69,6 +71,7 @@ export async function getCompletedJobs(): Promise<CompletedJob[]> {
       submissionId: job.data.submissionId,
       status: (job.returnvalue as CompletedJob)?.status || "UNKNOWN",
       executionTimeMs: (job.returnvalue as CompletedJob)?.executionTimeMs || 0,
+      judgePhase: job.data.judgePhase,
     })),
   );
 }

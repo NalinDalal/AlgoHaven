@@ -50,7 +50,7 @@ export async function handleRunSolution(req: Request): Promise<Response> {
     expectedOutput: tc.expectedOutput,
   }));
 
-  const enqueued = await sendToWorker(runId, code, language, testCases);
+  const enqueued = await sendToWorker(runId, code, language, testCases, JudgePhase.PRACTICE);
 
   if (!enqueued) {
     be.error({ problemId, userId: authResult.user.id }, "Failed to enqueue run");
@@ -109,7 +109,7 @@ export async function handleSubmitSolution(req: Request): Promise<Response> {
     expectedOutput: tc.expectedOutput,
   }));
 
-  await sendToWorker(submission.id, code, language, testCases);
+  await sendToWorker(submission.id, code, language, testCases, JudgePhase.PRACTICE);
 
   be.info({ submissionId: submission.id, problemId, userId: user.id, language, testCaseCount: testCases.length }, "Submission created");
   return success(
@@ -147,6 +147,7 @@ interface WorkerUpdateBody {
   points?: number;
   executionTimeMs?: number;
   memoryUsedKb?: number;
+  judgePhase?: string;
 }
 
 export async function handleWorkerUpdateSubmission(
@@ -158,10 +159,25 @@ export async function handleWorkerUpdateSubmission(
   }
 
   const body = (await req.json()) as WorkerUpdateBody;
-  const { submissionId, status, points, executionTimeMs, memoryUsedKb } = body;
+  const { submissionId, status, points, executionTimeMs, memoryUsedKb, judgePhase } = body;
 
   if (!submissionId || !status) {
     return failure("submissionId and status required", null, 400);
+  }
+
+  // Phase guard: discard stale updates from a previous judge phase
+  const current = await prisma.submission.findUnique({
+    where: { id: submissionId },
+    select: { judgePhase: true },
+  });
+  if (!current) return failure("Submission not found", null, 404);
+
+  if (judgePhase && current.judgePhase !== judgePhase) {
+    be.warn(
+      { submissionId, currentPhase: current.judgePhase, stalePhase: judgePhase },
+      "Discarding stale worker update from previous judge phase",
+    );
+    return success("Update discarded — stale judge phase", { submissionId });
   }
 
   await prisma.submission.update({
@@ -287,7 +303,7 @@ export async function handleTransitionJudgePhaseWorker(
       });
 
       const problemTestCases = testCasesByProblem.get(sub.problemId) ?? [];
-      await sendToWorker(sub.id, sub.code, sub.language, problemTestCases);
+      await sendToWorker(sub.id, sub.code, sub.language, problemTestCases, JudgePhase.CONTEST_PHASE2);
     }),
   );
 

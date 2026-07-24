@@ -17,6 +17,7 @@ export async function sendToWorker(
   code: string,
   language: string,
   testCases: { input: string; expectedOutput: string }[],
+  judgePhase: string,
 ) {
   try {
     const res = await fetch(`${getWorkerUrl()}/api/worker/enqueue`, {
@@ -30,6 +31,7 @@ export async function sendToWorker(
         code,
         language,
         testCases,
+        judgePhase,
       }),
     });
     if (!res.ok) {
