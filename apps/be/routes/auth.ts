@@ -1,7 +1,7 @@
 import { prisma, type Role } from "@algohaven/db";
 import {
   generateSessionToken,
-  hashToken,
+  hashSessionToken,
   hashPassword,
   verifyPassword,
 } from "@algohaven/auth";
@@ -184,7 +184,7 @@ export async function handleSignout(req: Request): Promise<Response> {
   const token = getSessionTokenFromRequest(req);
   if (token) {
     await prisma.session.updateMany({
-      where: { tokenHash: hashToken(token) },
+      where: { tokenHash: hashSessionToken(token) },
       data: { revokedAt: new Date() },
     });
     auth.info("User signed out");
@@ -261,7 +261,7 @@ export async function getUserFromRequest(req: Request) {
   if (!token) return null;
 
   const session = await prisma.session.findUnique({
-    where: { tokenHash: hashToken(token) },
+    where: { tokenHash: hashSessionToken(token) },
     include: {
       user: {
         select: {

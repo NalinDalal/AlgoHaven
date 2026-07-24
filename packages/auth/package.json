@@ -5,15 +5,13 @@
   "private": true,
   "devDependencies": {
     "@types/bcryptjs": "^3.0.0",
-    "@types/bun": "latest",
-    "@types/nodemailer": "^7.0.11"
+    "@types/bun": "latest"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
     "@algohaven/logger": "workspace:*",
-    "bcryptjs": "^3.0.3",
-    "nodemailer": "^8.0.1"
+    "bcryptjs": "^3.0.3"
   }
 }

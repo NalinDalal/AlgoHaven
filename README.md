@@ -59,19 +59,17 @@ http://localhost:3000/dev-login
 
 ## Auth
 
-- Magic link (email-based) auth
+- Password-based authentication
 - Session management with HttpOnly cookies
 - Role-based access (USER/ADMIN)
 
 ### API Endpoints
 
-| Endpoint               | Method | Description                  |
-| ---------------------- | ------ | ---------------------------- |
-| `/api/auth/magic-link` | POST   | Request magic link           |
-| `/api/auth/verify`     | GET    | Verify token, create session |
-| `/api/auth/signout`    | POST   | Sign out                     |
-| `/api/auth/me`         | GET    | Get current user             |
-| `/api/auth/dev-login`  | POST   | Dev-only quick login         |
+| Endpoint              | Method | Description           |
+| --------------------- | ------ | --------------------- |
+| `/api/auth/signout`   | POST   | Sign out              |
+| `/api/auth/me`        | GET    | Get current user      |
+| `/api/auth/dev-login` | POST   | Dev-only quick login  |
 
 ### Response Format
 
@@ -97,7 +95,6 @@ All API responses use consistent format:
 | ------------------ | ---------------------------------------------------------------------------------------- |
 | `User`             | `id`, `email`, `role` (USER/ADMIN), `username`                                           |
 | `Session`          | `id`, `tokenHash`, `userId`, `expiresAt`                                                 |
-| `MagicLinkToken`   | `id`, `email`, `tokenHash`, `expiresAt`                                                  |
 | `Problem`          | `id`, `title`, `slug`, `difficulty`, `statement`, `tags`, `timeLimitMs`, `memoryLimitKb` |
 | `TestCase`         | `id`, `problemId`, `input`, `expectedOutput`, `isSample`, `points`                       |
 | `Contest`          | `id`, `title`, `slug`, `startTime`, `endTime`, `visibility`, `isRated`, `freezeTime`     |
@@ -226,7 +223,6 @@ curl -X POST http://localhost:3002/api/worker/enqueue \
 
 ### Completed ✅
 
-- [x] Magic link authentication
 - [x] Session management
 - [x] Problem CRUD (backend + frontend)
 - [x] Problem delete endpoint
