@@ -84,6 +84,7 @@ model User {
 
   submissions        Submission[]
   leaderboardEntries LeaderboardEntry[]
+  snapshots          LeaderboardSnapshot[]
   sessions           Session[]
   ratings            UserRating[]
   rejudgesTriggered  RejudgeJob[]       @relation("triggeredBy")
@@ -178,6 +179,7 @@ model Contest {
   problems      ContestProblem[]
   submissions   Submission[]
   leaderboard   LeaderboardEntry[]
+  snapshots     LeaderboardSnapshot[]
   announcements ContestAnnouncement[]
   ratings       UserRating[]
 
@@ -276,6 +278,27 @@ model LeaderboardEntry {
 
   @@unique([contestId, userId])
   @@index([contestId, totalPoints, penaltyMins]) // composite index for ranking queries
+}
+
+// LeaderboardSnapshot stores an immutable copy of the leaderboard at freeze time.
+// Used to serve a stable snapshot to non-admins during and after the freeze window.
+model LeaderboardSnapshot {
+  id        String @id @default(uuid())
+  contestId String
+  userId    String
+
+  totalPoints  Int
+  solved       Int
+  penaltyMins  Int
+  lastSolvedAt DateTime?
+
+  snapshotTime DateTime @default(now())
+
+  contest Contest @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([contestId, userId])
+  @@index([contestId])
 }
 
 // Ratings- UserRating stores rating changes for a user after a Contest.

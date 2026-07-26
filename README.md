@@ -65,11 +65,11 @@ http://localhost:3000/dev-login
 
 ### API Endpoints
 
-| Endpoint              | Method | Description           |
-| --------------------- | ------ | --------------------- |
-| `/api/auth/signout`   | POST   | Sign out              |
-| `/api/auth/me`        | GET    | Get current user      |
-| `/api/auth/dev-login` | POST   | Dev-only quick login  |
+| Endpoint              | Method | Description          |
+| --------------------- | ------ | -------------------- |
+| `/api/auth/signout`   | POST   | Sign out             |
+| `/api/auth/me`        | GET    | Get current user     |
+| `/api/auth/dev-login` | POST   | Dev-only quick login |
 
 ### Response Format
 
@@ -99,11 +99,12 @@ All API responses use consistent format:
 | `TestCase`         | `id`, `problemId`, `input`, `expectedOutput`, `isSample`, `points`                       |
 | `Contest`          | `id`, `title`, `slug`, `startTime`, `endTime`, `visibility`, `isRated`, `freezeTime`     |
 | `ContestProblem`   | `id`, `contestId`, `problemId`, `index`, `points`                                        |
-| `Submission`       | `id`, `userId`, `problemId`, `contestId`, `code`, `language`, `status`                   |
-| `LeaderboardEntry` | `id`, `contestId`, `userId`, `totalPoints`, `solved`, `penaltyMins`                      |
+| `Submission`       | `id`, `userId`, `problemId`, `contestId`, `code`, `language`, `status`, `judgePhase`     |
+| `LeaderboardEntry` | `id`, `contestId`, `userId`, `totalPoints`, `solved`, `penaltyMins`, `isFrozen`          |
+| `LeaderboardSnapshot` | `id`, `contestId`, `userId`, `totalPoints`, `solved`, `penaltyMins`, `snapshotTime`  |
 | `UserRating`       | `id`, `userId`, `contestId`, `ratingBefore`, `ratingAfter`, `rank`                       |
 | `PlagiarismReport` | `id`, `submissionId`, `similarityScore`, `status`                                        |
-| `RejudgeJob`       | `id`, `problemId`, `contestId`, `status`                                                 |
+| `RejudgeJob`       | `id`, `problemId`, `contestId`, `submissionId`, `status`                                 |
 
 ### Enums
 
@@ -164,6 +165,7 @@ model TestCase {
 | `/api/contest/:id/leaderboard`   | GET      | -       | Get leaderboard          |
 | `/api/contest/:id/ratings`       | GET      | -       | Get ratings              |
 | `/api/contest/:id/announcements` | GET/POST | -/ADMIN | Get/create announcements |
+| `/api/contest/:id/freeze`        | POST     | Worker  | Freeze leaderboard       |
 
 ### Submissions
 
@@ -173,10 +175,15 @@ model TestCase {
 
 ### Worker (port 3002)
 
-| Endpoint              | Method | Auth | Description              |
-| --------------------- | ------ | ---- | ------------------------ |
-| `/api/worker/health`  | GET    | -    | Worker health check      |
-| `/api/worker/enqueue` | POST   | -    | Enqueue code for execute |
+| Endpoint                                | Method | Auth | Description                     |
+| --------------------------------------- | ------ | ---- | ------------------------------- |
+| `/api/worker/health`                    | GET    | -    | Worker health check             |
+| `/api/worker/enqueue`                   | POST   | -    | Enqueue code for execute        |
+| `/api/worker/update-submission`         | POST   | -    | Update submission result        |
+| `/api/worker/schedule-rating`           | POST   | -    | Schedule rating calc job        |
+| `/api/worker/schedule-phase-transition` | POST   | -    | Schedule phase 1→2 job          |
+| `/api/worker/schedule-freeze`           | POST   | -    | Schedule leaderboard freeze job |
+| `/api/worker/transition-judge-phase`    | POST   | -    | Transition phase 1→2            |
 
 ---
 
@@ -210,12 +217,7 @@ curl -X POST http://localhost:3002/api/worker/enqueue \
 
 ## Next Steps
 
-1. **Add more languages** - Extend worker to support C++, Java, Go
-2. **Problem/contest edit** - Add PUT endpoints for editing
-3. **User dashboard** - Add analytics and submission history
-4. **Rating system** - Calculate and update ratings after contests
-5. **Plagiarism detection** - Compare submissions for similarity
-6. **Virtual contests** - Allow practice mode on past contests
+1. **Deploy** — Containerize worker with Docker and provision a production Postgres/Redis instance
 
 ---
 
@@ -244,12 +246,14 @@ curl -X POST http://localhost:3002/api/worker/enqueue \
 - [x] Problem/contest edit functionality
 - [x] Add more languages (C++, Java, Go)
 - [x] Virtual contests (practice mode on past contests)
-
-### Todo 📋
-
+- [x] Two-phase contest evaluation (sample → full test suite)
+- [x] Custom checker execution
+- [x] Leaderboard freeze automation
+- [x] Public profile streak + heatmap
+- [x] RejudgeJob workflow
 - [x] Rating system post-contest (automated 3-day delay via BullMQ)
 - [x] Plagiarism detection (hash-based, runs after contest ends)
-- [x] Virtual contests
+- [x] Persist freeze snapshot (immutable leaderboard at freeze time)
 
 ---
 

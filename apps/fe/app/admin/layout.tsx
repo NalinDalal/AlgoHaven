@@ -82,6 +82,9 @@ export default function AdminLayout({
                         <Link href="/admin/submissions" className={NAV_LINK_CLASS}>
                             Submissions
                         </Link>
+                        <Link href="/admin/rejudge-jobs" className={NAV_LINK_CLASS}>
+                            Rejudge Jobs
+                        </Link>
                         <Link href="/admin/problems/new" className={NAV_LINK_CLASS}>
                             + Problem
                         </Link>

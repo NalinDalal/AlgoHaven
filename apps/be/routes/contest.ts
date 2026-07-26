@@ -493,36 +493,70 @@ export async function getContestLeaderboard(req: Request): Promise<Response> {
     const callerId = authResult instanceof Response ? null : authResult.user.id;
 
     const now = new Date();
+    const contestEnded = now > contest.endTime;
     const isFrozen =
         !isAdmin &&
         contest.freezeTime !== null &&
         now >= contest.freezeTime &&
         now <= contest.endTime;
 
-    // Pull all entries for rank computation. During a freeze window, non-admin
-    // callers see only the rows that were stamped isFrozen=true by the background
-    // job, rather than any entries that mutated after freezeTime.
-    const allEntries = await prisma.leaderboardEntry.findMany({
-        where: {
-            contestId,
-            ...(isFrozen && !isAdmin ? { isFrozen: true } : {}),
-        },
-        select: {
-            userId: true,
-            totalPoints: true,
-            solved: true,
-            penaltyMins: true,
-            lastSolvedAt: true,
-            rank: true,
+    // After the freeze window (during freeze or after contest ends), non-admins
+    // see the immutable snapshot taken at freeze time. Admins always see live data.
+    const useSnapshot = !isAdmin && contest.freezeTime !== null && now >= contest.freezeTime;
+
+    let allEntries: {
+        userId: string;
+        totalPoints: number;
+        solved: number;
+        penaltyMins: number;
+        lastSolvedAt: Date | null;
+        rank: number | null;
+        isFrozen: boolean;
+        user: { id: string; username: string | null };
+    }[];
+
+    if (useSnapshot) {
+        const snapshots = await prisma.leaderboardSnapshot.findMany({
+            where: { contestId },
+            select: {
+                userId: true,
+                totalPoints: true,
+                solved: true,
+                penaltyMins: true,
+                lastSolvedAt: true,
+                user: { select: { id: true, username: true } },
+            },
+            orderBy: [
+                { totalPoints: "desc" },
+                { penaltyMins: "asc" },
+                { lastSolvedAt: "asc" },
+            ],
+        });
+        allEntries = snapshots.map((s) => ({
+            ...s,
+            rank: null,
             isFrozen: true,
-            user: { select: { id: true, username: true } },
-        },
-        orderBy: [
-            { totalPoints: "desc" },
-            { penaltyMins: "asc" },
-            { lastSolvedAt: "asc" },
-        ],
-    });
+        }));
+    } else {
+        allEntries = await prisma.leaderboardEntry.findMany({
+            where: { contestId },
+            select: {
+                userId: true,
+                totalPoints: true,
+                solved: true,
+                penaltyMins: true,
+                lastSolvedAt: true,
+                rank: true,
+                isFrozen: true,
+                user: { select: { id: true, username: true } },
+            },
+            orderBy: [
+                { totalPoints: "desc" },
+                { penaltyMins: "asc" },
+                { lastSolvedAt: "asc" },
+            ],
+        });
+    }
 
     // Re-assign ranks in-process — materialised `rank` column may lag
     const ranked = allEntries.map((e, i) => ({ ...e, rank: i + 1 }));
@@ -677,13 +711,39 @@ export async function handleFreezeContest(req: Request): Promise<Response> {
     if (!contest) return failure("Contest not found", null, 404);
     if (!contest.freezeTime) return success("No freezeTime set — nothing to do");
 
+    // Snapshot current scores before stamping isFrozen
+    const entries = await prisma.leaderboardEntry.findMany({
+        where: { contestId },
+        select: {
+            userId: true,
+            totalPoints: true,
+            solved: true,
+            penaltyMins: true,
+            lastSolvedAt: true,
+        },
+    });
+
+    if (entries.length > 0) {
+        await prisma.leaderboardSnapshot.createMany({
+            data: entries.map((e) => ({
+                contestId,
+                userId: e.userId,
+                totalPoints: e.totalPoints,
+                solved: e.solved,
+                penaltyMins: e.penaltyMins,
+                lastSolvedAt: e.lastSolvedAt,
+            })),
+            skipDuplicates: true,
+        });
+    }
+
     const result = await prisma.leaderboardEntry.updateMany({
         where: { contestId, isFrozen: false },
         data: { isFrozen: true },
     });
 
-    be.info({ contestId, count: result.count }, "Leaderboard frozen");
-    return success(`Frozen ${result.count} leaderboard entries`, { count: result.count });
+    be.info({ contestId, count: result.count, snapshotCount: entries.length }, "Leaderboard frozen");
+    return success(`Frozen ${result.count} leaderboard entries`, { count: result.count, snapshotCount: entries.length });
 }
 
 // ─── 8. Create Contest ────────────────────────────────────────────────────────
