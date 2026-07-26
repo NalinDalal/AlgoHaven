@@ -223,7 +223,7 @@ export async function handleWorkerUpdateSubmission(
 
   be.info({ submissionId, status, executionTimeMs }, "Submission updated by worker");
 
-  if (status === SubmissionStatus.ACCEPTED) {
+  if (status === SubmissionStatus.ACCEPTED && current.judgePhase !== "PRACTICE") {
     try {
       await handleLeaderboardUpdate(submissionId);
     } catch (err) {
