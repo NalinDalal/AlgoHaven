@@ -1,0 +1,12 @@
+node_modules
+.turbo
+.next
+.git
+.env
+.env.*
+!.env.example
+*.md
+.DS_Store
+coverage
+dist
+build
