@@ -140,6 +140,26 @@ async function startRedisSubscriptions(): Promise<void> {
   ws.info("Redis subscriptions active");
 }
 
+async function startRedisSubscriptionsWithRetry(): Promise<void> {
+  const MAX_RETRIES = 10;
+  const BASE_DELAY_MS = 1000;
+
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      await startRedisSubscriptions();
+      return;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      ws.error({ attempt, error: msg }, "Redis subscription failed, retrying...");
+      if (attempt === MAX_RETRIES) {
+        ws.error("Max Redis retry attempts reached");
+        return;
+      }
+      await new Promise((r) => setTimeout(r, BASE_DELAY_MS * attempt));
+    }
+  }
+}
+
 function startCleanupJob(): void {
   setInterval(() => {
     for (const [clientId, client] of sseClients) {
@@ -263,7 +283,9 @@ async function shutdown(signal: string) {
   for (const [clientId, client] of sseClients) {
     try {
       client.controller.close();
-    } catch {}
+    } catch (e) {
+      ws.warn({ err: e, clientId }, "Error closing controller during shutdown");
+    }
     sseClients.delete(clientId);
     removeClientFromContest(clientId, client.contestId);
   }
