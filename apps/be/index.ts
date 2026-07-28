@@ -259,7 +259,9 @@ async function router(req: Request): Promise<Response> {
           headers,
         });
       } catch (err) {
-        be.error(err, "Route error");
+        const msg = err instanceof Error ? err.message : "Unknown error";
+        const stack = err instanceof Error ? err.stack : undefined;
+        be.error({ err: msg, stack, method, pathname: url.pathname }, "Route error");
 
         return new Response(
           JSON.stringify({
