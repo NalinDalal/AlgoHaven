@@ -277,7 +277,13 @@ const myWorker = new Worker<JobData, CompletedJob>(
             "Submission final result",
         );
 
-        await updateSubmission(submissionId, finalStatus, totalTime, judgePhase, maxMemoryKb, lastStderr);
+        try {
+            await updateSubmission(submissionId, finalStatus, totalTime, judgePhase, maxMemoryKb, lastStderr);
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : "Unknown error";
+            worker.error({ submissionId, error: msg }, "Failed to update submission result");
+            throw new Error(`Judgment result lost — updateSubmission failed: ${msg}`);
+        }
 
         return { id: job.id!, submissionId, status: finalStatus, executionTimeMs: totalTime, judgePhase };
     },
@@ -393,15 +399,19 @@ worker.info("BullMQ freeze worker started");
 async function shutdown(signal: string) {
     worker.info({ signal }, "Shutting down gracefully");
 
-    await myWorker.close();
-    await ratingWorker.close();
-    await phaseTransitionWorker.close();
-    await freezeWorker.close();
+    const closeWorkers = [myWorker, ratingWorker, phaseTransitionWorker, freezeWorker];
+    for (const w of closeWorkers) {
+        try {
+            await w.close();
+        } catch (err) {
+            worker.error({ error: err instanceof Error ? err.message : "Unknown error" }, "Error closing worker");
+        }
+    }
 
     server.stop();
     worker.info("Shutdown complete");
     process.exit(0);
 }
 
-process.on("SIGTERM", () => shutdown("SIGTERM"));
-process.on("SIGINT", () => shutdown("SIGINT"));
+process.on("SIGTERM", () => { shutdown("SIGTERM").catch(() => process.exit(1)); });
+process.on("SIGINT", () => { shutdown("SIGINT").catch(() => process.exit(1)); });
