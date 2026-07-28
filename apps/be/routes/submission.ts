@@ -195,7 +195,7 @@ export async function handleWorkerUpdateSubmission(
 ): Promise<Response> {
   const workerSecret = req.headers.get("x-worker-secret");
   if (workerSecret !== process.env.WORKER_SECRET) {
-    return new Response("Unauthorized", { status: 401 });
+    return failure("Unauthorized", null, 401);
   }
 
   let body: WorkerUpdateBody;
@@ -270,7 +270,7 @@ export async function handleWorkerUpdatePlagiarism(
 ): Promise<Response> {
   const workerSecret = req.headers.get("x-worker-secret");
   if (workerSecret !== process.env.WORKER_SECRET) {
-    return new Response("Unauthorized", { status: 401 });
+    return failure("Unauthorized", null, 401);
   }
 
   let body: PlagiarismBody;
