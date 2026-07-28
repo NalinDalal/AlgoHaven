@@ -269,7 +269,7 @@ const server = serve({
   },
 });
 
-startRedisSubscriptions().catch((err) =>
+startRedisSubscriptionsWithRetry().catch((err) =>
   ws.error({ err }, "Redis subscriptions failed"),
 );
 startCleanupJob();

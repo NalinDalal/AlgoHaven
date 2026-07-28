@@ -66,11 +66,13 @@ export async function handleRegister(req: Request): Promise<Response> {
     return failure("Too many registration attempts. Try again later.", null, 429);
   }
 
-  const { email, password, username } = (await req.json()) as {
-    email?: string;
-    password?: string;
-    username?: string;
-  };
+  let body: { email?: string; password?: string; username?: string };
+  try {
+    body = (await req.json()) as { email?: string; password?: string; username?: string };
+  } catch {
+    return failure("Invalid JSON", null, 400);
+  }
+  const { email, password, username } = body;
 
   if (!email || !email.includes("@")) {
     return failure("Valid email required", null, 400);
@@ -133,10 +135,13 @@ export async function handleLogin(req: Request): Promise<Response> {
     return failure("Too many login attempts. Try again later.", null, 429);
   }
 
-  const { email, password } = (await req.json()) as {
-    email?: string;
-    password?: string;
-  };
+  let body: { email?: string; password?: string };
+  try {
+    body = (await req.json()) as { email?: string; password?: string };
+  } catch {
+    return failure("Invalid JSON", null, 400);
+  }
+  const { email, password } = body;
 
   if (!email || !password) {
     return failure("Email and password required", null, 400);
@@ -312,7 +317,13 @@ export async function handleUpdateUserRole(req: Request): Promise<Response> {
   if (authResult instanceof Response) return authResult;
 
   const { id } = getIdParams(req);
-  const { role } = (await req.json()) as { role?: string };
+  let body: { role?: string };
+  try {
+    body = (await req.json()) as { role?: string };
+  } catch {
+    return failure("Invalid JSON", null, 400);
+  }
+  const { role } = body;
 
   if (!id) return failure("User ID required", null, 400);
   if (!role || (role !== "USER" && role !== "ADMIN")) {

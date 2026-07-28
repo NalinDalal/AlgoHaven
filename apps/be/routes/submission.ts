@@ -20,7 +20,12 @@ export async function handleRunSolution(req: Request): Promise<Response> {
   const problemId = idMatch ? idMatch[1] : null;
   if (!problemId) return failure("Invalid problem id", null, 400);
 
-  const body = (await req.json()) as SubmitBody;
+  let body: SubmitBody;
+  try {
+    body = (await req.json()) as SubmitBody;
+  } catch {
+    return failure("Invalid JSON", null, 400);
+  }
   const { code, language } = body ?? {};
 
   if (!code || !language) {
@@ -87,7 +92,12 @@ export async function handleSubmitSolution(req: Request): Promise<Response> {
   const problemId = idMatch ? idMatch[1] : null;
   if (!problemId) return failure("Invalid problem id", null, 400);
 
-  const body = (await req.json()) as SubmitBody;
+  let body: SubmitBody;
+  try {
+    body = (await req.json()) as SubmitBody;
+  } catch {
+    return failure("Invalid JSON", null, 400);
+  }
   const { code, language } = body ?? {};
 
   if (!code || !language) {
@@ -125,7 +135,7 @@ export async function handleSubmitSolution(req: Request): Promise<Response> {
     expectedOutput: tc.expectedOutput,
   }));
 
-  await sendToWorker(
+  const enqueued = await sendToWorker(
     submission.id,
     code,
     language,
@@ -134,6 +144,11 @@ export async function handleSubmitSolution(req: Request): Promise<Response> {
     problem?.hasCustomChecker ?? false,
     problem?.checkerCode ?? undefined,
   );
+
+  if (!enqueued) {
+    be.error({ submissionId: submission.id, problemId, userId: user.id }, "Failed to enqueue submission to worker");
+    return failure("Failed to enqueue for execution", null, 500);
+  }
 
   be.info({ submissionId: submission.id, problemId, userId: user.id, language, testCaseCount: testCases.length }, "Submission created");
   return success(
@@ -183,7 +198,12 @@ export async function handleWorkerUpdateSubmission(
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const body = (await req.json()) as WorkerUpdateBody;
+  let body: WorkerUpdateBody;
+  try {
+    body = (await req.json()) as WorkerUpdateBody;
+  } catch {
+    return failure("Invalid JSON", null, 400);
+  }
   const { submissionId, status, points, executionTimeMs, memoryUsedKb, judgePhase, judgeOutput } = body;
 
   if (!submissionId || !status) {
@@ -253,7 +273,12 @@ export async function handleWorkerUpdatePlagiarism(
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const body = (await req.json()) as PlagiarismBody;
+  let body: PlagiarismBody;
+  try {
+    body = (await req.json()) as PlagiarismBody;
+  } catch {
+    return failure("Invalid JSON", null, 400);
+  }
   const { contestId, reports } = body;
 
   if (!contestId || !reports || reports.length === 0) {
@@ -281,7 +306,13 @@ export async function handleTransitionJudgePhaseWorker(
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const { contestId } = (await req.json()) as { contestId?: string };
+  let body: { contestId?: string };
+  try {
+    body = (await req.json()) as { contestId?: string };
+  } catch {
+    return failure("Invalid JSON", null, 400);
+  }
+  const { contestId } = body;
   if (!contestId) return failure("contestId required", null, 400);
 
   const contest = await prisma.contest.findUnique({

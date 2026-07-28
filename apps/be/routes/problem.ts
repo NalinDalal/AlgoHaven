@@ -215,7 +215,12 @@ export async function handleProblemCreate(req: Request): Promise<Response> {
   if (authResult instanceof Response) return authResult;
 
   // Parse request body
-  const body = (await req.json()) as CreateProblemBody;
+  let body: CreateProblemBody;
+  try {
+    body = (await req.json()) as CreateProblemBody;
+  } catch {
+    return failure("Invalid JSON", null, 400);
+  }
 
   // Extract fields with sensible defaults
   const {
@@ -319,7 +324,12 @@ export async function handleProblemUpdate(req: Request): Promise<Response> {
   }
 
   // Parse request body
-  const body = (await req.json()) as UpdateProblemBody;
+  let body: UpdateProblemBody;
+  try {
+    body = (await req.json()) as UpdateProblemBody;
+  } catch {
+    return failure("Invalid JSON", null, 400);
+  }
 
   // Destructure updateable fields
   const {
