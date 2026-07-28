@@ -142,6 +142,9 @@ export async function runCode(
       proc.exited.then((code) => {
         clearTimeout(timeout);
         resolve(code);
+      }).catch((err) => {
+        clearTimeout(timeout);
+        reject(err);
       });
     });
 
@@ -241,6 +244,9 @@ export async function runChecker(
       proc.exited.then((code) => {
         clearTimeout(timeout);
         resolve(code);
+      }).catch((err) => {
+        clearTimeout(timeout);
+        reject(err);
       });
     });
 
