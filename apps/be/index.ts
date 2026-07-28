@@ -292,7 +292,10 @@ async function router(req: Request): Promise<Response> {
 // Start server
 // -----------------------------------------------------------------------------
 
-const PORT = parseInt(process.env.BE_PORT || "3001");
+const PORT = parseInt(process.env.BE_PORT || "3001", 10);
+if (isNaN(PORT)) {
+  throw new Error("BE_PORT must be a valid number");
+}
 
 const server = serve({
   port: PORT,

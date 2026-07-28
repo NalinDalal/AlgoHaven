@@ -19,7 +19,10 @@ validateEnv(
   "SSE Server",
 );
 
-const PORT = parseInt(process.env.WS_PORT || "3003");
+const PORT = parseInt(process.env.WS_PORT || "3003", 10);
+if (isNaN(PORT)) {
+  throw new Error("WS_PORT must be a valid number");
+}
 const BACKEND_URL = process.env.BE_URL || "http://localhost:3001";
 
 interface LeaderboardEntry {
