@@ -148,7 +148,8 @@ function startCleanupJob(): void {
           sseClients.delete(clientId);
           removeClientFromContest(clientId, client.contestId);
         }
-      } catch {
+      } catch (e) {
+        ws.warn({ err: e, clientId }, "Cleanup job error");
         sseClients.delete(clientId);
         removeClientFromContest(clientId, client.contestId);
       }
@@ -181,7 +182,8 @@ const server = serve({
               controller.enqueue(
                 encoder.encode(`data: ${JSON.stringify(data)}\n\n`),
               );
-            } catch {
+            } catch (e) {
+              ws.warn({ err: e, clientId }, "Failed to send event");
               sseClients.delete(clientId);
               removeClientFromContest(clientId, contestId);
             }
@@ -216,7 +218,9 @@ const server = serve({
             removeClientFromContest(clientId, contestId);
             try {
               controller.close();
-            } catch {}
+            } catch (e) {
+              ws.warn({ err: e, clientId }, "Error closing controller on abort");
+            }
           });
         },
       });
@@ -269,5 +273,5 @@ async function shutdown(signal: string) {
   process.exit(0);
 }
 
-process.on("SIGTERM", () => shutdown("SIGTERM"));
-process.on("SIGINT", () => shutdown("SIGINT"));
+process.on("SIGTERM", () => { shutdown("SIGTERM").catch(() => process.exit(1)); });
+process.on("SIGINT", () => { shutdown("SIGINT").catch(() => process.exit(1)); });
