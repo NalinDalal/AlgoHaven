@@ -5,10 +5,10 @@ import { ButtonHTMLAttributes, ReactNode } from "react";
 export type ButtonVariant = "primary" | "secondary" | "danger" | "ghost";
 
 const variantClasses: Record<ButtonVariant, string> = {
-  primary: "bg-[var(--accent)] border-none text-black",
-  secondary: "bg-transparent border border-[var(--border)] text-[var(--muted)]",
-  danger: "bg-transparent border border-[#5c1a1a] text-[var(--red)]",
-  ghost: "bg-transparent border-none text-[var(--accent)] p-0",
+  primary:   "bg-accent text-background border-none font-bold hover:bg-accent-dim active:bg-accent/80",
+  secondary: "bg-transparent border border-border text-muted hover:border-border-lit hover:text-foreground",
+  danger:    "bg-transparent border border-[#5c1a1a] text-red hover:border-red/60 hover:bg-red/10",
+  ghost:     "bg-transparent border-none text-accent p-0 hover:text-accent-dim underline underline-offset-4 decoration-border",
 };
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -31,9 +31,14 @@ export function Button({
 
   return (
     <button
-      className={`rounded-sm font-mono text-[13px] font-bold cursor-pointer transition-opacity ${variantClasses[variant]} ${
-        variant === "primary" ? "px-8 py-3" : ""
-      } ${fullWidth ? "w-full" : ""} ${isDisabled ? "opacity-70 cursor-not-allowed" : ""} ${className}`}
+      className={`inline-flex items-center justify-center font-mono text-sm tracking-tight
+        rounded-none border cursor-pointer transition-all duration-fast
+        disabled:opacity-50 disabled:cursor-not-allowed
+        focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-background
+        ${variantClasses[variant]}
+        ${fullWidth ? "w-full" : ""}
+        ${loading ? "animate-pulse" : ""}
+        ${className}`}
       disabled={isDisabled}
       {...rest}
     >

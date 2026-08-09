@@ -7,7 +7,7 @@ export interface CardProps {
 
 export function Card({ children, className = "" }: CardProps) {
   return (
-    <div className={`bg-[var(--surface)] border border-[var(--border)] rounded p-6 mb-6 ${className}`}>
+    <div className={`bg-surface border border-border shadow-panel ${className}`}>
       {children}
     </div>
   );
@@ -22,7 +22,8 @@ export interface SectionHeadingProps {
 
 export function SectionHeading({ children, className = "" }: SectionHeadingProps) {
   return (
-    <h3 className={`font-mono text-xs text-[var(--accent)] tracking-widest uppercase mb-6 ${className}`}>
+    <h3 className={`font-mono text-xs text-accent tracking-[0.14em] uppercase font-bold mb-6 flex items-center gap-2 ${className}`}>
+      <span className="text-muted-2">//</span>
       {children}
     </h3>
   );

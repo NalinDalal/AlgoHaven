@@ -55,7 +55,10 @@ export default function Hero() {
     return (
         <section className="min-h-screen flex flex-col items-center justify-center text-center relative overflow-hidden px-8 pt-20 pb-16 bg-zinc-950">
             {/* Background Grid (optional) */}
-            <div className="grid-bg absolute inset-0 opacity-30" />
+            <div className="grid-bg absolute inset-0 opacity-20" />
+            <div className="absolute inset-0 pointer-events-none opacity-[0.03]"
+              style={{ background: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 4px)" }}
+            />
 
             {/* Eyebrow */}
             <div className="animate-fade-up inline-block mb-8 font-mono text-xs font-medium text-emerald-400 tracking-[0.12em] uppercase border border-emerald-400/70 py-1.5 px-5 rounded">
@@ -63,14 +66,14 @@ export default function Hero() {
             </div>
 
             {/* Title */}
-            <h1 className="animate-fade-up-1 font-bold text-[clamp(3rem,8vw,7rem)] leading-[0.95] tracking-[-0.03em] text-zinc-100">
-                <span className="text-zinc-700">Compete.</span>
+            <h1 className="animate-fade-up font-syne font-extrabold text-[clamp(2.5rem,7vw,6rem)] leading-[0.9] tracking-[-0.04em] text-foreground">
+                <span className="text-muted">Compete.</span>
                 <br />
-                <span className="text-zinc-100">Solve.</span>
+                <span className="text-foreground">Solve.</span>
                 <br />
-                <span className="text-emerald-400">
+                <span className="text-accent relative inline-block">
                     Dominate
-                    <span className="animate-blink text-emerald-400">_</span>
+                    <span className="inline-block w-[0.6em] h-[0.85em] ml-1 bg-accent align-middle animate-blink" />
                 </span>
             </h1>
 
