@@ -23,7 +23,7 @@ export interface SectionHeadingProps {
 export function SectionHeading({ children, className = "" }: SectionHeadingProps) {
   return (
     <h3 className={`font-mono text-xs text-accent tracking-[0.14em] uppercase font-bold mb-6 flex items-center gap-2 ${className}`}>
-      <span className="text-muted-2">//</span>
+      <span className="text-muted-2">{'//'}</span>
       {children}
     </h3>
   );
