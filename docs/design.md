@@ -166,7 +166,7 @@ Leetcode:
 
 check/ endpoint gives PENDING, then moves to STARTED then response will have the data
 
-![LeetCode DevTools Polling Example](leetcode-devtools-polling.png)
+![LeetCode DevTools Polling Example](img/leetcode-devtools-polling.png)
 
 This is how LeetCode works in production—you can see it in Chrome DevTools:
 
