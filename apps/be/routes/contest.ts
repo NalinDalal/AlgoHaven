@@ -1,7 +1,7 @@
 import { prisma, SubmissionStatus, JudgePhase, Role, ContestVisibility } from "@algohaven/db";
 
-import { requireAuth, requireAdmin, getUserFromRequest, type AuthUser } from "./auth";
-import { success, failure, getIdParams, getContestProblemParams, type IdParams, type ContestProblemParams } from "@algohaven/utils";
+import { requireAuth, requireAdmin, getUserFromRequest } from "./auth";
+import { success, failure, getIdParams, getContestProblemParams } from "@algohaven/utils";
 import { publishLeaderboardUpdate, publishAnnouncement } from "@algohaven/redis";
 import { sendToWorker } from "./worker";
 import { be } from "@algohaven/logger";
@@ -493,7 +493,6 @@ export async function getContestLeaderboard(req: Request): Promise<Response> {
     const callerId = authResult instanceof Response ? null : authResult.user.id;
 
     const now = new Date();
-    const contestEnded = now > contest.endTime;
     const isFrozen =
         !isAdmin &&
         contest.freezeTime !== null &&

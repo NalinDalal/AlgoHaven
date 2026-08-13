@@ -5,7 +5,7 @@ import {
   hashPassword,
   verifyPassword,
 } from "@algohaven/auth";
-import { success, failure, getCookie, getIdParams, type IdParams } from "@algohaven/utils";
+import { success, failure, getCookie, getIdParams } from "@algohaven/utils";
 import { auth } from "@algohaven/logger";
 
 export interface AuthUser {
