@@ -49,7 +49,7 @@ bun run dev
 - Worker: http://localhost:3002
 - Real-time (SSE): http://localhost:3003
 
-Dev login (no email needed for testing): `http://localhost:3000/dev-login`
+Dev login (no email needed for testing): `http://localhost:3000/dev-login?secret=<DEV_LOGIN_SECRET>`
 
 ## Repository Structure
 

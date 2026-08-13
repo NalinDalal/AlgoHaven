@@ -54,10 +54,16 @@ bun run dev
 
 ## 5. Dev Login (Testing)
 
-For quick testing without email:
+For quick testing without email, set `DEV_LOGIN_SECRET` in `.env`:
 
 ```
-http://localhost:3000/dev-login
+DEV_LOGIN_SECRET=your-dev-secret
+```
+
+Then visit (secret can be passed as a query param for one-click login):
+
+```
+http://localhost:3000/dev-login?secret=your-dev-secret
 ```
 
 ---
@@ -77,5 +83,6 @@ See [`.env.example`](../.env.example) for the full list with defaults:
 | `BACKEND_URL`             | Backend URL (used by worker)              |
 | `REDIS_URL`               | Redis connection string                   |
 | `REDIS_PASSWORD`          | Redis password                            |
+| `DEV_LOGIN_SECRET`        | Secret required by `/api/auth/dev-login`  |
 | `CORS_ALLOWED_ORIGINS`    | Comma-separated allowed CORS origins      |
 | `CORS_ALLOW_CREDENTIALS`  | Whether to allow credentials in CORS      |
