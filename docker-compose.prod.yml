@@ -79,6 +79,7 @@ services:
       WORKER_SECRET: ${WORKER_SECRET}
       REDIS_HOST: redis
       REDIS_PORT: "6379"
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
     ports:
       - "${WORKER_PORT:-3002}:3002"
     volumes:

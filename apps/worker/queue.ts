@@ -1,5 +1,4 @@
 import { Queue, Worker, Job } from "bullmq";
-import { redis } from "@algohaven/redis";
 import { worker } from "@algohaven/logger";
 
 export interface TestCase {
@@ -25,9 +24,10 @@ export interface CompletedJob {
   judgePhase: string;
 }
 
-const connection = {
+export const connection = {
   host: process.env.REDIS_HOST || "localhost",
-  port: parseInt(process.env.REDIS_PORT || "6379"),
+  port: parseInt(process.env.REDIS_PORT || "6379", 10) || 6379,
+  password: process.env.REDIS_PASSWORD || undefined,
 };
 
 export const submissionQueue = new Queue<JobData>("submissions", {

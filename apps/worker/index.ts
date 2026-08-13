@@ -8,6 +8,7 @@ import {
     enqueueSubmission,
     getQueueLength,
     submissionQueue,
+    connection,
     scheduleRatingCalculation,
     scheduleJudgePhaseTransition,
     scheduleFreeze,
@@ -40,17 +41,13 @@ validateEnv(
         WORKER_SECRET: { required: true },
         REDIS_HOST: { required: false, default: "localhost" },
         REDIS_PORT: { required: false, default: "6379" },
+        REDIS_PASSWORD: { required: false, default: "" },
     },
     "Worker",
 );
 
 const BACKEND_URL = process.env.BE_URL!;
 const WORKER_SECRET = process.env.WORKER_SECRET!;
-
-const connection = {
-    host: process.env.REDIS_HOST || "localhost",
-    port: parseInt(process.env.REDIS_PORT || "6379", 10) || 6379,
-};
 
 async function updateSubmission(
     submissionId: string,
