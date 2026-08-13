@@ -19,8 +19,6 @@
     "REDIS_PASSWORD",
     "REDIS_PORT",
     "REDIS_URL",
-    "SESSION_COOKIE_NAME",
-    "SESSION_TTL_MS",
     "WORKER_SECRET",
     "WORKER_URL",
     "WS_PORT"

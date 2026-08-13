@@ -35,10 +35,6 @@ POSTGRES_USER=postgres
 POSTGRES_PASSWORD=<strong-password>
 POSTGRES_DB=algohaven
 
-AUTH_SECRET=<random-64-char-hex>
-SESSION_COOKIE_NAME=algohaven_session
-SESSION_TTL_MS=604800000
-
 WORKER_SECRET=<random-64-char-hex>
 WORKER_URL=http://worker:3002
 BE_URL=http://be:3001

@@ -75,9 +75,6 @@ See [`.env.example`](../.env.example) for the full list with defaults:
 | Variable                  | Description                                |
 | ------------------------- | ------------------------------------------ |
 | `DATABASE_URL`            | PostgreSQL connection string              |
-| `AUTH_SECRET`             | Secret for signing auth tokens            |
-| `SESSION_COOKIE_NAME`     | Cookie name for sessions                  |
-| `SESSION_TTL_MS`          | Session lifetime in milliseconds          |
 | `WORKER_SECRET`           | Shared secret between backend and worker  |
 | `WORKER_URL`              | Worker service URL                        |
 | `BACKEND_URL`             | Backend URL (used by worker)              |

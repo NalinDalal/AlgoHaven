@@ -45,9 +45,6 @@ services:
       WORKER_URL: http://worker:3002
       BE_URL: http://be:3001
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
-      AUTH_SECRET: ${AUTH_SECRET}
-      SESSION_COOKIE_NAME: ${SESSION_COOKIE_NAME:-algohaven_session}
-      SESSION_TTL_MS: ${SESSION_TTL_MS:-604800000}
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
     ports:
       - "${BE_PORT:-3001}:3001"
