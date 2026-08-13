@@ -4,6 +4,9 @@ WORKDIR /app
 ARG NEXT_PUBLIC_BE_URL=http://localhost:3001
 ENV NEXT_PUBLIC_BE_URL=$NEXT_PUBLIC_BE_URL
 
+ARG NEXT_PUBLIC_WS_URL=http://localhost:3003
+ENV NEXT_PUBLIC_WS_URL=$NEXT_PUBLIC_WS_URL
+
 # Install Bun
 RUN npm install -g bun@1
 

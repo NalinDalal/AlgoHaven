@@ -58,6 +58,7 @@ services:
       dockerfile: apps/fe/Dockerfile
       args:
         NEXT_PUBLIC_BE_URL: ${NEXT_PUBLIC_BE_URL}
+        NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL}
     container_name: algohaven-fe
     restart: unless-stopped
     depends_on:
