@@ -32,7 +32,7 @@ flowchart TB
     end
 
     FE -->|HTTP| API
-    FE -->|SSE /ws/contest/:id| SSE_Server
+    FE -->|SSE /sse/contest/:id| SSE_Server
     Monaco -->|Submit Code| API
     API --> Prisma
     API -->|Enqueue Job| Queue
@@ -51,7 +51,7 @@ flowchart TB
 | Frontend  | 3000 | Next.js UI      |
 | Backend   | 3001 | REST API        |
 | Worker    | 3002 | Code execution  |
-| Real-time | 3003 | SSE / WebSocket |
+| Real-time | 3003 | SSE |
 
 ## Data Flow: Submission
 

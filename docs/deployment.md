@@ -70,7 +70,7 @@ docker compose -f docker-compose.prod.yml exec -T be bunx prisma migrate deploy 
 | Frontend | 3000 | Next.js UI |
 | Backend | 3001 | REST API |
 | Worker | 3002 | Code execution (Docker-in-Docker) |
-| WebSocket | 3003 | SSE real-time updates |
+| Real-time | 3003 | SSE real-time updates |
 
 ## Useful commands
 

@@ -237,34 +237,30 @@ VALUES (:problemId, '3\n3 2 4\n6', '1 2', false);
 
 ## Queue System
 
-### Current Implementation (In-Memory)
+BullMQ (Redis-backed) queues, defined in `apps/worker/queue.ts`:
+
+- `submissions` — one job per submission/run, retried up to 3 times with exponential backoff
+- `ratings` — delayed rating calculation, scheduled 3 days after a rated contest ends
+- `phase-transitions` — judge phase 1 → 2 transition, scheduled at contest end
+- `freezes` — leaderboard freeze, scheduled at the contest freeze time
 
 ```typescript
 // apps/worker/queue.ts
-const jobQueue: Job[] = [];
-
-export function enqueueSubmission(job: Job): void {
-  jobQueue.push(job);
-}
-
-export function getNextJob(): Job | undefined {
-  return jobQueue.shift();
-}
-```
-
-### Production (Future - Redis Bull)
-
-```typescript
-import Queue from "bull";
-const submissionQueue = new Queue("submissions", "redis://localhost:6379");
-
-await submissionQueue.add({
-  submissionId: submission.id,
-  code: submission.code,
-  language: submission.language,
-  testCases: testCases,
+export const submissionQueue = new Queue<JobData>("submissions", {
+  connection, // REDIS_HOST / REDIS_PORT / REDIS_PASSWORD
+  defaultJobOptions: {
+    attempts: 3,
+    backoff: { type: "exponential", delay: 1000 },
+    removeOnComplete: true,
+    removeOnFail: false,
+  },
 });
 ```
+
+Workers consume the queues in `apps/worker/index.ts` and call the backend
+(`/api/worker/update-submission`, `/api/worker/transition-judge-phase`,
+`/api/contest/:id/calculate-ratings`, `/api/contest/:id/freeze`) to update
+state.
 
 ---
 
@@ -303,9 +299,10 @@ docker pull golang:1.21
 
 | File                           | Description                  |
 | ------------------------------ | ---------------------------- |
-| `apps/worker/index.ts`         | Main worker service          |
-| `apps/worker/queue.ts`         | In-memory job queue          |
-| `apps/worker/docker.ts`        | Docker command execution     |
-| `apps/worker/config.ts`        | Language config & limits     |
-| `apps/worker/api.ts`           | HTTP handlers                |
-| `apps/be/routes/submission.ts` | Backend submission endpoints |
+| `apps/worker/index.ts`         | Main worker service + BullMQ consumers |
+| `apps/worker/queue.ts`         | BullMQ queues & scheduling helpers     |
+| `apps/worker/docker.ts`        | Docker command execution               |
+| `apps/worker/plagiarism.ts`    | Hash-based plagiarism detection        |
+| `apps/worker/config.ts`        | Language config & limits               |
+| `apps/worker/api.ts`           | HTTP handlers                          |
+| `apps/be/routes/submission.ts` | Backend submission endpoints           |
