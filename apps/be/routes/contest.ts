@@ -26,6 +26,7 @@ interface ContestBody {
 interface SubmissionBody {
   code?: string;
   language?: string;
+  virtualSessionId?: string;
 }
 
 interface AnnouncementBody {
@@ -199,6 +200,63 @@ export async function registerForContest(req: Request): Promise<Response> {
     return success("Registered successfully", null, 201);
 }
 
+// POST /api/contest/:id/virtual/start  [auth]
+// Starts (or resumes) the user's timed virtual session on a practice contest.
+// One active session per user per contest; the deadline is enforced server-side.
+const VIRTUAL_DURATION_MS = 2 * 60 * 60 * 1000;
+
+export async function startVirtualContest(req: Request): Promise<Response> {
+    const authResult = await requireAuth(req);
+    if (authResult instanceof Response) return authResult;
+    const { user } = authResult;
+
+    const { id: contestId } = getIdParams(req);
+    if (!contestId) return failure("Missing contest id", null, 400);
+
+    const contest = await prisma.contest.findUnique({
+        where: { id: contestId },
+        select: { id: true, isPractice: true },
+    });
+    if (!contest) return failure("Contest not found", null, 404);
+
+    const existing = await prisma.virtualContestSession.findUnique({
+        where: { userId_contestId: { contestId, userId: user.id } },
+        select: { id: true, startedAt: true, expiresAt: true },
+    });
+
+    if (existing && existing.expiresAt > new Date()) {
+        return success("Virtual contest resumed", {
+            sessionId: existing.id,
+            startedAt: existing.startedAt,
+            expiresAt: existing.expiresAt,
+        });
+    }
+
+    if (existing) {
+        await prisma.virtualContestSession.delete({
+            where: { userId_contestId: { contestId, userId: user.id } },
+        });
+    }
+
+    const now = new Date();
+    const session = await prisma.virtualContestSession.create({
+        data: {
+            userId: user.id,
+            contestId,
+            startedAt: now,
+            expiresAt: new Date(now.getTime() + VIRTUAL_DURATION_MS),
+        },
+        select: { id: true, startedAt: true, expiresAt: true },
+    });
+
+    be.info({ contestId, userId: user.id }, "Virtual contest started");
+    return success("Virtual contest started", {
+        sessionId: session.id,
+        startedAt: session.startedAt,
+        expiresAt: session.expiresAt,
+    });
+}
+
 // POST /api/contest/:id/unregister
 export async function unregisterFromContest(req: Request): Promise<Response> {
     const authResult = await requireAuth(req);
@@ -367,9 +425,13 @@ export async function submitContestProblemSolution(
     if (!contest) return failure("Contest not found", null, 404);
 
     const now = new Date();
-    if (now < contest.startTime)
-        return failure("Contest has not started yet", null, 403);
-    if (now > contest.endTime) return failure("Contest has ended", null, 403);
+    // Practice contests (virtual mode) are submittable at any time — the
+    // virtual session deadline is enforced below instead.
+    if (!contest.isPractice) {
+        if (now < contest.startTime)
+            return failure("Contest has not started yet", null, 403);
+        if (now > contest.endTime) return failure("Contest has ended", null, 403);
+    }
 
     // Must be registered (LeaderboardEntry exists)
     const entry = await prisma.leaderboardEntry.findUnique({
@@ -392,8 +454,20 @@ export async function submitContestProblemSolution(
     } catch {
         return failure("Invalid JSON", null, 400);
     }
-    const { code, language } = body ?? {};
+    const { code, language, virtualSessionId } = body ?? {};
     if (!code || !language) return failure("Missing code or language", null, 422);
+
+    // Virtual contest deadline: reject submissions after the session expires
+    if (virtualSessionId) {
+        const session = await prisma.virtualContestSession.findUnique({
+            where: { id: virtualSessionId },
+            select: { userId: true, contestId: true, expiresAt: true },
+        });
+        if (!session || session.userId !== user.id || session.contestId !== contestId)
+            return failure("Invalid virtual contest session", null, 403);
+        if (now > session.expiresAt)
+            return failure("Your virtual contest has ended", null, 403);
+    }
 
     // 10-second cooldown per user × problem × contest
     const recentSub = await prisma.submission.findFirst({

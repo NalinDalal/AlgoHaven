@@ -31,6 +31,7 @@ interface Props {
     problemId: string;
     samples: SampleTestCase[];
     submitEndpoint?: string;
+    virtualSessionId?: string;
     onVerdict?: (result: SubmissionResult) => void;
 }
 
@@ -38,6 +39,7 @@ export default function EditorPanel({
     problemId,
     samples,
     submitEndpoint,
+    virtualSessionId,
     onVerdict,
 }: Props) {
     const [lang, setLang] = useState<Lang>("cpp");
@@ -60,8 +62,8 @@ export default function EditorPanel({
 
     const handleSubmit = useCallback(() => {
         setLastAction("submit");
-        submit(code, lang);
-    }, [submit, code, lang]);
+        submit(code, lang, virtualSessionId);
+    }, [submit, code, lang, virtualSessionId]);
 
     const handleRun = useCallback(() => {
         setLastAction("run");

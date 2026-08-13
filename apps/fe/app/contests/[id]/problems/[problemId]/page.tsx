@@ -47,6 +47,7 @@ export default function ContestProblemPage() {
     }>();
     const searchParams = useSearchParams();
     const isVirtual = searchParams.get("virtual") === "1";
+    const virtualSessionId = searchParams.get("session") ?? undefined;
     const router = useRouter();
     const [problem, setProblem] = useState<ProblemData | null>(null);
     const [contestInfo, setContestInfo] = useState<{
@@ -164,6 +165,7 @@ export default function ContestProblemPage() {
                         problemId={problem.id}
                         samples={problem.testCases}
                         submitEndpoint={`${process.env.NEXT_PUBLIC_BE_URL}/api/contest/${contestId}/problems/${problemId}`}
+                        virtualSessionId={virtualSessionId}
                     />
                 </div>
             </div>

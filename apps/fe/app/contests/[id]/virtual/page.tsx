@@ -23,6 +23,28 @@ interface ContestDetails {
 
 const VIRTUAL_DURATION_MS = 2 * 60 * 60 * 1000; // 2 hours
 
+interface VirtualSession {
+    sessionId: string;
+    startedAt: number;
+    expiresAt: number;
+}
+
+function loadStoredSession(contestId: string): VirtualSession | null {
+    try {
+        const raw = localStorage.getItem(`virtual_session_${contestId}`);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw) as VirtualSession;
+        if (!parsed.sessionId || typeof parsed.expiresAt !== "number") return null;
+        return parsed;
+    } catch {
+        return null;
+    }
+}
+
+function storeSession(contestId: string, session: VirtualSession) {
+    localStorage.setItem(`virtual_session_${contestId}`, JSON.stringify(session));
+}
+
 function formatTime(ms: number) {
     if (ms <= 0) return "00:00:00";
     const totalSeconds = Math.floor(ms / 1000);
@@ -48,8 +70,18 @@ export default function VirtualContestPage({
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [started, setStarted] = useState(false);
-    const [startTime, setStartTime] = useState<number | null>(null);
+    const [session, setSession] = useState<VirtualSession | null>(null);
+    const [starting, setStarting] = useState(false);
     const [timeLeft, setTimeLeft] = useState(VIRTUAL_DURATION_MS);
+
+    // Restore an in-progress session on mount (survives refresh)
+    useEffect(() => {
+        const stored = loadStoredSession(id);
+        if (stored) {
+            setSession(stored);
+            setStarted(true);
+        }
+    }, [id]);
 
     useEffect(() => {
         apiFetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/contest/${id}`)
@@ -66,11 +98,10 @@ export default function VirtualContestPage({
     }, [id]);
 
     useEffect(() => {
-        if (!started || !startTime) return;
+        if (!started || !session) return;
 
         const interval = setInterval(() => {
-            const elapsed = Date.now() - startTime;
-            const remaining = VIRTUAL_DURATION_MS - elapsed;
+            const remaining = session.expiresAt - Date.now();
             if (remaining <= 0) {
                 setTimeLeft(0);
                 clearInterval(interval);
@@ -80,11 +111,33 @@ export default function VirtualContestPage({
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [started, startTime]);
+    }, [started, session]);
 
-    const handleStart = () => {
-        setStartTime(Date.now());
-        setStarted(true);
+    const handleStart = async () => {
+        setStarting(true);
+        try {
+            const res = await apiFetch(
+                `${process.env.NEXT_PUBLIC_BE_URL}/api/contest/${id}/virtual/start`,
+                { method: "POST", credentials: "include" },
+            );
+            const d = await res.json();
+            if (d.status === "success") {
+                const s: VirtualSession = {
+                    sessionId: d.data.sessionId,
+                    startedAt: new Date(d.data.startedAt).getTime(),
+                    expiresAt: new Date(d.data.expiresAt).getTime(),
+                };
+                storeSession(id, s);
+                setSession(s);
+                setStarted(true);
+            } else {
+                setError(d.message || "Failed to start virtual contest");
+            }
+        } catch {
+            setError("Failed to start virtual contest");
+        } finally {
+            setStarting(false);
+        }
     };
 
     if (loading) {
@@ -140,9 +193,10 @@ export default function VirtualContestPage({
                             </div>
                             <button
                                 onClick={handleStart}
-                                className="px-8 py-3 rounded font-mono text-sm font-bold bg-purple-600 text-white hover:bg-purple-500 transition-colors"
+                                disabled={starting}
+                                className="px-8 py-3 rounded font-mono text-sm font-bold bg-purple-600 text-white hover:bg-purple-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                Start Virtual Contest
+                                {starting ? "Starting..." : "Start Virtual Contest"}
                             </button>
                         </div>
                     </div>
@@ -185,7 +239,7 @@ export default function VirtualContestPage({
                                 return (
                                     <Link
                                         key={p.id}
-                                        href={`/contests/${id}/problems/${p.problem.id}?virtual=1&start=${startTime}`}
+                                        href={`/contests/${id}/problems/${p.problem.id}?virtual=1&session=${session?.sessionId ?? ""}`}
                                         className="flex items-center justify-between px-4 py-3 hover:bg-[#161616] transition-colors"
                                     >
                                         <div className="flex items-center gap-3">

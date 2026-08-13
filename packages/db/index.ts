@@ -16,6 +16,7 @@ export type {
   PlagiarismReport,
   RejudgeJob,
   Session,
+  VirtualContestSession,
 } from "./generated/prisma/client";
 
 const connectionString = process.env.DATABASE_URL;

@@ -89,6 +89,7 @@ model User {
   ratings            UserRating[]
   rejudgesTriggered  RejudgeJob[]       @relation("triggeredBy")
   plagiarismReviews  PlagiarismReport[] @relation("reviewedBy")
+  virtualSessions    VirtualContestSession[]
 
   createdAt DateTime @default(now())
 }
@@ -182,9 +183,27 @@ model Contest {
   snapshots     LeaderboardSnapshot[]
   announcements ContestAnnouncement[]
   ratings       UserRating[]
+  virtualSessions VirtualContestSession[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// A timed virtual contest session: one active session per user per contest.
+// Enforces the practice deadline server-side.
+model VirtualContestSession {
+  id        String   @id @default(uuid())
+  userId    String
+  contestId String
+  startedAt DateTime @default(now())
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contest Contest @relation(fields: [contestId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, contestId])
+  @@index([contestId])
 }
 
 // maps a Problem to a specific Contest.

@@ -60,6 +60,7 @@ All API responses use a consistent format:
 | `/api/contest/:id`                    | PUT/DELETE | ADMIN | Update/delete contest    |
 | `/api/contest/:id/register`           | POST     | USER    | Register for contest     |
 | `/api/contest/:id/unregister`         | POST     | USER    | Unregister               |
+| `/api/contest/:id/virtual/start`      | POST     | USER    | Start/resume 2h virtual session on a practice contest |
 | `/api/contest/:id/problems`           | GET      | USER    | Get contest problems     |
 | `/api/contest/:id/problems/:problemId`| GET/POST | USER    | Get problem / submit solution |
 | `/api/contest/:id/leaderboard`        | GET      | -       | Get leaderboard          |
@@ -68,6 +69,10 @@ All API responses use a consistent format:
 | `/api/contest/:id/freeze`             | POST     | Worker  | Freeze leaderboard       |
 | `/api/contest/:id/calculate-ratings`  | POST     | ADMIN/Worker | Calculate ratings (after contest) |
 | `/api/contest/:id/recent-submissions` | GET      | -       | Recent verdicts for home page ticker |
+
+Contest submission body: `{ "code": string, "language": string, "virtualSessionId"?: string }`.
+`virtualSessionId` is required for practice contests entered via virtual mode; the server
+rejects submissions once the session's 2-hour window has expired.
 
 ## Submissions
 

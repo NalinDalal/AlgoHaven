@@ -74,6 +74,7 @@ import {
   getContestSubmissions,
   getRecentContestSubmissions,
   handleFreezeContest,
+  startVirtualContest,
 } from "./routes/contest";
 
 import { handleCalculateRatings } from "./routes/ratings";
@@ -154,6 +155,7 @@ const routes: Record<string, Record<string, Handler>> = {
     PUT: updateContest,
   },
   "/api/contest/:id/register": { POST: registerForContest },
+  "/api/contest/:id/virtual/start": { POST: startVirtualContest },
   "/api/contest/:id/unregister": { POST: unregisterFromContest },
   "/api/contest/:id/problems": { GET: listContestProblems },
 

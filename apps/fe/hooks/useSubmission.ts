@@ -35,7 +35,11 @@ export function useSubmission(problemId: string, endpoint?: string) {
       });
   };
 
-  const submit = async (code: string, language: string) => {
+  const submit = async (
+    code: string,
+    language: string,
+    virtualSessionId?: string
+  ) => {
     setSubmitting(true);
     setResult(null);
     setJudgeMsg("Submitting...");
@@ -47,7 +51,11 @@ export function useSubmission(problemId: string, endpoint?: string) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ code, language }),
+          body: JSON.stringify({
+            code,
+            language,
+            ...(virtualSessionId ? { virtualSessionId } : {}),
+          }),
         }
       );
 
@@ -61,6 +69,7 @@ export function useSubmission(problemId: string, endpoint?: string) {
         pollStatus(sid);
       } else {
         setSubmitting(false);
+        if (d.message) setJudgeMsg(d.message);
       }
     } catch {
       setSubmitting(false);
