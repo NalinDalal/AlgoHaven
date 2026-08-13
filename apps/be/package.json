@@ -24,7 +24,6 @@
     "@algohaven/logger": "workspace:*",
     "@algohaven/redis": "workspace:*",
     "@algohaven/utils": "workspace:*",
-    "@prisma/client": "^7.4.2",
-    "nodemailer": "^8.0.1"
+    "@prisma/client": "^7.4.2"
   }
 }
