@@ -8,7 +8,7 @@ export default function Footer() {
             </span>
 
             <span className="font-mono text-xs text-zinc-500">
-                © 2025
+                © {new Date().getFullYear()}
             </span>
         </footer>
     );

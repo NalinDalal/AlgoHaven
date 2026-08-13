@@ -78,7 +78,7 @@ import {
 } from "./routes/contest";
 
 import { handleCalculateRatings } from "./routes/ratings";
-import { handleConfirmPlagiarism } from "./routes/plagiarism";
+import { handleConfirmPlagiarism, handleListPlagiarismReports } from "./routes/plagiarism";
 import { handleGetProfile } from "./routes/profile";
 import {
   handleAdminListSubmissions,
@@ -182,6 +182,7 @@ const routes: Record<string, Record<string, Handler>> = {
   // ---------------- ADMIN REJUDGE JOBS ----------------
   "/api/admin/problems/:id/rejudge": { POST: handleAdminBulkRejudge },
   "/api/admin/rejudge-jobs": { GET: handleAdminListRejudgeJobs },
+  "/api/admin/plagiarism": { GET: handleListPlagiarismReports },
 };
 
 // -----------------------------------------------------------------------------

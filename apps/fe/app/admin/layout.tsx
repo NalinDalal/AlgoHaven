@@ -85,6 +85,9 @@ export default function AdminLayout({
                         <Link href="/admin/rejudge-jobs" className={NAV_LINK_CLASS}>
                             Rejudge Jobs
                         </Link>
+                        <Link href="/admin/plagiarism" className={NAV_LINK_CLASS}>
+                            Plagiarism
+                        </Link>
                         <Link href="/admin/problems/new" className={NAV_LINK_CLASS}>
                             + Problem
                         </Link>
