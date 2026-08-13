@@ -31,8 +31,11 @@ async function getCurrentRating(userId: string): Promise<number> {
 }
 
 export async function handleCalculateRatings(req: Request): Promise<Response> {
-  const authResult = await requireAdmin(req);
-  if (authResult instanceof Response) return authResult;
+  const workerSecret = req.headers.get("x-worker-secret");
+  if (workerSecret !== process.env.WORKER_SECRET) {
+    const authResult = await requireAdmin(req);
+    if (authResult instanceof Response) return authResult;
+  }
 
   const { id: contestId } = getIdParams(req);
   if (!contestId) return failure("Missing contest id", null, 400);
