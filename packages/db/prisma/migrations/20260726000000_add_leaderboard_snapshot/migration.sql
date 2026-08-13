@@ -6,7 +6,7 @@ CREATE TABLE "LeaderboardSnapshot" (
     "totalPoints" INTEGER NOT NULL,
     "solved" INTEGER NOT NULL,
     "penaltyMins" INTEGER NOT NULL,
-    "lastSolvedAt TIMESTAMP(3),
+    "lastSolvedAt" TIMESTAMP(3),
     "snapshotTime" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "LeaderboardSnapshot_pkey" PRIMARY KEY ("id")
