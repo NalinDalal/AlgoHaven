@@ -42,7 +42,7 @@ export interface SubmissionResult {
     points?: number;
 }
 
-export type Lang = "cpp" | "python" | "java" | "javascript";
+export type Lang = "cpp" | "python" | "java" | "javascript" | "go";
 
 const DIFF_STYLES: Record<string, { chip: string; label: string }> = {
     EASY: { chip: "bg-green-950 border border-green-900 text-green-400", label: "Easy" },

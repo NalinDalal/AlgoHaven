@@ -15,6 +15,7 @@ const LANG_LABELS: Record<Lang, string> = {
     python: "Python 3",
     java: "Java 21",
     javascript: "JavaScript",
+    go: "Go",
 };
 
 const TERMINAL_STATUSES = new Set([
