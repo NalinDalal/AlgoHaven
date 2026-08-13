@@ -118,26 +118,26 @@ Backend endpoints called by the worker (also protected by `x-worker-secret`):
 
 ```bash
 # Login to get session cookie (requires DEV_LOGIN_SECRET in the backend .env)
-curl -c cookies.txt -X POST http://localhost:3001/api/auth/dev-login \
+curl -c /tmp/algohaven-cookies.txt -X POST http://localhost:3001/api/auth/dev-login \
   -H "Content-Type: application/json" \
   -d '{"email":"test@test.com","secret":"<DEV_LOGIN_SECRET>"}'
 
 # Submit solution (replace :problemId)
 curl -X POST "http://localhost:3001/api/problems/:problemId/submission" \
   -H "Content-Type: application/json" \
-  -b cookies.txt \
+  -b /tmp/algohaven-cookies.txt \
   -d '{"code":"console.log(1)","language":"javascript"}'
 
 # Run against sample cases, then poll the result
 curl -X POST "http://localhost:3001/api/problems/:problemId/run" \
   -H "Content-Type: application/json" \
-  -b cookies.txt \
+  -b /tmp/algohaven-cookies.txt \
   -d '{"code":"console.log(1)","language":"javascript"}'
 # → { runId: "run-..." } then:
-curl "http://localhost:3001/api/runs/run-..." -b cookies.txt
+curl "http://localhost:3001/api/runs/run-..." -b /tmp/algohaven-cookies.txt
 
 # Check submission status (replace :submissionId)
-curl "http://localhost:3001/api/submissions/:submissionId/status" -b cookies.txt
+curl "http://localhost:3001/api/submissions/:submissionId/status" -b /tmp/algohaven-cookies.txt
 
 # Worker health
 curl http://localhost:3002/api/worker/health
