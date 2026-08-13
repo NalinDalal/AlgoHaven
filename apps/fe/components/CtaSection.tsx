@@ -15,7 +15,7 @@ export default function CtaSection() {
             </p>
 
             <Link
-                href="/register"
+                href="/auth?mode=register"
                 className="inline-block bg-emerald-400 hover:bg-emerald-300 active:bg-emerald-500 text-black font-mono text-[15px] font-bold py-[15px] px-[36px] rounded transition-all duration-150 hover:-translate-y-0.5 active:scale-[0.985]"
             >
                 Create your account →

@@ -1,15 +1,17 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { apiFetch } from "@/lib/apiFetch";
-import Link from "next/link";
 import { Button, Input, ErrorBanner } from "@repo/ui";
 
 type Mode = "login" | "register";
 
-export default function AuthPage() {
+function AuthContent() {
     const router = useRouter();
-    const [mode, setMode] = useState<Mode>("login");
+    const searchParams = useSearchParams();
+    const [mode, setMode] = useState<Mode>(
+        searchParams.get("mode") === "register" ? "register" : "login",
+    );
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [username, setUsername] = useState("");
@@ -159,5 +161,19 @@ export default function AuthPage() {
                 </p>
             </div>
         </div>
+    );
+}
+
+export default function AuthPage() {
+    return (
+        <Suspense
+            fallback={
+                <div className="min-h-screen flex items-center justify-center bg-[var(--bg)] font-[family-name:var(--font-mono)] text-[var(--muted)]">
+                    Loading...
+                </div>
+            }
+        >
+            <AuthContent />
+        </Suspense>
     );
 }

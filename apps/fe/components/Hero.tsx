@@ -91,7 +91,7 @@ export default function Hero() {
             {/* CTA Buttons */}
             <div className="animate-fade-up-3 flex flex-col sm:flex-row gap-4 mt-10">
                 <Link
-                    href="/register"
+                    href="/auth?mode=register"
                     className="bg-emerald-400 hover:bg-emerald-300 active:bg-emerald-500 text-black font-mono text-sm font-bold py-3.5 px-8 rounded transition-all hover:-translate-y-0.5"
                 >
                     Start Competing →
