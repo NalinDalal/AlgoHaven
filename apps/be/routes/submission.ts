@@ -4,6 +4,7 @@ import { success, failure } from "@algohaven/utils";
 import { handleLeaderboardUpdate } from "./contest";
 import { be } from "@algohaven/logger";
 import { sendToWorker } from "./worker";
+import { storeRunResult, getRunResult } from "./runStore";
 
 interface SubmitBody {
   code?: string;
@@ -210,6 +211,18 @@ export async function handleWorkerUpdateSubmission(
     return failure("submissionId and status required", null, 400);
   }
 
+  // Run results (POST /api/problems/:id/run) are not persisted in the DB —
+  // store them in the in-memory run store instead.
+  if (submissionId.startsWith("run-")) {
+    storeRunResult(submissionId, {
+      status,
+      executionTimeMs: executionTimeMs ?? 0,
+      memoryUsedKb: memoryUsedKb ?? 0,
+      judgeOutput: judgeOutput || "",
+    });
+    return success("Run result stored", { runId: submissionId, status });
+  }
+
   // Phase guard: discard stale updates from a previous judge phase
   const current = await prisma.submission.findUnique({
     where: { id: submissionId },
@@ -394,4 +407,23 @@ export async function handleTransitionJudgePhaseWorker(
     `Transitioned ${succeeded} submissions to phase 2${failed > 0 ? ` (${failed} failed)` : ""}`,
     { succeeded, failed, total: submissions.length },
   );
+}
+
+// GET /api/runs/:runId - Poll the result of a sample run (not persisted in DB)
+export async function handleGetRunResult(req: Request): Promise<Response> {
+  const url = new URL(req.url);
+  const idMatch = url.pathname.match(/\/api\/runs\/(.+)/);
+  const runId = idMatch ? idMatch[1] : null;
+  if (!runId) return failure("Invalid run id", null, 400);
+
+  const result = getRunResult(runId);
+  if (!result) return failure("Run result not found or expired", null, 404);
+
+  return success("Run result retrieved", {
+    runId: result.runId,
+    status: result.status,
+    executionTimeMs: result.executionTimeMs,
+    memoryUsedKb: result.memoryUsedKb,
+    judgeOutput: result.judgeOutput,
+  });
 }

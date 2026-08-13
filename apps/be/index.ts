@@ -53,6 +53,7 @@ import {
   handleWorkerUpdatePlagiarism,
   handleTransitionJudgePhaseWorker,
   handleRunSolution,
+  handleGetRunResult,
 } from "./routes/submission";
 
 import {
@@ -128,6 +129,7 @@ const routes: Record<string, Record<string, Handler>> = {
   },
   "/api/problems/:id/submission": { POST: handleSubmitSolution },
   "/api/problems/:id/run": { POST: handleRunSolution },
+  "/api/runs/:runId": { GET: handleGetRunResult },
 
   // ---------------- CREATE PROBLEM ----------------
   // POST /api/problem/create - Create new problem (admin only)

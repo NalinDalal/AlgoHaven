@@ -6,6 +6,7 @@ import SampleStrip from "./SampleStrip";
 import OutputPanel from "./OutputPanel";
 import JudgeStatusBadge from "./JudgeStatusBadge";
 import { useSubmission } from "../hooks/useSubmission";
+import { useRun } from "../hooks/useRun";
 import type { Lang, SampleTestCase, SubmissionResult } from "./problemWrapper";
 import { apiFetch } from "@/lib/apiFetch";
 
@@ -43,11 +44,28 @@ export default function EditorPanel({
     const [activeSample, setActiveSample] = useState(0);
     const [saved, setSaved] = useState(true);
     const [banned, setBanned] = useState(false);
+    const [lastAction, setLastAction] = useState<"submit" | "run">("submit");
 
     const { submitting, result, judgeMsg, submit } = useSubmission(
         problemId,
         submitEndpoint,
     );
+
+    const { running, result: runResult, judgeMsg: runJudgeMsg, run } = useRun(problemId);
+
+    const activeResult = lastAction === "run" ? (runResult ?? result) : (result ?? runResult);
+    const activeJudgeMsg = lastAction === "run" ? (runJudgeMsg || judgeMsg) : (judgeMsg || runJudgeMsg);
+    const busy = submitting || running;
+
+    const handleSubmit = useCallback(() => {
+        setLastAction("submit");
+        submit(code, lang);
+    }, [submit, code, lang]);
+
+    const handleRun = useCallback(() => {
+        setLastAction("run");
+        run(code, lang);
+    }, [run, code, lang]);
 
     useEffect(() => {
         apiFetch(`${process.env.NEXT_PUBLIC_BE_URL}/api/auth/me`, { credentials: "include" })
@@ -79,12 +97,12 @@ export default function EditorPanel({
         const handler = (e: KeyboardEvent) => {
             if (e.ctrlKey && e.key === "Enter") {
                 e.preventDefault();
-                if (!banned) submit(code, lang);
+                if (!banned) handleSubmit();
             }
         };
         window.addEventListener("keydown", handler);
         return () => window.removeEventListener("keydown", handler);
-    }, [code, lang, submit, banned]);
+    }, [code, lang, banned, handleSubmit]);
 
     const handleLangChange = (l: Lang) => {
         const savedCode = localStorage.getItem(`code_${problemId}_${l}`);
@@ -141,13 +159,25 @@ export default function EditorPanel({
                     </span>
 
                     {/* Judge status */}
-                    {(submitting || result) && (
+                    {(busy || activeResult) && (
                         <JudgeStatusBadge
-                            result={result}
-                            judgeMsg={judgeMsg}
-                            submitting={submitting}
+                            result={activeResult}
+                            judgeMsg={activeJudgeMsg}
+                            submitting={busy}
                         />
                     )}
+
+                    {/* Test button (runs against samples only) */}
+                    <button
+                        onClick={handleRun}
+                        disabled={busy}
+                        className={`font-mono text-xs font-bold px-4 py-2 rounded border transition-all ${busy
+                                ? "bg-transparent border-zinc-700 text-zinc-500 cursor-not-allowed"
+                                : "bg-zinc-800 text-zinc-200 border-zinc-600 hover:bg-zinc-700 hover:-translate-y-px"
+                            }`}
+                    >
+                        {running ? "Testing..." : "Test"}
+                    </button>
 
                     {/* Submit button */}
                     {banned ? (
@@ -156,7 +186,7 @@ export default function EditorPanel({
                         </span>
                     ) : (
                         <button
-                            onClick={() => submit(code, lang)}
+                            onClick={handleSubmit}
                             disabled={submitting}
                             className={`font-mono text-xs font-bold px-5 py-2 rounded flex items-center gap-2 transition-all ${submitting
                                     ? "bg-transparent border border-zinc-700 text-zinc-500 cursor-not-allowed"
@@ -206,8 +236,8 @@ export default function EditorPanel({
             )}
 
             {/* Output Panel */}
-            {result && (result.compilerOutput || result.judgeOutput) && (
-                <OutputPanel result={result} />
+            {activeResult && (activeResult.compilerOutput || activeResult.judgeOutput) && (
+                <OutputPanel result={activeResult} />
             )}
         </div>
     );
