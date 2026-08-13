@@ -32,8 +32,8 @@ export default function Leaderboard() {
             })
             .then((r) => r?.json())
             .then((d) => {
-                if (d?.status === "success" && d.data?.entries) {
-                    setEntries(d.data.entries.slice(0, 5));
+                if (d?.status === "success" && d.data?.top) {
+                    setEntries(d.data.top.slice(0, 5));
                 }
             })
             .catch(() => {})
@@ -43,7 +43,7 @@ export default function Leaderboard() {
     return (
         <section className="mx-auto py-16 px-8 pb-24 max-w-[1100px]">
             <div className="font-mono text-xs text-emerald-400 tracking-[0.12em] uppercase mb-4">
-                // Recent Contest
+                {"// Recent Contest"}
             </div>
 
             <h2 className="font-bold text-[clamp(2rem,4vw,3rem)] leading-[1.05] tracking-[-0.02em] mb-6 text-zinc-100">

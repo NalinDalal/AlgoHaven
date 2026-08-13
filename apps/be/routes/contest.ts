@@ -692,6 +692,31 @@ export async function getContestSubmissions(req: Request): Promise<Response> {
     return success("Submissions retrieved", { submissions });
 }
 
+// GET /api/contest/:id/recent-submissions  [public]
+// Returns recent verdicts for a contest (no code), for the home page ticker.
+export async function getRecentContestSubmissions(req: Request): Promise<Response> {
+    const { id: contestId } = getIdParams(req);
+    if (!contestId) return failure("Missing contest id", null, 400);
+
+    const url = new URL(req.url);
+    const limit = Math.min(parseInt(url.searchParams.get("limit") || "8", 10) || 8, 50);
+
+    const submissions = await prisma.submission.findMany({
+        where: { contestId },
+        select: {
+            status: true,
+            language: true,
+            executionTimeMs: true,
+            user: { select: { username: true } },
+            problem: { select: { slug: true } },
+        },
+        orderBy: { createdAt: "desc" },
+        take: limit,
+    });
+
+    return success("Recent submissions retrieved", { submissions });
+}
+
 // POST /api/contest/:id/freeze  [worker only, via x-worker-secret]
 // Marks all leaderboard entries for the contest as isFrozen=true.
 // Idempotent: re-running against an already-frozen contest is a no-op.

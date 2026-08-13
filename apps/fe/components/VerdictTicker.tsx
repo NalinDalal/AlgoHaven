@@ -31,7 +31,7 @@ export default function VerdictTicker() {
             .then((d) => {
                 if (d.status === "success" && d.data?.contests?.[0]?.id) {
                     return apiFetch(
-                        `${process.env.NEXT_PUBLIC_BE_URL}/api/contest/${d.data.contests[0].id}/submissions?limit=8`,
+                        `${process.env.NEXT_PUBLIC_BE_URL}/api/contest/${d.data.contests[0].id}/recent-submissions?limit=8`,
                         { credentials: "include" },
                     );
                 }
